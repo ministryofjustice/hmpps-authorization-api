@@ -1,6 +1,6 @@
 {
   "role": {
-    "name": "hmpps-template-kotlin"
+    "name": "hmpps-authorization-server"
   },
   "customDimensions": {
     "service.version": "${BUILD_NUMBER}"
