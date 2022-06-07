@@ -17,3 +17,6 @@ spring:
       enabled: true
   jpa:
     show-sql: true
+
+  flyway:
+    locations: classpath:db/auth,db/dev/data
