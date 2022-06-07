@@ -1,13 +1,12 @@
-_  _ _  _ ___  ___  ____  
-|__| |\/| |__] |__] [__   
-|  | |  | |    |    ___]  
-                          
-___ ____ _  _ ___  _    ____ ___ ____ 
- |  |___ |\/| |__] |    |__|  |  |___ 
- |  |___ |  | |    |___ |  |  |  |___ 
-                                      
-_  _ ____ ___ _    _ _  _ 
-|_/  |  |  |  |    | |\ | 
-| \_ |__|  |  |___ | | \| 
-                          
-Please change me by generating your own ASCII art and placing in banner.txt
+
+
+                                  88                                    88                                  88
+                           ,d     88                                    ""                           ,d     ""
+                           88     88                                                                 88
+,adPPYYba,  88       88  MM88MMM  88,dPPYba,    ,adPPYba,   8b,dPPYba,  88  888888888  ,adPPYYba,  MM88MMM  88   ,adPPYba,   8b,dPPYba,             ,adPPYba,   ,adPPYba,  8b,dPPYba,  8b       d8   ,adPPYba,  8b,dPPYba,
+""     `Y8  88       88    88     88P'    "8a  a8"     "8a  88P'   "Y8  88       a8P"  ""     `Y8    88     88  a8"     "8a  88P'   `"8a  aaaaaaaa  I8[    ""  a8P_____88  88P'   "Y8  `8b     d8'  a8P_____88  88P'   "Y8
+,adPPPPP88  88       88    88     88       88  8b       d8  88          88    ,d8P'    ,adPPPPP88    88     88  8b       d8  88       88  """"""""   `"Y8ba,   8PP"""""""  88           `8b   d8'   8PP"""""""  88
+88,    ,88  "8a,   ,a88    88,    88       88  "8a,   ,a8"  88          88  ,d8"       88,    ,88    88,    88  "8a,   ,a8"  88       88            aa    ]8I  "8b,   ,aa  88            `8b,d8'    "8b,   ,aa  88
+`"8bbdP"Y8   `"YbbdP'Y8    "Y888  88       88   `"YbbdP"'   88          88  888888888  `"8bbdP"Y8    "Y888  88   `"YbbdP"'   88       88            `"YbbdP"'   `"Ybbd8"'  88              "8"       `"Ybbd8"'  88
+
+
