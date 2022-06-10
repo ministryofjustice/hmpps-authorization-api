@@ -17,4 +17,13 @@ will apply ktlint styles to intellij and also add a pre-commit hook to format al
 SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ```
 
-The service should start up using the dev profile, perform the flyway migrations on its local HSQLDB and then seed local development data.
+The service should start up using the dev profile, perform the flyway migrations on a local HSQLDB and then seed local development data.
+
+### Run locally against a Postgres database
+By default, Authorization Server runs against an in memory h2 database.  It can be run against a local Postgres database too, useful
+to verify database related changes prior to test environment deployment.
+
+Steps are:
+
+* Run a local docker container to start up authorization-server-db only (see docker-compose-test.yml)
+* Set the appropriate spring profiles: SPRING_ACTIVE_PROFILES=dev,local-postgres
