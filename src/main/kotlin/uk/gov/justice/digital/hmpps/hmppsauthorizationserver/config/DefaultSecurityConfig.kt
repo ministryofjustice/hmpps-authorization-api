@@ -16,19 +16,22 @@ class DefaultSecurityConfig {
   fun defaultSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
     http.headers().frameOptions().sameOrigin()
     http.cors().and().csrf().disable()
-      .authorizeRequests {auth -> auth.antMatchers(
-        "/h2-console/**",
-        "/login",
-        "/css/**",
-        "/js/**",
-        "/images/**",
-        "/fonts/**",
-        "/webjars/**",
-        "/health/**",
-        "/info",
-        "/ping",
-        "/error",
-        "/favicon.ico").permitAll().anyRequest().authenticated() }
+      .authorizeRequests { auth ->
+        auth.antMatchers(
+          "/h2-console/**",
+          "/login",
+          "/css/**",
+          "/js/**",
+          "/images/**",
+          "/fonts/**",
+          "/webjars/**",
+          "/health/**",
+          "/info",
+          "/ping",
+          "/error",
+          "/favicon.ico"
+        ).permitAll().anyRequest().authenticated()
+      }
       .formLogin(Customizer.withDefaults())
     return http.build()
   }
