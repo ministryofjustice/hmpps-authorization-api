@@ -21,6 +21,8 @@ dependencies {
   runtimeOnly("com.h2database:h2:2.1.210")
   runtimeOnly("org.postgresql:postgresql:42.3.6")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux")
 }
 
 java {
