@@ -99,11 +99,8 @@ class AuthorizationServerConfig {
       if (context.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
         val principal = context.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
 
-        if (principal.registeredClient != null) {
-          val oAuth2AuthorizationConsent = authorizationConsentService.findById(
-            principal.registeredClient!!.id,
-            principal.registeredClient!!.clientName
-          )
+        principal.registeredClient?.let { registeredClient ->
+          val oAuth2AuthorizationConsent = authorizationConsentService.findById(registeredClient.id, registeredClient.clientName)
 
           // TODO this will produce token without any authorities when none registered, confirm this is OK
           oAuth2AuthorizationConsent?.let {
