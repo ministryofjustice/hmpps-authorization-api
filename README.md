@@ -27,3 +27,19 @@ Steps are:
 
 * Run a local docker container to start up authorization-server-db only (see docker-compose-test.yml)
 * Set the appropriate spring profiles: SPRING_ACTIVE_PROFILES=dev,local-postgres
+
+### Testing locally
+To avoid problems with session cookie overwrites add the following line to your /etc/hosts file
+
+```bash
+127.0.0.1        auth-server
+```
+
+After starting the application locally, the client credentials flow can be tested easily via Postman, using the following variables:
+
+```bash
+client-id=test-client-id
+client-secret=test-secret
+access-token-url=localhost:8089/authorization-server/oauth2/token
+auth-url=localhost:8089/authorization-server
+```
