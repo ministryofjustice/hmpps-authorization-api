@@ -52,11 +52,20 @@ CREATE TABLE oauth2_registered_client
     PRIMARY KEY (id)
 );
 
--- NB This table can be changed to meet requirements
-CREATE TABLE registered_users
+-- NOTE, the users and authorities tables below can be restructured as necessary
+-- Doing so requires exposing a bean implementing UserDetailsService interface
+CREATE TABLE users
 (
-    id        varchar(100)  NOT NULL,
-    user_name varchar(200)  NOT NULL,
-    password  varchar(100)  NOT NULL,
-    role     varchar(1000) NOT NULL
+    username varchar(50) NOT NULL PRIMARY KEY,
+    password varchar(200) NOT NULL,
+    enabled  boolean NOT NULL
 );
+
+CREATE TABLE authorities
+(
+    username  varchar(50) NOT NULL,
+    authority varchar(50) NOT NULL,
+    CONSTRAINT fk_authorities_users FOREIGN KEY (username) REFERENCES users (username)
+);
+
+CREATE UNIQUE INDEX ix_auth_username ON authorities (username, authority);
