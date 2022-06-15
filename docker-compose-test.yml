@@ -1,0 +1,18 @@
+version: '3.1'
+services:
+
+  authorization-server-db:
+    image: postgres:14.3
+    networks:
+      - hmpps
+    container_name: authorization-server-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=admin_password
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=authorization-server-db
+
+networks:
+  hmpps:

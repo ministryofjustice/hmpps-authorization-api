@@ -4,8 +4,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication()
-class HmppsAuthorizationServer
+class AuthorizationServer
 
 fun main(args: Array<String>) {
-  runApplication<HmppsAuthorizationServer>(*args)
+  runApplication<AuthorizationServer>(*args)
 }

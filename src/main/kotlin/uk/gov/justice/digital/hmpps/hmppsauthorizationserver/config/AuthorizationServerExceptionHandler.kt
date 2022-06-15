@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import javax.validation.ValidationException
 
 @RestControllerAdvice
-class HmppsAuthorizationServerExceptionHandler {
+class AuthorizationServerExceptionHandler {
   @ExceptionHandler(ValidationException::class)
   fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> {
     log.info("Validation exception: {}", e.message)
