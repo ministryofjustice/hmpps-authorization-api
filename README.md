@@ -35,7 +35,7 @@ To avoid problems with session cookie overwrites add the following line to your 
 127.0.0.1        auth-server
 ```
 
-After starting the application locally, the client credentials flow can be tested easily via Postman, using the following variables:
+After starting the application locally, the client credentials flow can be tested via Postman, using the following variables:
 
 ```bash
 client-id=test-client-id
@@ -43,3 +43,18 @@ client-secret=test-secret
 access-token-url=localhost:8089/authorization-server/oauth2/token
 auth-url=localhost:8089/authorization-server
 ```
+
+The generated token can be de-coded at jwt.io
+
+The authorization code flow is also supported and can be tested via Postman using the following variables:
+
+```bash
+client-id=test-client-id
+client-secret=test-secret
+access-token-url=localhost:8089/authorization-server/oauth2/token
+auth-url=localhost:8089/authorization-server/oauth2/authorize
+```
+
+Note that for this flow you will also need to check the 'authorize using browser' checkbox. When presented with the login page use username: alant and password: letmein.
+The generated token will live for 5 minutes so subsequent attempts to retrieve the token whilst there is already one live do not require re-authentication.
+Also note that on this flow the auth-url needed to be preceded by the protocol, so http://
