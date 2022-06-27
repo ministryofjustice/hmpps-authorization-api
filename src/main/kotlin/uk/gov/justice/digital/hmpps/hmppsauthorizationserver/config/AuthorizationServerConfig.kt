@@ -6,14 +6,11 @@ import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
-import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.Resource
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -31,20 +28,15 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings
 import org.springframework.security.web.SecurityFilterChain
-import uk.gov.justice.digital.hmpps.hmppsauthorizationserver.service.KeyStoreKeyFactory
+import uk.gov.justice.digital.hmpps.hmppsauthorizationserver.service.KeyPairAccessor
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.UUID
 
 @Configuration(proxyBeanMethods = false)
 class AuthorizationServerConfig(
-  @Value("\${jwt.signing.key.pair}") privateKeyPair: String,
-  @Value("\${jwt.keystore.password}") private val keystorePassword: String,
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
-  @Value("\${jwt.keystore.alias:elite2api}") private val keystoreAlias: String,
 ) {
-
-  private val privateKeyPair: Resource = ByteArrayResource(Base64.decodeBase64(privateKeyPair))
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -58,13 +50,8 @@ class AuthorizationServerConfig(
   }
 
   @Bean
-  fun keyStore(): KeyStoreKeyFactory {
-    return KeyStoreKeyFactory(privateKeyPair, keystorePassword.toCharArray())
-  }
-
-  @Bean
-  fun jwkSet(keyStoreKeyFactory: KeyStoreKeyFactory): JWKSet {
-    val builder = RSAKey.Builder(keyStoreKeyFactory.getKeyPair(keystoreAlias).public as RSAPublicKey)
+  fun jwkSet(keyPairAccessor: KeyPairAccessor): JWKSet {
+    val builder = RSAKey.Builder(keyPairAccessor.getKeyPair().public as RSAPublicKey)
       .keyUse(KeyUse.SIGNATURE)
       .algorithm(JWSAlgorithm.RS256)
       .keyID(keyId)
@@ -72,8 +59,8 @@ class AuthorizationServerConfig(
   }
 
   @Bean
-  fun jwkSource(keyStoreKeyFactory: KeyStoreKeyFactory): JWKSource<SecurityContext> {
-    val keyPair = keyStoreKeyFactory.getKeyPair(keystoreAlias)
+  fun jwkSource(keyPairAccessor: KeyPairAccessor): JWKSource<SecurityContext> {
+    val keyPair = keyPairAccessor.getKeyPair()
     val rsaKey = RSAKey.Builder(keyPair.public as RSAPublicKey)
       .privateKey(keyPair.private as RSAPrivateKey)
       .keyID(UUID.randomUUID().toString())
