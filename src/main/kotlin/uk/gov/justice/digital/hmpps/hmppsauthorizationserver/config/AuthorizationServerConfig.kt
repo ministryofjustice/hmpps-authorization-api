@@ -1,8 +1,12 @@
 package uk.gov.justice.digital.hmpps.hmppsauthorizationserver.config
 
+import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWKSet
+import com.nimbusds.jose.jwk.KeyUse
+import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -24,10 +28,18 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings
 import org.springframework.security.web.SecurityFilterChain
-import uk.gov.justice.digital.hmpps.hmppsauthorizationserver.service.KeyGeneratorUtils
+import uk.gov.justice.digital.hmpps.hmppsauthorizationserver.service.KeyPairAccessor
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.util.UUID
 
 @Configuration(proxyBeanMethods = false)
-class AuthorizationServerConfig {
+class AuthorizationServerConfig(
+  @Value("\${jwt.jwk.key.id}") private val keyId: String,
+  @Value("\${server.base-url}") private val baseUrl: String,
+  @Value("\${server.servlet.context-path}") private val contextPath: String,
+  @Value("\${server.port}") private val port: String,
+) {
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -41,8 +53,22 @@ class AuthorizationServerConfig {
   }
 
   @Bean
-  fun jwkSource(): JWKSource<SecurityContext> {
-    val rsaKey = KeyGeneratorUtils.generateRSAKey()
+  fun jwkSet(keyPairAccessor: KeyPairAccessor): JWKSet {
+    val builder = RSAKey.Builder(keyPairAccessor.getKeyPair().public as RSAPublicKey)
+      .keyUse(KeyUse.SIGNATURE)
+      .algorithm(JWSAlgorithm.RS256)
+      .keyID(keyId)
+    return JWKSet(builder.build())
+  }
+
+  @Bean
+  fun jwkSource(keyPairAccessor: KeyPairAccessor): JWKSource<SecurityContext> {
+    val keyPair = keyPairAccessor.getKeyPair()
+    val rsaKey = RSAKey.Builder(keyPair.public as RSAPublicKey)
+      .privateKey(keyPair.private as RSAPrivateKey)
+      .keyID(UUID.randomUUID().toString())
+      .build()
+
     val jwkSet = JWKSet(rsaKey)
     return JWKSource<SecurityContext> { jwkSelector, _ -> jwkSelector.select(jwkSet) }
   }
@@ -54,7 +80,7 @@ class AuthorizationServerConfig {
 
   @Bean
   fun providerSettings(): ProviderSettings {
-    return ProviderSettings.builder().issuer("http://authorization-server:8089").build()
+    return ProviderSettings.builder().issuer("http://$baseUrl:$port$contextPath").build()
   }
 
   @Bean

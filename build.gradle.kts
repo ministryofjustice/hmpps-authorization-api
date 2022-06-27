@@ -18,6 +18,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.hibernate:hibernate-core:5.6.9.Final")
 
+  implementation("commons-codec:commons-codec")
+
   runtimeOnly("com.h2database:h2:2.1.210")
   runtimeOnly("org.postgresql:postgresql:42.3.6")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
