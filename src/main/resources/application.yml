@@ -38,6 +38,7 @@ spring:
 
 server:
   port: 8089
+  base-url: authorization-server-dev.hmpps.service.justice.gov.uk
   servlet:
     context-path: /authorization-server
   forward-headers-strategy: native

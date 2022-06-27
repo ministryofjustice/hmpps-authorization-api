@@ -36,6 +36,9 @@ import java.util.UUID
 @Configuration(proxyBeanMethods = false)
 class AuthorizationServerConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
+  @Value("\${server.base-url}") private val baseUrl: String,
+  @Value("\${server.servlet.context-path}") private val contextPath: String,
+  @Value("\${server.port}") private val port: String,
 ) {
 
   @Bean
@@ -77,7 +80,7 @@ class AuthorizationServerConfig(
 
   @Bean
   fun providerSettings(): ProviderSettings {
-    return ProviderSettings.builder().issuer("http://authorization-server:8089").build()
+    return ProviderSettings.builder().issuer("http://$baseUrl:$port$contextPath").build()
   }
 
   @Bean
