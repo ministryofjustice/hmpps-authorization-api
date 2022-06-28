@@ -33,7 +33,7 @@ COPY --from=builder --chown=appuser:appgroup /app/root.crt /home/appuser/.postgr
 
 WORKDIR /app
 
-COPY --from=builder --chown=appuser:appgroup /app/build/libs/prison-register*.jar /app/app.jar
+COPY --from=builder --chown=appuser:appgroup /app/build/libs/hmpps-authorization-server*.jar /app/app.jar
 COPY --from=builder --chown=appuser:appgroup /app/build/libs/applicationinsights-agent*.jar /app/agent.jar
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.json /app
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.dev.json /app
