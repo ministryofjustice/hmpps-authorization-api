@@ -1,7 +1,5 @@
 server:
   shutdown: immediate
-  port: 8089
-  base-url: authorization-server
 
 audit:
   endpoint.url: http://localhost:8182
