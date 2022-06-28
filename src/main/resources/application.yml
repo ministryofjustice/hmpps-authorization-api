@@ -37,8 +37,7 @@ spring:
         - "dev"
 
 server:
-  port: 8080
-  base-url: authorization-server-dev.hmpps.service.justice.gov.uk
+  base-url: ${BASE_URL}
   servlet:
     context-path: /
   forward-headers-strategy: native
@@ -56,7 +55,7 @@ management:
     web:
       base-path: /
       exposure:
-        include: 'info, health'
+        include: 'info, health, ping'
   endpoint:
     health:
       cache:

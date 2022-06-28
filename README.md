@@ -1,6 +1,6 @@
 # HMPPS Authorization Server
 
-Spring Boot 2.7, Java 17, Spring Security Authorization Server covering the client credentials flow. This project has been started with the intention of:
+Spring Boot 2.7.1, Java 18, Spring Security Authorization Server covering the client credentials flow. This project has been started with the intention of:
 - Moving HMPPS Auth off the deprecated spring-security-oauth2 library
 - Simplifying Auth by splitting out client credentials flows into a separate service
 
