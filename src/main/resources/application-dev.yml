@@ -1,4 +1,6 @@
 server:
+  port: 8089
+  base-url: localhost:8089
   shutdown: immediate
 
 audit:
