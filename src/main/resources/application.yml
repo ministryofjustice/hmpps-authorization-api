@@ -37,10 +37,10 @@ spring:
         - "dev"
 
 server:
-  port: 8089
+  port: 8080
   base-url: authorization-server-dev.hmpps.service.justice.gov.uk
   servlet:
-    context-path: /authorization-server
+    context-path: /
   forward-headers-strategy: native
   tomcat:
     remoteip:
