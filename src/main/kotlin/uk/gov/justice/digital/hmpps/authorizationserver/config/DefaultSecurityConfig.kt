@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsauthorizationserver.config
+package uk.gov.justice.digital.hmpps.authorizationserver.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.Customizer

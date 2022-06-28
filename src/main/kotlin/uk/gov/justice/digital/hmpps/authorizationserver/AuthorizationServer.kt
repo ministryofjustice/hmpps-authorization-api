@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsauthorizationserver
+package uk.gov.justice.digital.hmpps.authorizationserver
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

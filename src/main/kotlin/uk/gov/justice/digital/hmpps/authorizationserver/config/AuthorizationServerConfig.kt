@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsauthorizationserver.config
+package uk.gov.justice.digital.hmpps.authorizationserver.config
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWKSet
@@ -28,7 +28,7 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings
 import org.springframework.security.web.SecurityFilterChain
-import uk.gov.justice.digital.hmpps.hmppsauthorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.UUID
@@ -38,7 +38,6 @@ class AuthorizationServerConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
-  @Value("\${server.port}") private val port: String,
 ) {
 
   @Bean
@@ -80,7 +79,7 @@ class AuthorizationServerConfig(
 
   @Bean
   fun providerSettings(): ProviderSettings {
-    return ProviderSettings.builder().issuer("http://$baseUrl:$port$contextPath").build()
+    return ProviderSettings.builder().issuer("$baseUrl$contextPath").build()
   }
 
   @Bean

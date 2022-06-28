@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsauthorizationserver.service
+package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.apache.commons.codec.binary.Base64.decodeBase64
 import org.springframework.beans.factory.annotation.Value
