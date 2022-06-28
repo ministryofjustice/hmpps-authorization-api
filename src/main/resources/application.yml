@@ -21,7 +21,7 @@ spring:
       WRITE_DATES_AS_TIMESTAMPS: false
 
   datasource:
-    url: jdbc:postgresql://${DATABASE_ENDPOINT}/${DATABASE_NAME}?sslmode=verify-full
+    url: jdbc:postgresql://${SPRING_DATASOURCE_ENDPOINT}/${SPRING_DATASOURCE_NAME}?sslmode=verify-full
     continue-on-error: true
     hikari:
       pool-name: AuthorizationServer-CP
