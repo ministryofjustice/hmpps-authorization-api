@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsauthorizationserver.service
+package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication

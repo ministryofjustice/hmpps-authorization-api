@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsauthorizationserver.config
+package uk.gov.justice.digital.hmpps.authorizationserver.config
 
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
