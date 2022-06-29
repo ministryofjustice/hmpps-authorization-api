@@ -31,7 +31,6 @@ import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
-import java.util.UUID
 
 @Configuration(proxyBeanMethods = false)
 class AuthorizationServerConfig(
@@ -65,7 +64,7 @@ class AuthorizationServerConfig(
     val keyPair = keyPairAccessor.getKeyPair()
     val rsaKey = RSAKey.Builder(keyPair.public as RSAPublicKey)
       .privateKey(keyPair.private as RSAPrivateKey)
-      .keyID(UUID.randomUUID().toString())
+      .keyID(keyId)
       .build()
 
     val jwkSet = JWKSet(rsaKey)
