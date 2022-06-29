@@ -65,7 +65,7 @@ class AuthorizationServerConfig(
     val keyPair = keyPairAccessor.getKeyPair()
     val rsaKey = RSAKey.Builder(keyPair.public as RSAPublicKey)
       .privateKey(keyPair.private as RSAPrivateKey)
-      .keyID(UUID.randomUUID().toString())
+      .keyID(keyId)
       .build()
 
     val jwkSet = JWKSet(rsaKey)
