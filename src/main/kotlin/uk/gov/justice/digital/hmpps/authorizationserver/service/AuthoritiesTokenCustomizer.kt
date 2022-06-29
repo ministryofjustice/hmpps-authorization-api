@@ -22,6 +22,7 @@ class AuthoritiesTokenCustomizer(
 
       if (jwtEncodingContext.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
         addClientAuthoritiesTo(jwtEncodingContext)
+        addClientId(jwtEncodingContext)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
         addEndUserAuthoritiesTo(jwtEncodingContext)
       }
@@ -48,5 +49,10 @@ class AuthoritiesTokenCustomizer(
     val authorities = grantedAuthorities.stream().map { obj: GrantedAuthority -> obj.authority }
       .collect(Collectors.toSet())
     context.claims.claim("authorities", authorities)
+  }
+
+  private fun addClientId(context: JwtEncodingContext) {
+    val principal = context.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
+    context.claims.claim("client_id", principal.registeredClient?.clientId ?: "Bob")
   }
 }

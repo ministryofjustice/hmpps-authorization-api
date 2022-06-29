@@ -29,6 +29,8 @@ class DefaultSecurityConfig {
           "/info",
           "/ping",
           "/error",
+          "/.well-known/jwks.json",
+          "/issuer/.well-known/**",
           "/favicon.ico"
         ).permitAll().anyRequest().authenticated()
       }
@@ -43,7 +45,7 @@ class DefaultSecurityConfig {
       allowedOrigins = listOf("yourAllowedOrigin.com", "127.0.0.1")
       allowCredentials = true
       allowedHeaders = listOf("Origin", "Content-Type", "Accept", "responseType", "Authorization")
-      allowedMethods = listOf("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH")
+      allowedMethods = listOf("GET", "POST", "PUT", "DELETE")
     }
     source.registerCorsConfiguration("/**", corsConfig)
     return source
