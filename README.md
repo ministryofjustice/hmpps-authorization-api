@@ -19,14 +19,25 @@ SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 
 The service should start up using the dev profile, perform the flyway migrations on a local HSQLDB and then seed local development data.
 
+When running locally with SPRING_ACTIVE_PROFILES=dev the seeded H2 database console is available at http://localhost:8080/authorization-server-db/h2-console
+
+| Database                | JDBC connection                     | username  | password  |
+|-------------------------|-------------------------------------|-----------|-----------|
+| authorization-server-db | jdbc:h2:mem:authorization-server-db | `<blank>` | `<blank>` |
+
+
 ### Run locally against a Postgres database
 By default, Authorization Server runs against an in memory h2 database.  It can be run against a local Postgres database too, useful
 to verify database related changes prior to test environment deployment.
 
 Steps are:
 
-* Run a local docker container to start up authorization-server-db only (see docker-compose-test.yml)
-* Set the appropriate spring profiles: SPRING_ACTIVE_PROFILES=dev,local-postgres
+* Run a local docker container to start up authorization-server-db only (use either docker-compose-test.yml from within your IDE or command below)
+* Start authorization-server with the appropriate spring profiles: SPRING_ACTIVE_PROFILES=dev,local-postgres
+
+```
+docker stop authorization-server-db && docker rm authorization-server-db && docker-compose -f docker-compose-test.yml up
+```
 
 ### Testing locally
 
