@@ -19,29 +19,37 @@ SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 
 The service should start up using the dev profile, perform the flyway migrations on a local HSQLDB and then seed local development data.
 
+When running locally with SPRING_ACTIVE_PROFILES=dev the seeded H2 database console is available at http://localhost:8080/authorization-server-db/h2-console
+
+| Database                | JDBC connection                     | username  | password  |
+|-------------------------|-------------------------------------|-----------|-----------|
+| authorization-server-db | jdbc:h2:mem:authorization-server-db | `<blank>` | `<blank>` |
+
+
 ### Run locally against a Postgres database
 By default, Authorization Server runs against an in memory h2 database.  It can be run against a local Postgres database too, useful
 to verify database related changes prior to test environment deployment.
 
 Steps are:
 
-* Run a local docker container to start up authorization-server-db only (see docker-compose-test.yml)
-* Set the appropriate spring profiles: SPRING_ACTIVE_PROFILES=dev,local-postgres
+* Run a local docker container to start up authorization-server-db only (use either docker-compose-test.yml from within your IDE or command below)
+* Start authorization-server with the appropriate spring profiles: SPRING_ACTIVE_PROFILES=dev,local-postgres
+
+```
+docker stop authorization-server-db && docker rm authorization-server-db && docker-compose -f docker-compose-test.yml up
+```
 
 ### Testing locally
-To avoid problems with session cookie overwrites add the following line to your /etc/hosts file
 
-```bash
-127.0.0.1        auth-server
-```
+Authorization Server runs locally on port 8089.
 
 After starting the application locally, the client credentials flow can be tested via Postman, using the following variables:
 
 ```bash
 client-id=test-client-id
 client-secret=test-secret
-access-token-url=localhost:8089/authorization-server/oauth2/token
-auth-url=localhost:8089/authorization-server
+access-token-url=http://localhost:8089/oauth2/token
+auth-url=http://localhost:8089/
 ```
 
 The generated token can be de-coded at jwt.io
@@ -51,10 +59,18 @@ The authorization code flow is also supported and can be tested via Postman usin
 ```bash
 client-id=test-client-id
 client-secret=test-secret
-access-token-url=localhost:8089/authorization-server/oauth2/token
-auth-url=localhost:8089/authorization-server/oauth2/authorize
+access-token-url=http://localhost:8089/oauth2/token
+auth-url=http://localhost:8089/oauth2/authorize
 ```
 
-Note that for this flow you will also need to check the 'authorize using browser' checkbox. When presented with the login page use username: alant and password: letmein.
+Note that for this flow you will also need to check the 'authorize using browser' checkbox in Postman. When presented with the login page use username: alant and password: letmein.
 The generated token will live for 5 minutes so subsequent attempts to retrieve the token whilst there is already one live do not require re-authentication.
-Also note that on this flow the auth-url needed to be preceded by the protocol, so http://
+
+### Testing in DEV
+
+To test the client credentials flow in the DEV environment, the only difference is the URLs (client-id and client-secret are the same). Use the following URLs:
+
+```bash
+access-token-url=https://authorization-server-dev.hmpps.service.justice.gov.uk/oauth2/token
+auth-url=https://authorization-server-dev.hmpps.service.justice.gov.uk/
+```
