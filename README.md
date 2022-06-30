@@ -37,8 +37,8 @@ After starting the application locally, the client credentials flow can be teste
 ```bash
 client-id=test-client-id
 client-secret=test-secret
-access-token-url=localhost:8089/oauth2/token
-auth-url=localhost:8089/
+access-token-url=http://localhost:8089/oauth2/token
+auth-url=http://localhost:8089/
 ```
 
 The generated token can be de-coded at jwt.io
@@ -48,7 +48,7 @@ The authorization code flow is also supported and can be tested via Postman usin
 ```bash
 client-id=test-client-id
 client-secret=test-secret
-access-token-url=localhost:8089/oauth2/token
+access-token-url=http://localhost:8089/oauth2/token
 auth-url=http://localhost:8089/oauth2/authorize
 ```
 
