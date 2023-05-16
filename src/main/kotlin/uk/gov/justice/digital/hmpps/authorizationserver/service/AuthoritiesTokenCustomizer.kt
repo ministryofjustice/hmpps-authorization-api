@@ -12,13 +12,12 @@ import java.util.stream.Collectors
 
 @Component
 class AuthoritiesTokenCustomizer(
-  private val authorizationConsentService: OAuth2AuthorizationConsentService
+  private val authorizationConsentService: OAuth2AuthorizationConsentService,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
   override fun customize(context: JwtEncodingContext?) {
-
     context?.let {
-      jwtEncodingContext ->
+        jwtEncodingContext ->
 
       if (jwtEncodingContext.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
         addClientAuthoritiesTo(jwtEncodingContext)

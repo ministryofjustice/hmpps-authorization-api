@@ -14,7 +14,6 @@ import org.springframework.core.annotation.Order
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
@@ -26,7 +25,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.config.ProviderSettings
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import java.security.interfaces.RSAPrivateKey
@@ -87,7 +86,7 @@ class AuthorizationServerConfig(
   @Bean
   fun registeredClientRepository(
     jdbcTemplate: JdbcTemplate,
-    passwordEncoder: BCryptPasswordEncoder
+    passwordEncoder: BCryptPasswordEncoder,
   ): RegisteredClientRepository {
     val registeredClientRepository = JdbcRegisteredClientRepository(jdbcTemplate)
     val registeredClientParametersMapper = JdbcRegisteredClientRepository.RegisteredClientParametersMapper()
@@ -99,7 +98,7 @@ class AuthorizationServerConfig(
   @Bean
   fun authorizationService(
     jdbcTemplate: JdbcTemplate,
-    registeredClientRepository: RegisteredClientRepository
+    registeredClientRepository: RegisteredClientRepository,
   ): OAuth2AuthorizationService {
     return JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository)
   }
@@ -107,7 +106,7 @@ class AuthorizationServerConfig(
   @Bean
   fun authorizationConsentService(
     jdbcTemplate: JdbcTemplate,
-    registeredClientRepository: RegisteredClientRepository
+    registeredClientRepository: RegisteredClientRepository,
   ): OAuth2AuthorizationConsentService {
     return JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository)
   }

@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import com.nimbusds.jose.jwk.JWKSet
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
-import javax.servlet.http.HttpServletResponse
 
 @RestController
 class JwkSetController(@Autowired private val jwkSet: JWKSet) {
