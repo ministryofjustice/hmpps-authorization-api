@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.authorizationserver.service
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.oauth2.server.authorization.JwtEncodingContext
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
 import java.util.stream.Collectors
 

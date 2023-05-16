@@ -26,6 +26,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import java.security.interfaces.RSAPrivateKey
@@ -76,8 +77,8 @@ class AuthorizationServerConfig(
   }
 
   @Bean
-  fun providerSettings(): ProviderSettings {
-    return ProviderSettings.builder().issuer("$baseUrl$contextPath").build()
+  fun providerSettings(): AuthorizationServerSettings {
+    return AuthorizationServerSettings.builder().issuer("$baseUrl$contextPath").build()
   }
 
   @Bean
