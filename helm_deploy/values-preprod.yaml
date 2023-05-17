@@ -2,6 +2,8 @@
 # Per environment values which override defaults in hmpps-authorization-server/values.yaml
 
 generic-service:
+  replicaCount: 2
+
   ingress:
     host: hmpps-authorization-server-preprod.hmpps.service.justice.gov.uk
 

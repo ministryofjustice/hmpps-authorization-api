@@ -16,8 +16,8 @@ class DefaultSecurityConfig {
   fun defaultSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
     http.headers().frameOptions().sameOrigin()
     http.cors().and().csrf().disable()
-      .authorizeRequests { auth ->
-        auth.antMatchers(
+      .authorizeHttpRequests { auth ->
+        auth.requestMatchers(
           "/h2-console/**",
           "/login",
           "/css/**",
@@ -31,7 +31,7 @@ class DefaultSecurityConfig {
           "/error",
           "/.well-known/jwks.json",
           "/issuer/.well-known/**",
-          "/favicon.ico"
+          "/favicon.ico",
         ).permitAll().anyRequest().authenticated()
       }
       .formLogin(Customizer.withDefaults())
@@ -39,7 +39,7 @@ class DefaultSecurityConfig {
   }
 
   @Bean
-  protected fun corsConfigurationSource(): CorsConfigurationSource {
+  fun corsConfigurationSource(): CorsConfigurationSource {
     val source = UrlBasedCorsConfigurationSource()
     val corsConfig = CorsConfiguration().applyPermitDefaultValues().apply {
       allowedOrigins = listOf("yourAllowedOrigin.com", "127.0.0.1")

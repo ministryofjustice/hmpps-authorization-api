@@ -14,11 +14,12 @@ import org.springframework.core.annotation.Order
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
@@ -26,7 +27,8 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.config.ProviderSettings
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import java.security.interfaces.RSAPrivateKey
@@ -77,37 +79,31 @@ class AuthorizationServerConfig(
   }
 
   @Bean
-  fun providerSettings(): ProviderSettings {
-    return ProviderSettings.builder().issuer("$baseUrl$contextPath").build()
+  fun providerSettings(): AuthorizationServerSettings {
+    return AuthorizationServerSettings.builder().issuer("$baseUrl$contextPath").build()
   }
 
   @Bean
-  fun passwordEncoder() = BCryptPasswordEncoder(10)
-
-  @Bean
-  fun registeredClientRepository(
-    jdbcTemplate: JdbcTemplate,
-    passwordEncoder: BCryptPasswordEncoder
-  ): RegisteredClientRepository {
-    val registeredClientRepository = JdbcRegisteredClientRepository(jdbcTemplate)
-    val registeredClientParametersMapper = JdbcRegisteredClientRepository.RegisteredClientParametersMapper()
-    registeredClientParametersMapper.setPasswordEncoder(passwordEncoder)
-    registeredClientRepository.setRegisteredClientParametersMapper(registeredClientParametersMapper)
-    return registeredClientRepository
+  fun passwordEncoder(): PasswordEncoder {
+    val idForEncode = "bcrypt"
+    val encoders: MutableMap<String, PasswordEncoder> = mutableMapOf()
+    // NOTE: Further encoders could be added here if required
+    encoders[idForEncode] = BCryptPasswordEncoder(10)
+    return DelegatingPasswordEncoder(idForEncode, encoders)
   }
 
   @Bean
-  fun authorizationService(
-    jdbcTemplate: JdbcTemplate,
-    registeredClientRepository: RegisteredClientRepository
-  ): OAuth2AuthorizationService {
+  fun registeredClientRepository(jdbcTemplate: JdbcTemplate) = JdbcRegisteredClientRepository(jdbcTemplate)
+
+  @Bean
+  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository): OAuth2AuthorizationService {
     return JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository)
   }
 
   @Bean
   fun authorizationConsentService(
     jdbcTemplate: JdbcTemplate,
-    registeredClientRepository: RegisteredClientRepository
+    registeredClientRepository: RegisteredClientRepository,
   ): OAuth2AuthorizationConsentService {
     return JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository)
   }
