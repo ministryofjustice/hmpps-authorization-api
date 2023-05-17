@@ -39,7 +39,7 @@ class DefaultSecurityConfig {
   }
 
   @Bean
-  protected fun corsConfigurationSource(): CorsConfigurationSource {
+  fun corsConfigurationSource(): CorsConfigurationSource {
     val source = UrlBasedCorsConfigurationSource()
     val corsConfig = CorsConfiguration().applyPermitDefaultValues().apply {
       allowedOrigins = listOf("yourAllowedOrigin.com", "127.0.0.1")

@@ -20,21 +20,20 @@ class AuthoritiesTokenCustomizer(
         jwtEncodingContext ->
 
       if (jwtEncodingContext.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
-        addClientAuthoritiesTo(jwtEncodingContext)
-        addClientId(jwtEncodingContext)
+        val principal = jwtEncodingContext.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
+        addClientAuthoritiesTo(jwtEncodingContext, principal)
+        addClientId(jwtEncodingContext, principal)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
-        addEndUserAuthoritiesTo(jwtEncodingContext)
+        addEndUserAuthoritiesTo(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
       }
     }
   }
 
-  private fun addEndUserAuthoritiesTo(context: JwtEncodingContext) {
-    val principal = context.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken
+  private fun addEndUserAuthoritiesTo(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
     addAuthorities(context, principal.authorities)
   }
 
-  private fun addClientAuthoritiesTo(context: JwtEncodingContext) {
-    val principal = context.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
+  private fun addClientAuthoritiesTo(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     principal.registeredClient?.let { registeredClient ->
       val oAuth2AuthorizationConsent = authorizationConsentService.findById(registeredClient.id, registeredClient.clientName)
 
@@ -50,8 +49,7 @@ class AuthoritiesTokenCustomizer(
     context.claims.claim("authorities", authorities)
   }
 
-  private fun addClientId(context: JwtEncodingContext) {
-    val principal = context.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
-    context.claims.claim("client_id", principal.registeredClient?.clientId ?: "Bob")
+  private fun addClientId(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
+    context.claims.claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
   }
 }

@@ -18,6 +18,8 @@ import org.springframework.security.config.annotation.web.configurers.FormLoginC
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
@@ -82,25 +84,19 @@ class AuthorizationServerConfig(
   }
 
   @Bean
-  fun passwordEncoder() = BCryptPasswordEncoder(10)
-
-  @Bean
-  fun registeredClientRepository(
-    jdbcTemplate: JdbcTemplate,
-    passwordEncoder: BCryptPasswordEncoder,
-  ): RegisteredClientRepository {
-    val registeredClientRepository = JdbcRegisteredClientRepository(jdbcTemplate)
-    val registeredClientParametersMapper = JdbcRegisteredClientRepository.RegisteredClientParametersMapper()
-    registeredClientParametersMapper.setPasswordEncoder(passwordEncoder)
-    registeredClientRepository.setRegisteredClientParametersMapper(registeredClientParametersMapper)
-    return registeredClientRepository
+  fun passwordEncoder(): PasswordEncoder {
+    val idForEncode = "bcrypt"
+    val encoders: MutableMap<String, PasswordEncoder> = mutableMapOf()
+    // NOTE: Further encoders could be added here if required
+    encoders[idForEncode] = BCryptPasswordEncoder(10)
+    return DelegatingPasswordEncoder(idForEncode, encoders)
   }
 
   @Bean
-  fun authorizationService(
-    jdbcTemplate: JdbcTemplate,
-    registeredClientRepository: RegisteredClientRepository,
-  ): OAuth2AuthorizationService {
+  fun registeredClientRepository(jdbcTemplate: JdbcTemplate) = JdbcRegisteredClientRepository(jdbcTemplate)
+
+  @Bean
+  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository): OAuth2AuthorizationService {
     return JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository)
   }
 

@@ -2,6 +2,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.1.3"
   kotlin("plugin.spring") version "1.8.21"
   kotlin("plugin.jpa") version "1.8.21"
+  kotlin("jvm") version "1.8.21"
 }
 
 configurations {
@@ -29,6 +30,7 @@ dependencies {
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation(kotlin("stdlib"))
 }
 
 java {
