@@ -8,10 +8,11 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
+import java.util.UUID
 import java.util.stream.Collectors
 
 @Component
-class AuthoritiesTokenCustomizer(
+class TokenCustomizer(
   private val authorizationConsentService: OAuth2AuthorizationConsentService,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
@@ -21,19 +22,19 @@ class AuthoritiesTokenCustomizer(
 
       if (jwtEncodingContext.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
         val principal = jwtEncodingContext.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
-        addClientAuthoritiesTo(jwtEncodingContext, principal)
-        addClientId(jwtEncodingContext, principal)
+        addClientAuthorities(jwtEncodingContext, principal)
+        customizeClientCredentials(jwtEncodingContext, principal)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
-        addEndUserAuthoritiesTo(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
+        addEndUserAuthorities(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
       }
     }
   }
 
-  private fun addEndUserAuthoritiesTo(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
+  private fun addEndUserAuthorities(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
     addAuthorities(context, principal.authorities)
   }
 
-  private fun addClientAuthoritiesTo(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
+  private fun addClientAuthorities(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     principal.registeredClient?.let { registeredClient ->
       val oAuth2AuthorizationConsent = authorizationConsentService.findById(registeredClient.id, registeredClient.clientName)
 
@@ -49,7 +50,13 @@ class AuthoritiesTokenCustomizer(
     context.claims.claim("authorities", authorities)
   }
 
-  private fun addClientId(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
-    context.claims.claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
+  private fun customizeClientCredentials(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
+    with(context.claims) {
+      claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
+      claim("scope", principal.registeredClient?.scopes)
+      claim("grant_type", context.authorizationGrantType.value)
+      claim("auth_source", "none")
+      claim("jit", UUID.randomUUID())
+    }
   }
 }
