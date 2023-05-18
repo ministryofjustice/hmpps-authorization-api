@@ -51,10 +51,12 @@ class TokenCustomizer(
   }
 
   private fun customizeClientCredentials(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
-    context.claims.claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
-    context.claims.claim("scope", principal.registeredClient?.scopes)
-    context.claims.claim("grant_type", context.authorizationGrantType.value)
-    context.claims.claim("auth_source", "none")
-    context.claims.claim("jit", UUID.randomUUID())
+    with(context.claims) {
+      claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
+      claim("scope", principal.registeredClient?.scopes)
+      claim("grant_type", context.authorizationGrantType.value)
+      claim("auth_source", "none")
+      claim("jit", UUID.randomUUID())
+    }
   }
 }
