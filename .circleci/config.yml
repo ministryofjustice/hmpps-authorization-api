@@ -6,7 +6,7 @@ orbs:
 parameters:
   alerts-slack-channel:
     type: string
-    default: dps_alerts_security
+    default: hmpps_tech_alerts_security
   releases-slack-channel:
     type: string
     default: dps-releases
@@ -62,7 +62,6 @@ workflows:
             - validate
             - build_docker
             - helm_lint
-          helm_timeout: 5m
 #      - request-preprod-approval:
 #          type: approval
 #          requires:
@@ -77,7 +76,6 @@ workflows:
 #            - hmpps-authorization-server-preprod
 #          requires:
 #            - request-preprod-approval
-#          helm_timeout: 5m
 #      - request-prod-approval:
 #          type: approval
 #          requires:
@@ -94,7 +92,6 @@ workflows:
 #            - hmpps-authorization-server-prod
 #          requires:
 #            - request-prod-approval
-#          helm_timeout: 5m
 
   security:
     triggers:
@@ -106,6 +103,7 @@ workflows:
                 - main
     jobs:
       - hmpps/gradle_owasp_dependency_check:
+          jdk_tag: "19.0"
           slack_channel: << pipeline.parameters.alerts-slack-channel >>
           context:
             - hmpps-common-vars
@@ -113,12 +111,11 @@ workflows:
           slack_channel: << pipeline.parameters.alerts-slack-channel >>
           context:
             - hmpps-common-vars
-# currently disabled as no support for jdk 18 or kotlin 1.7
-#      - hmpps/veracode_pipeline_scan:
-#          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-#          context:
-#            - veracode-credentials
-#            - hmpps-common-vars
+      - hmpps/veracode_pipeline_scan:
+          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+          context:
+            - veracode-credentials
+            - hmpps-common-vars
   security-weekly:
     triggers:
       - schedule:
