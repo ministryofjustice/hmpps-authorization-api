@@ -56,7 +56,7 @@ class TokenCustomizer(
       claim("scope", principal.registeredClient?.scopes)
       claim("grant_type", context.authorizationGrantType.value)
       claim("auth_source", "none")
-      claim("jit", UUID.randomUUID())
+      claim("jti", UUID.randomUUID())
     }
   }
 }
