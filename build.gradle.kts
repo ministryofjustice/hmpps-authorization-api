@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.1.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.0-beta"
   kotlin("plugin.spring") version "1.8.21"
   kotlin("plugin.jpa") version "1.8.21"
   kotlin("jvm") version "1.8.21"
@@ -17,11 +17,11 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.0.2")
+  implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.1.0")
 
-  implementation("org.flywaydb:flyway-core:9.18.0")
+  implementation("org.flywaydb:flyway-core:9.19.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.hibernate:hibernate-core:6.2.2.Final")
+  implementation("org.hibernate:hibernate-core:6.2.3.Final")
 
   implementation("commons-codec:commons-codec")
 
