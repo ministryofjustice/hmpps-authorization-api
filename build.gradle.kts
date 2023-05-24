@@ -2,17 +2,12 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.0-beta"
   kotlin("plugin.spring") version "1.8.21"
   kotlin("plugin.jpa") version "1.8.21"
-  kotlin("jvm") version "1.8.21"
 }
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-repositories {
-  maven { url = uri("https://repo.spring.io/milestone") }
-  mavenCentral()
-}
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-web")
