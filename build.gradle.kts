@@ -19,6 +19,7 @@ dependencies {
   implementation("org.hibernate:hibernate-core:6.2.3.Final")
 
   implementation("commons-codec:commons-codec")
+  implementation("org.apache.commons:commons-text:1.10.0")
 
   runtimeOnly("com.h2database:h2:2.1.214")
   runtimeOnly("org.postgresql:postgresql:42.6.0")
