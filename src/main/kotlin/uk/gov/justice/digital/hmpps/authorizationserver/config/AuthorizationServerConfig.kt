@@ -12,9 +12,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.security.config.Customizer.withDefaults
+import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -25,12 +24,17 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsIpAddressValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 
@@ -39,17 +43,36 @@ class AuthorizationServerConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
+
+  private val clientConfigRepository: ClientConfigRepository,
+  private val ipAddressHelper: IpAddressHelper,
 ) {
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
   fun authorizationServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
-    OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http.cors().and())
+    val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer()
+    http.apply(authorizationServerConfigurer)
+    authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
+      tokenEndpointConfigurer.authenticationProviders {
+          authenticationProviders ->
+        authenticationProviders.replaceAll { authenticationProvider -> withIPAddressCheckForClientCredentials(authenticationProvider) }
+      }
+    }
 
-    http.cors().and().csrf().disable()
-      .formLogin(withDefaults<FormLoginConfigurer<HttpSecurity>>())
+    // TODO - confirm cors and csrf configuration
+    http.cors { it.disable() }
+    http.csrf { it.disable() }
 
     return http.build()
+  }
+
+  private fun withIPAddressCheckForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+    if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
+      return ClientCredentialsIpAddressValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
+    }
+
+    return authenticationProvider
   }
 
   @Bean

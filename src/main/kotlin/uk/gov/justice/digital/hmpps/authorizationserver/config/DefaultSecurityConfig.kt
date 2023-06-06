@@ -14,6 +14,8 @@ class DefaultSecurityConfig {
 
   @Bean
   fun defaultSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    // TODO replace deprecated method usage
+
     http.headers().frameOptions().sameOrigin()
     http.cors().and().csrf().disable()
       .authorizeHttpRequests { auth ->

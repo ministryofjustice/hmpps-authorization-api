@@ -53,6 +53,15 @@ CREATE TABLE oauth2_registered_client
     PRIMARY KEY (id)
 );
 
+CREATE TABLE oauth2_client_config
+(
+    base_client_id  varchar(100) NOT NULL
+        CONSTRAINT oauth2_client_config_pk
+            PRIMARY KEY,
+    allowed_ips     varchar(1000),
+    client_end_date date
+);
+
 -- NOTE, the users and authorities tables below can be restructured as necessary
 -- Doing so requires exposing a bean implementing UserDetailsService interface
 CREATE TABLE users
