@@ -5,10 +5,11 @@ import java.util.Base64
 
 class ClientIpAllowListIntTest : IntegrationTestBase() {
 
+  private val token = "test-secret"
+
   @Test
   fun `empty ip allow list returns token`() {
     val username = "test-client-id"
-    val token = "test-secret"
     webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
       .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
       .exchange()
@@ -18,7 +19,6 @@ class ClientIpAllowListIntTest : IntegrationTestBase() {
   @Test
   fun `localhost ip in allow list returns token`() {
     val username = "ip-allow-a-client-1"
-    val token = "test-secret"
     webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
       .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
       .exchange()
@@ -28,7 +28,6 @@ class ClientIpAllowListIntTest : IntegrationTestBase() {
   @Test
   fun `ip in allow list base client id returns token`() {
     val username = "ip-allow-b-client"
-    val token = "test-secret"
     webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
       .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
       .header("x-forwarded-for", "35.176.93.186")
@@ -39,10 +38,19 @@ class ClientIpAllowListIntTest : IntegrationTestBase() {
   @Test
   fun `ip in allow list incremented client id returns token`() {
     val username = "ip-allow-b-client-8"
-    val token = "test-secret"
     webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
       .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
       .header("x-forwarded-for", "35.176.93.186")
+      .exchange()
+      .expectStatus().isOk
+  }
+
+  @Test
+  fun `token can be retrieved when ip address uses CIDR notation in allow list`() {
+    val username = "ip-allow-c-client"
+    webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
+      .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
+      .header("x-forwarded-for", "35.176.3.1")
       .exchange()
       .expectStatus().isOk
   }
@@ -53,7 +61,6 @@ class ClientIpAllowListIntTest : IntegrationTestBase() {
   @Test
   fun `localhost ip not in allow list forbidden`() {
     val username = "ip-allow-b-client"
-    val token = "test-secret"
     webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
       .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
       .exchange()
@@ -63,7 +70,6 @@ class ClientIpAllowListIntTest : IntegrationTestBase() {
   @Test
   fun `base client id ip not in allow list forbidden`() {
     val username = "ip-allow-b-client"
-    val token = "test-secret"
     webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
       .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
       .header("x-forwarded-for", "235.177.93.186")
@@ -74,16 +80,10 @@ class ClientIpAllowListIntTest : IntegrationTestBase() {
   @Test
   fun `incremented client id ip not in allow list forbidden`() {
     val username = "ip-allow-b-client-8"
-    val token = "test-secret"
     webTestClient.post().uri("/oauth2/token?grant_type=client_credentials")
       .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$username:$token").toByteArray()))
       .header("x-forwarded-for", "235.177.93.186")
       .exchange()
       .expectStatus().isBadRequest
-  }
-
-  @Test
-  fun `token can be retrieved when ip address uses CIDR notation in allow list`() {
-    // TODO port last test case from Auth
   }
 }
