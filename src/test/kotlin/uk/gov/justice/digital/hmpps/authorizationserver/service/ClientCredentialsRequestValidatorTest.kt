@@ -20,12 +20,12 @@ import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.time.LocalDate
 import java.util.Optional
 
-class ClientCredentialsIpAddressValidatorTest {
+class ClientCredentialsRequestValidatorTest {
   private val delegate: AuthenticationProvider = mock()
   private val clientConfigRepository: ClientConfigRepository = mock()
   private val ipAddressHelper: IpAddressHelper = mock()
 
-  private val clientCredentialsIpAddressValidator = ClientCredentialsIpAddressValidator(delegate, clientConfigRepository, ipAddressHelper)
+  private val clientCredentialsRequestValidator = ClientCredentialsRequestValidator(delegate, clientConfigRepository, ipAddressHelper)
 
   @Test
   fun shouldNotValidateClientIPWhenClientConfigNotPresent() {
@@ -35,7 +35,7 @@ class ClientCredentialsIpAddressValidatorTest {
     whenever(ipAddressHelper.retrieveIpFromRequest()).thenReturn("1.2.3.4")
     whenever(delegate.authenticate(authenticationToken)).thenReturn(authenticationToken)
 
-    clientCredentialsIpAddressValidator.authenticate(authenticationToken)
+    clientCredentialsRequestValidator.authenticate(authenticationToken)
 
     verify(delegate).authenticate(authenticationToken)
   }
@@ -48,7 +48,7 @@ class ClientCredentialsIpAddressValidatorTest {
     whenever(ipAddressHelper.retrieveIpFromRequest()).thenReturn("1.2.3.4")
     whenever(delegate.authenticate(authenticationToken)).thenReturn(authenticationToken)
 
-    clientCredentialsIpAddressValidator.authenticate(authenticationToken)
+    clientCredentialsRequestValidator.authenticate(authenticationToken)
 
     verify(delegate).authenticate(authenticationToken)
   }
@@ -60,7 +60,7 @@ class ClientCredentialsIpAddressValidatorTest {
     whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(clientId, LocalDate.now().minusDays(2))))
 
     assertThatThrownBy {
-      clientCredentialsIpAddressValidator.authenticate(authenticationToken)
+      clientCredentialsRequestValidator.authenticate(authenticationToken)
     }.isInstanceOf(OAuth2AuthenticationException::class.java)
 
     verify(delegate, never()).authenticate(authenticationToken)
@@ -74,7 +74,7 @@ class ClientCredentialsIpAddressValidatorTest {
     whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(clientId, LocalDate.now().plusDays(2), "1.2.3.5")))
 
     assertThatThrownBy {
-      clientCredentialsIpAddressValidator.authenticate(authenticationToken)
+      clientCredentialsRequestValidator.authenticate(authenticationToken)
     }.isInstanceOf(OAuth2AuthenticationException::class.java)
 
     verify(delegate, never()).authenticate(authenticationToken)
@@ -88,7 +88,7 @@ class ClientCredentialsIpAddressValidatorTest {
     whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(clientId, LocalDate.now().plusDays(2), "1.2.3.4")))
     whenever(delegate.authenticate(authenticationToken)).thenReturn(authenticationToken)
 
-    val actualToken = clientCredentialsIpAddressValidator.authenticate(authenticationToken)
+    val actualToken = clientCredentialsRequestValidator.authenticate(authenticationToken)
 
     verify(delegate).authenticate(authenticationToken)
     assertThat(actualToken).isEqualTo(authenticationToken)

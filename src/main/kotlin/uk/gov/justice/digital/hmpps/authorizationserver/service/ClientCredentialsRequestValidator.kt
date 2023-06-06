@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientCo
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.time.LocalDate
 
-class ClientCredentialsIpAddressValidator(
+class ClientCredentialsRequestValidator(
   private val delegate: AuthenticationProvider,
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,

@@ -32,7 +32,7 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsIpAddressValidator
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
@@ -56,7 +56,7 @@ class AuthorizationServerConfig(
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
-        authenticationProviders.replaceAll { authenticationProvider -> withIPAddressCheckForClientCredentials(authenticationProvider) }
+        authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
       }
     }
 
@@ -67,9 +67,9 @@ class AuthorizationServerConfig(
     return http.build()
   }
 
-  private fun withIPAddressCheckForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+  private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsIpAddressValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
+      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
     }
 
     return authenticationProvider
