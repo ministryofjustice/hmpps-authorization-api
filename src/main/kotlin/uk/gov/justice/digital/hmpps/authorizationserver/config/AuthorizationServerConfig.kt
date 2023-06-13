@@ -13,6 +13,7 @@ import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.authentication.AuthenticationProvider
+import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
@@ -59,6 +60,9 @@ class AuthorizationServerConfig(
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
       }
     }
+
+    http.oauth2ResourceServer { resourceServer -> resourceServer.jwt(Customizer.withDefaults()) }
+    authorizationServerConfigurer.oidc { oidcCustomizer -> oidcCustomizer.clientRegistrationEndpoint(Customizer.withDefaults()) }
 
     // TODO - confirm cors and csrf configuration
     http.cors { it.disable() }
