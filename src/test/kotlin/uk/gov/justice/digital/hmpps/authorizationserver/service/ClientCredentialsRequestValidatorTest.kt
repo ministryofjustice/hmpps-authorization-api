@@ -10,7 +10,6 @@ import org.mockito.kotlin.whenever
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
@@ -61,7 +60,7 @@ class ClientCredentialsRequestValidatorTest {
 
     assertThatThrownBy {
       clientCredentialsRequestValidator.authenticate(authenticationToken)
-    }.isInstanceOf(OAuth2AuthenticationException::class.java)
+    }.isInstanceOf(ClientExpiredException::class.java)
 
     verify(delegate, never()).authenticate(authenticationToken)
   }
@@ -75,7 +74,7 @@ class ClientCredentialsRequestValidatorTest {
 
     assertThatThrownBy {
       clientCredentialsRequestValidator.authenticate(authenticationToken)
-    }.isInstanceOf(OAuth2AuthenticationException::class.java)
+    }.isInstanceOf(IPAddressNotAllowedException::class.java)
 
     verify(delegate, never()).authenticate(authenticationToken)
   }
