@@ -4,8 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.core.Authentication
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException
-import org.springframework.security.oauth2.core.OAuth2ErrorCodes
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.web.util.matcher.IpAddressMatcher
@@ -33,7 +32,7 @@ class ClientCredentialsRequestValidator(
 
     if (clientConfig?.clientEndDate != null && clientConfig.clientEndDate!!.isBefore(LocalDate.now())) {
       log.warn("Client id $baseClientId has expired")
-      throw OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT)
+      throw ClientExpiredException(clientConfig.baseClientId)
     }
 
     if (!clientConfig?.ips.isNullOrEmpty()) {
@@ -51,7 +50,11 @@ class ClientCredentialsRequestValidator(
     val matchIp = clientAllowList.any { ip: String? -> IpAddressMatcher(ip).matches(remoteIp) }
     if (!matchIp) {
       log.warn("Client IP: $remoteIp not in client allowlist: $clientAllowList")
-      throw OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT)
+      throw IPAddressNotAllowedException(remoteIp)
     }
   }
 }
+
+class IPAddressNotAllowedException(remoteIp: String?) : AuthenticationException("Remote IP address $remoteIp not in client allow list")
+
+class ClientExpiredException(clientId: String) : AuthenticationException("Client $clientId has expired")
