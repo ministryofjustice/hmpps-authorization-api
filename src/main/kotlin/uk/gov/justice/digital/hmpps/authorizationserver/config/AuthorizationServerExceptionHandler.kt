@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.config
 
 import org.slf4j.LoggerFactory
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.MediaType
@@ -8,12 +10,29 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import uk.gov.justice.digital.hmpps.authorizationserver.service.IPAddressNotAllowedException
 
 @RestControllerAdvice
+@Order(Ordered.LOWEST_PRECEDENCE)
 class AuthorizationServerExceptionHandler {
 
   @ExceptionHandler(AccessDeniedException::class)
   fun handleAccessDeniedException(e: AccessDeniedException): ResponseEntity<ErrorResponse> {
+    log.debug("Forbidden (403) returned with message {}", e.message)
+    return ResponseEntity
+      .status(HttpStatus.FORBIDDEN)
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.FORBIDDEN,
+          userMessage = e.message,
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(IPAddressNotAllowedException::class)
+  fun handleIPAddressNotAllowedException(e: IPAddressNotAllowedException): ResponseEntity<ErrorResponse> {
     log.debug("Forbidden (403) returned with message {}", e.message)
     return ResponseEntity
       .status(HttpStatus.FORBIDDEN)
