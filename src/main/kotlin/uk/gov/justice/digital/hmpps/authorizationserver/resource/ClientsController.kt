@@ -24,6 +24,8 @@ class ClientsController(
 data class ClientDetails(
   val clientId: String,
   val clientName: String,
-  val authorizationGrantTypes: Set<String>,
-  val scopes: Set<String>,
+  val authorizationGrantTypes: List<String>,
+  val scopes: List<String>,
+  val authorities: List<String>,
+  val ips: List<String>,
 )

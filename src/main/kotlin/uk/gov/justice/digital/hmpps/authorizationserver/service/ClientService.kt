@@ -1,31 +1,42 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator
 import org.springframework.security.crypto.keygen.StringKeyGenerator
-import org.springframework.security.oauth2.core.AuthorizationGrantType
+import org.springframework.security.jackson2.SecurityJackson2Modules
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
-import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
+import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDetails
+import java.time.Instant
 import java.util.Base64
 import java.util.UUID
 
 @Service
 class ClientService(
-  private val jdbcRegisteredClientRepository: JdbcRegisteredClientRepository,
+  private val clientRepository: ClientRepository,
+  private val clientConfigRepository: ClientConfigRepository,
+  private val authorizationConsentRepository: AuthorizationConsentRepository,
 ) {
+  private val objectMapper = ObjectMapper()
 
-  private val supportedGrantTypes = setOf(
-    AuthorizationGrantType.CLIENT_CREDENTIALS,
-    AuthorizationGrantType.DEVICE_CODE,
-    AuthorizationGrantType.JWT_BEARER,
-    AuthorizationGrantType.PASSWORD, // TODO do we need to support this?
-  )
+  init {
+    // TODO Move to configuration class
+    val classLoader = OAuth2AuthorizationServerJackson2Module::class.java.classLoader
+    val securityModules = SecurityJackson2Modules.getModules(classLoader)
+    objectMapper.registerModules(securityModules)
+    objectMapper.registerModule(OAuth2AuthorizationServerJackson2Module())
+  }
 
   private val clientSecretGenerator: StringKeyGenerator = Base64StringKeyGenerator(
     Base64.getUrlEncoder().withoutPadding(),
@@ -34,46 +45,38 @@ class ClientService(
 
   @Transactional
   fun add(clientDetails: ClientDetails) {
-    jdbcRegisteredClientRepository.save(buildRegisteredClient(clientDetails))
+    // TODO this logic assumes creating new - needs safety check to confirm - revert to update instead if not, or fail validation?
+
+    val client = clientRepository.save(buildNewClient(clientDetails))
+    authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
+
+    // TODO do we need to resolve client id to base client id first here?
+    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, null))
   }
 
-  private fun buildRegisteredClient(clientDetails: ClientDetails): RegisteredClient {
-    val registeredClientBuilder = RegisteredClient
-      .withId(UUID.randomUUID().toString())
-      .clientId(clientDetails.clientId)
-      .clientName(clientDetails.clientName)
-      .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC) // TODO do we need to support other authentication methods?
-      .clientSecret(clientSecretGenerator.generateKey())
-      .clientSettings(
-        ClientSettings.builder()
-          .requireProofKey(false)
-          .requireAuthorizationConsent(false).build(),
+  private fun buildNewClient(clientDetails: ClientDetails): Client {
+    with(clientDetails) {
+      return Client(
+        id = UUID.randomUUID().toString(),
+        clientId = clientId, // TODO do we need to generate this?
+        clientIdIssuedAt = Instant.now(),
+        clientSecret = clientSecretGenerator.generateKey(),
+        clientSecretExpiresAt = null,
+        clientName = clientName,
+        clientAuthenticationMethods = ClientAuthenticationMethod.CLIENT_SECRET_BASIC.value,
+        authorizationGrantTypes = authorizationGrantTypes.joinToString(separator = ",") { it },
+        scopes = scopes.joinToString(separator = ",") { it },
+        clientSettings = objectMapper.writeValueAsString(
+          ClientSettings.builder()
+            .requireProofKey(false)
+            .requireAuthorizationConsent(false).build().settings,
+        ),
+        tokenSettings = objectMapper.writeValueAsString(
+          TokenSettings.builder()
+            .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
+            .build().settings,
+        ),
       )
-      .tokenSettings(
-        TokenSettings.builder()
-          .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
-          .build(),
-      )
-
-    if (clientDetails.scopes.isNotEmpty()) {
-      registeredClientBuilder.scopes { it.addAll(clientDetails.scopes) }
     }
-
-    if (clientDetails.authorizationGrantTypes.isEmpty()) {
-      // TODO trigger bad request response
-    }
-
-    val acceptableGrantTypes =
-      clientDetails.authorizationGrantTypes.filter { supportedGrantTypes.contains(AuthorizationGrantType(it)) }
-
-    if (acceptableGrantTypes.isEmpty()) {
-      // TODO trigger bad request response
-    }
-
-    acceptableGrantTypes.forEach {
-      registeredClientBuilder.authorizationGrantType(AuthorizationGrantType(it))
-    }
-
-    return registeredClientBuilder.build()
   }
 }
