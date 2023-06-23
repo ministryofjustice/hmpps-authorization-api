@@ -1,17 +1,28 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 
 class ClientsControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var jdbcRegisteredClientRepository: JdbcRegisteredClientRepository
+
+  @Autowired
+  lateinit var clientConfigRepository: ClientConfigRepository
+
+  @Autowired
+  lateinit var authorizationConsentRepository: AuthorizationConsentRepository
 
   @Nested
   inner class AddClient {
@@ -22,10 +33,12 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy-1",
+              "clientId" to "testy",
               "clientName" to "test client",
               "authorizationGrantTypes" to listOf("client_credentials"),
               "scopes" to listOf("read"),
+              "authorities" to listOf("VIEW_PRISONER_DATA"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
             ),
           ),
         )
@@ -40,10 +53,12 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy-1",
+              "clientId" to "testy",
               "clientName" to "test client",
               "authorizationGrantTypes" to listOf("client_credentials"),
               "scopes" to listOf("read"),
+              "authorities" to listOf("VIEW_PRISONER_DATA"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
             ),
           ),
         )
@@ -58,10 +73,12 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy-1",
+              "clientId" to "testy",
               "clientName" to "test client",
               "authorizationGrantTypes" to listOf("client_credentials"),
               "scopes" to listOf("read"),
+              "authorities" to listOf("VIEW_PRISONER_DATA"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
             ),
           ),
         )
@@ -78,17 +95,36 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy-1",
+              "clientId" to "testy",
               "clientName" to "test client",
               "authorizationGrantTypes" to listOf("client_credentials"),
-              "scopes" to listOf("read"),
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
             ),
           ),
         )
         .exchange()
         .expectStatus().isOk
 
-      assertNotNull(jdbcRegisteredClientRepository.findByClientId("testy-1"))
+      val registeredClient = jdbcRegisteredClientRepository.findByClientId("testy")
+
+      assertNotNull(registeredClient)
+      assertThat(registeredClient!!.clientId).isEqualTo("testy")
+      assertThat(registeredClient.clientName).isEqualTo("test client")
+      assertThat(registeredClient.authorizationGrantTypes).contains(AuthorizationGrantType.CLIENT_CREDENTIALS)
+      assertThat(registeredClient.scopes).contains("read", "write")
+
+      val clientConfig = clientConfigRepository.findById(registeredClient.clientId).get()
+      assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
+
+      val authorizationConsent = authorizationConsentRepository.findById(
+        AuthorizationConsent.AuthorizationConsentId(
+          registeredClient.id,
+          registeredClient.clientId,
+        ),
+      ).get()
+      assertThat(authorizationConsent.authorities).contains("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY")
     }
   }
 }
