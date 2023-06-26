@@ -40,7 +40,7 @@ import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
-import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverter
+import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -75,8 +75,8 @@ class AuthorizationServerConfig(
       oidcCustomizer.clientRegistrationEndpoint { clientRegistrationEndpoint ->
         clientRegistrationEndpoint.authenticationProviders { authenticationProviders ->
           authenticationProviders.filterIsInstance<OidcClientRegistrationAuthenticationProvider>()[0].let {
-            val delegateRegisteredClientConverter = it.getRegisteredClientConverter()
-            it.setRegisteredClientConverter(OidcRegisteredClientConverter(delegateRegisteredClientConverter))
+            val registeredClientConverter = it.getRegisteredClientConverter()
+            it.setRegisteredClientConverter(OidcRegisteredClientConverterDecorator(registeredClientConverter))
           }
         }
       }

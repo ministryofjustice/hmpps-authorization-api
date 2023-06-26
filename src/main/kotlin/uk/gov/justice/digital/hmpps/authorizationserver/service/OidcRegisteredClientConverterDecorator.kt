@@ -4,7 +4,7 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.security.oauth2.server.authorization.oidc.OidcClientRegistration
 
-class OidcRegisteredClientConverter(private val delegateConverter: Converter<OidcClientRegistration, RegisteredClient>) : Converter<OidcClientRegistration, RegisteredClient> {
+class OidcRegisteredClientConverterDecorator(private val delegateConverter: Converter<OidcClientRegistration, RegisteredClient>) : Converter<OidcClientRegistration, RegisteredClient> {
 
   override fun convert(clientRegistration: OidcClientRegistration): RegisteredClient? {
     val registeredClient = delegateConverter.convert(clientRegistration)
