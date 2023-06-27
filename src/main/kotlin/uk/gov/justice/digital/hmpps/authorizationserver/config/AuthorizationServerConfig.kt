@@ -89,14 +89,6 @@ class AuthorizationServerConfig(
     return http.build()
   }
 
-  private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
-    if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
-    }
-
-    return authenticationProvider
-  }
-
   @Bean
   fun jwkSet(keyPairAccessor: KeyPairAccessor): JWKSet {
     val builder = RSAKey.Builder(keyPairAccessor.getKeyPair().public as RSAPublicKey)
@@ -158,6 +150,14 @@ class AuthorizationServerConfig(
     val userDetailsService = JdbcDaoImpl()
     userDetailsService.jdbcTemplate = jdbcTemplate
     return userDetailsService
+  }
+
+  private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+    if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
+      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
+    }
+
+    return authenticationProvider
   }
 
   private fun OidcClientRegistrationAuthenticationProvider.getRegisteredClientConverter(): Converter<OidcClientRegistration, RegisteredClient> {
