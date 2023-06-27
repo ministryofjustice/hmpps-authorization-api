@@ -167,6 +167,7 @@ class AuthorizationServerConfig(
         return@let it.get(this)
       }
 
+    @Suppress("UNCHECKED_CAST")
     return converter as Converter<OidcClientRegistration, RegisteredClient>
   }
 }
