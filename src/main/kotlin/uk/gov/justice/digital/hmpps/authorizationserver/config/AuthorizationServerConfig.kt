@@ -164,9 +164,9 @@ class AuthorizationServerConfig(
     val converter =
       OidcClientRegistrationAuthenticationProvider::class.java.getDeclaredField("registeredClientConverter").let {
         it.isAccessible = true
-        return@let it.get(this) as Converter<OidcClientRegistration, RegisteredClient>
+        return@let it.get(this)
       }
 
-    return converter
+    return converter as Converter<OidcClientRegistration, RegisteredClient>
   }
 }
