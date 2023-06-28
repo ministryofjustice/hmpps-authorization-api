@@ -13,18 +13,17 @@ class ClientsController(
   private val clientService: ClientService,
 ) {
 
-  @PostMapping("clients/add")
+  @PostMapping("clients/client-credentials/add")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun addClient(@RequestBody clientDetails: ClientDetails) {
-    clientService.add(clientDetails)
+    clientService.addClientCredentials(clientDetails)
   }
 }
 
 data class ClientDetails(
   val clientId: String,
   val clientName: String,
-  val authorizationGrantTypes: List<String>,
   val scopes: List<String>,
   val authorities: List<String>,
   val ips: List<String>,

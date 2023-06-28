@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.authorizationserver.data.model
 
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -34,7 +35,8 @@ data class Client(
   private val postLogoutRedirectUris: String? = null,
 
   @Column(length = 1000)
-  private val scopes: String,
+  @Convert(converter = StringListConverter::class)
+  private var scopes: List<String> = emptyList(),
 
   @Column(length = 2000)
   private val clientSettings: String,
