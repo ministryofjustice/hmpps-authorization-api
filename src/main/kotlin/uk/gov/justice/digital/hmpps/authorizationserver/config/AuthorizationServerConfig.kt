@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.core.convert.converter.Converter
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.authentication.AuthenticationProvider
-import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -29,14 +29,18 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
+import org.springframework.security.oauth2.server.authorization.oidc.OidcClientRegistration
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationProvider
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -66,21 +70,23 @@ class AuthorizationServerConfig(
     }
 
     http.oauth2ResourceServer { resourceServer -> resourceServer.jwt { jwtCustomizer -> jwtCustomizer.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
-    authorizationServerConfigurer.oidc { oidcCustomizer -> oidcCustomizer.clientRegistrationEndpoint(Customizer.withDefaults()) }
+
+    authorizationServerConfigurer.oidc { oidcCustomizer ->
+      oidcCustomizer.clientRegistrationEndpoint { clientRegistrationEndpoint ->
+        clientRegistrationEndpoint.authenticationProviders { authenticationProviders ->
+          authenticationProviders.filterIsInstance<OidcClientRegistrationAuthenticationProvider>()[0].let {
+            val registeredClientConverter = it.getRegisteredClientConverter()
+            it.setRegisteredClientConverter(OidcRegisteredClientConverterDecorator(registeredClientConverter))
+          }
+        }
+      }
+    }
 
     // TODO - confirm cors and csrf configuration
     http.cors { it.disable() }
     http.csrf { it.disable() }
 
     return http.build()
-  }
-
-  private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
-    if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
-    }
-
-    return authenticationProvider
   }
 
   @Bean
@@ -144,5 +150,24 @@ class AuthorizationServerConfig(
     val userDetailsService = JdbcDaoImpl()
     userDetailsService.jdbcTemplate = jdbcTemplate
     return userDetailsService
+  }
+
+  private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+    if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
+      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
+    }
+
+    return authenticationProvider
+  }
+
+  private fun OidcClientRegistrationAuthenticationProvider.getRegisteredClientConverter(): Converter<OidcClientRegistration, RegisteredClient> {
+    val converter =
+      OidcClientRegistrationAuthenticationProvider::class.java.getDeclaredField("registeredClientConverter").let {
+        it.isAccessible = true
+        return@let it.get(this)
+      }
+
+    @Suppress("UNCHECKED_CAST")
+    return converter as Converter<OidcClientRegistration, RegisteredClient>
   }
 }
