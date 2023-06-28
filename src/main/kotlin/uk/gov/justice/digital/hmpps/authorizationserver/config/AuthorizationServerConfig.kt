@@ -35,11 +35,13 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.oidc.OidcClientRegistration
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationProvider
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcClientRegistrationDataHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
@@ -78,6 +80,8 @@ class AuthorizationServerConfig(
             val registeredClientConverter = it.getRegisteredClientConverter()
             it.setRegisteredClientConverter(OidcRegisteredClientConverterDecorator(registeredClientConverter))
           }
+
+          authenticationProviders.replaceAll { authenticationProvider -> withAuthorizationCodeClientConfigurationDataHandler(authenticationProvider) }
         }
       }
     }
@@ -155,6 +159,14 @@ class AuthorizationServerConfig(
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
       return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
+    }
+
+    return authenticationProvider
+  }
+
+  private fun withAuthorizationCodeClientConfigurationDataHandler(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+    if (authenticationProvider.supports(OidcClientRegistrationAuthenticationToken::class.java)) {
+      return OidcClientRegistrationDataHandler(authenticationProvider)
     }
 
     return authenticationProvider
