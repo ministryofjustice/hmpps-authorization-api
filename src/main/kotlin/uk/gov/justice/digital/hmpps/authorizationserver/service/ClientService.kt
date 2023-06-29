@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator
 import org.springframework.security.crypto.keygen.StringKeyGenerator
 import org.springframework.security.jackson2.SecurityJackson2Modules
+import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module
@@ -31,7 +32,6 @@ class ClientService(
   private val objectMapper = ObjectMapper()
 
   init {
-    // TODO Move to configuration class
     val classLoader = OAuth2AuthorizationServerJackson2Module::class.java.classLoader
     val securityModules = SecurityJackson2Modules.getModules(classLoader)
     objectMapper.registerModules(securityModules)
@@ -44,13 +44,14 @@ class ClientService(
   )
 
   @Transactional
-  fun add(clientDetails: ClientDetails) {
-    // TODO this logic assumes creating new - needs safety check to confirm - revert to update instead if not, or fail validation?
+  fun addClientCredentials(clientDetails: ClientDetails) {
+    val existingClient = clientRepository.findClientByClientId(clientDetails.clientId)
+    existingClient?.let {
+      throw ClientAlreadyExistsException(clientDetails.clientId)
+    }
 
     val client = clientRepository.save(buildNewClient(clientDetails))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
-
-    // TODO do we need to resolve client id to base client id first here?
     clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, null))
   }
 
@@ -58,14 +59,14 @@ class ClientService(
     with(clientDetails) {
       return Client(
         id = UUID.randomUUID().toString(),
-        clientId = clientId, // TODO do we need to generate this?
+        clientId = clientId,
         clientIdIssuedAt = Instant.now(),
         clientSecret = clientSecretGenerator.generateKey(),
         clientSecretExpiresAt = null,
         clientName = clientName,
         clientAuthenticationMethods = ClientAuthenticationMethod.CLIENT_SECRET_BASIC.value,
-        authorizationGrantTypes = authorizationGrantTypes.joinToString(separator = ",") { it },
-        scopes = scopes.joinToString(separator = ",") { it },
+        authorizationGrantTypes = AuthorizationGrantType.CLIENT_CREDENTIALS.value,
+        scopes = scopes,
         clientSettings = objectMapper.writeValueAsString(
           ClientSettings.builder()
             .requireProofKey(false)
@@ -80,3 +81,5 @@ class ClientService(
     }
   }
 }
+
+class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")

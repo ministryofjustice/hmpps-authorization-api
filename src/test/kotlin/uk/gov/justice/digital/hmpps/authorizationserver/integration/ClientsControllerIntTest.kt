@@ -29,13 +29,12 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.post().uri("/clients/add")
+      webTestClient.post().uri("/clients/client-credentials/add")
         .body(
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
-              "authorizationGrantTypes" to listOf("client_credentials"),
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -48,14 +47,13 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.post().uri("/clients/add")
+      webTestClient.post().uri("/clients/client-credentials/add")
         .headers(setAuthorisation(roles = listOf()))
         .body(
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
-              "authorizationGrantTypes" to listOf("client_credentials"),
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -68,14 +66,13 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.post().uri("/clients/add")
+      webTestClient.post().uri("/clients/client-credentials/add")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .body(
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
-              "authorizationGrantTypes" to listOf("client_credentials"),
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -87,17 +84,47 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `bad request when client already exists`() {
+      assertNotNull(jdbcRegisteredClientRepository.findByClientId("test-client-id"))
+
+      webTestClient.post().uri("/clients/client-credentials/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-client-id",
+              "clientName" to "test client",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody()
+        .json(
+          """
+              {
+              "userMessage":"Client with client id test-client-id cannot be created as already exists",
+              "developerMessage":"Client with client id test-client-id cannot be created as already exists"
+              }
+          """
+            .trimIndent(),
+        )
+    }
+
+    @Test
     fun `register client success`() {
       assertNull(jdbcRegisteredClientRepository.findByClientId("testy-1"))
 
-      webTestClient.post().uri("/clients/add")
+      webTestClient.post().uri("/clients/client-credentials/add")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
-              "authorizationGrantTypes" to listOf("client_credentials"),
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
