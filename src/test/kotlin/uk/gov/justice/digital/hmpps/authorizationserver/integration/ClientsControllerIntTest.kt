@@ -12,6 +12,7 @@ import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 
 class ClientsControllerIntTest : IntegrationTestBase() {
 
@@ -23,6 +24,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var authorizationConsentRepository: AuthorizationConsentRepository
+
+  @Autowired
+  lateinit var clientRepository: ClientRepository
 
   @Nested
   inner class AddClient {
@@ -116,7 +120,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `register client success`() {
-      assertNull(jdbcRegisteredClientRepository.findByClientId("testy-1"))
+      assertNull(clientRepository.findClientByClientId("testy"))
 
       webTestClient.post().uri("/clients/client-credentials/add")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
@@ -128,27 +132,31 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
             ),
           ),
         )
         .exchange()
         .expectStatus().isOk
 
-      val registeredClient = jdbcRegisteredClientRepository.findByClientId("testy")
+      val client = clientRepository.findClientByClientId("testy")
 
-      assertNotNull(registeredClient)
-      assertThat(registeredClient!!.clientId).isEqualTo("testy")
-      assertThat(registeredClient.clientName).isEqualTo("test client")
-      assertThat(registeredClient.authorizationGrantTypes).contains(AuthorizationGrantType.CLIENT_CREDENTIALS)
-      assertThat(registeredClient.scopes).contains("read", "write")
+      assertNotNull(client)
+      assertThat(client!!.clientId).isEqualTo("testy")
+      assertThat(client.clientName).isEqualTo("test client")
+      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.scopes).contains("read", "write")
+      assertThat(client.additionalInformation?.get("databaseUserName")).isEqualTo("testy-mctest")
+      assertThat(client.additionalInformation?.get("jiraNumber")).isEqualTo("HAAR-9999")
 
-      val clientConfig = clientConfigRepository.findById(registeredClient.clientId).get()
+      val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
 
       val authorizationConsent = authorizationConsentRepository.findById(
         AuthorizationConsent.AuthorizationConsentId(
-          registeredClient.id,
-          registeredClient.clientId,
+          client.id,
+          client.clientId,
         ),
       ).get()
       assertThat(authorizationConsent.authorities).contains("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY")
