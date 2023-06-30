@@ -132,7 +132,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-              "additionalInformation" to mapOf("databaseUserName" to "Fred"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
             ),
           ),
         )
@@ -146,7 +147,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.clientName).isEqualTo("test client")
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
-      assertThat(client.additionalInformation?.get("databaseUserName")).isEqualTo("Fred")
+      assertThat(client.additionalInformation?.get("databaseUserName")).isEqualTo("testy-mctest")
+      assertThat(client.additionalInformation?.get("jiraNumber")).isEqualTo("HAAR-9999")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")

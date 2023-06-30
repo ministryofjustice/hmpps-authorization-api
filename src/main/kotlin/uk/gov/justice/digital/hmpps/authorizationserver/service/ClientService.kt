@@ -63,9 +63,16 @@ class ClientService(
         TokenSettings.builder()
           .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
           .build(),
-        additionalInformation = clientDetails.additionalInformation,
+        additionalInformation = buildAdditionalInformationMap(this),
       )
     }
+  }
+
+  private fun buildAdditionalInformationMap(clientDetails: ClientDetails): Map<String, Any> {
+    val additionalInformation = LinkedHashMap<String, Any>()
+    clientDetails.jiraNumber?.let { additionalInformation["jiraNumber"] = it }
+    clientDetails.databaseUserName?.let { additionalInformation["databaseUserName"] = it }
+    return additionalInformation
   }
 }
 

@@ -27,5 +27,8 @@ data class ClientDetails(
   val scopes: List<String>,
   val authorities: List<String>,
   val ips: List<String>,
-  val additionalInformation: Map<String, Any>?,
+  val jiraNumber: String?,
+  val databaseUserName: String?,
+  val clientValidityDays: Int?,
+  val accessTokenValidityMinutes: Int?,
 )
