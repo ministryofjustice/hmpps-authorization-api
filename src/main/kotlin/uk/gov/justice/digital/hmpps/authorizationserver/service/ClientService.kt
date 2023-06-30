@@ -1,12 +1,10 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator
 import org.springframework.security.crypto.keygen.StringKeyGenerator
-import org.springframework.security.jackson2.SecurityJackson2Modules
+import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
-import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import org.springframework.stereotype.Service
@@ -28,29 +26,20 @@ class ClientService(
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
 ) {
-  private val objectMapper = ObjectMapper()
-
-  init {
-    // TODO Move to configuration class
-    val classLoader = OAuth2AuthorizationServerJackson2Module::class.java.classLoader
-    val securityModules = SecurityJackson2Modules.getModules(classLoader)
-    objectMapper.registerModules(securityModules)
-    objectMapper.registerModule(OAuth2AuthorizationServerJackson2Module())
-  }
-
   private val clientSecretGenerator: StringKeyGenerator = Base64StringKeyGenerator(
     Base64.getUrlEncoder().withoutPadding(),
     48,
   )
 
   @Transactional
-  fun add(clientDetails: ClientDetails) {
-    // TODO this logic assumes creating new - needs safety check to confirm - revert to update instead if not, or fail validation?
+  fun addClientCredentials(clientDetails: ClientDetails) {
+    val existingClient = clientRepository.findClientByClientId(clientDetails.clientId)
+    existingClient?.let {
+      throw ClientAlreadyExistsException(clientDetails.clientId)
+    }
 
     val client = clientRepository.save(buildNewClient(clientDetails))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
-
-    // TODO do we need to resolve client id to base client id first here?
     clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, null))
   }
 
@@ -58,25 +47,33 @@ class ClientService(
     with(clientDetails) {
       return Client(
         id = UUID.randomUUID().toString(),
-        clientId = clientId, // TODO do we need to generate this?
+        clientId = clientId,
         clientIdIssuedAt = Instant.now(),
         clientSecret = clientSecretGenerator.generateKey(),
         clientSecretExpiresAt = null,
         clientName = clientName,
         clientAuthenticationMethods = ClientAuthenticationMethod.CLIENT_SECRET_BASIC.value,
-        authorizationGrantTypes = authorizationGrantTypes.joinToString(separator = ",") { it },
-        scopes = scopes.joinToString(separator = ",") { it },
-        clientSettings = objectMapper.writeValueAsString(
-          ClientSettings.builder()
-            .requireProofKey(false)
-            .requireAuthorizationConsent(false).build().settings,
-        ),
-        tokenSettings = objectMapper.writeValueAsString(
-          TokenSettings.builder()
-            .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
-            .build().settings,
-        ),
+        authorizationGrantTypes = AuthorizationGrantType.CLIENT_CREDENTIALS.value,
+        scopes = scopes,
+        clientSettings =
+        ClientSettings.builder()
+          .requireProofKey(false)
+          .requireAuthorizationConsent(false).build(),
+        tokenSettings =
+        TokenSettings.builder()
+          .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
+          .build(),
+        additionalInformation = buildAdditionalInformationMap(this),
       )
     }
   }
+
+  private fun buildAdditionalInformationMap(clientDetails: ClientDetails): Map<String, Any> {
+    val additionalInformation = LinkedHashMap<String, Any>()
+    clientDetails.jiraNumber?.let { additionalInformation["jiraNumber"] = it }
+    clientDetails.databaseUserName?.let { additionalInformation["databaseUserName"] = it }
+    return additionalInformation
+  }
 }
+
+class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")

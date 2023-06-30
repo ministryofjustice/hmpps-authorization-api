@@ -10,29 +10,29 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import uk.gov.justice.digital.hmpps.authorizationserver.service.IPAddressNotAllowedException
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientAlreadyExistsException
 
 @RestControllerAdvice
 @Order(Ordered.LOWEST_PRECEDENCE)
 class AuthorizationServerExceptionHandler {
 
-  @ExceptionHandler(AccessDeniedException::class)
-  fun handleAccessDeniedException(e: AccessDeniedException): ResponseEntity<ErrorResponse> {
-    log.debug("Forbidden (403) returned with message {}", e.message)
+  @ExceptionHandler(ClientAlreadyExistsException::class)
+  fun handleClientAlreadyExistsException(e: ClientAlreadyExistsException): ResponseEntity<ErrorResponse> {
+    log.debug("Bad request returned with message {}", e.message)
     return ResponseEntity
-      .status(HttpStatus.FORBIDDEN)
+      .status(HttpStatus.BAD_REQUEST)
       .contentType(MediaType.APPLICATION_JSON)
       .body(
         ErrorResponse(
-          status = HttpStatus.FORBIDDEN,
+          status = HttpStatus.BAD_REQUEST,
           userMessage = e.message,
           developerMessage = e.message,
         ),
       )
   }
 
-  @ExceptionHandler(IPAddressNotAllowedException::class)
-  fun handleIPAddressNotAllowedException(e: IPAddressNotAllowedException): ResponseEntity<ErrorResponse> {
+  @ExceptionHandler(AccessDeniedException::class)
+  fun handleAccessDeniedException(e: AccessDeniedException): ResponseEntity<ErrorResponse> {
     log.debug("Forbidden (403) returned with message {}", e.message)
     return ResponseEntity
       .status(HttpStatus.FORBIDDEN)
