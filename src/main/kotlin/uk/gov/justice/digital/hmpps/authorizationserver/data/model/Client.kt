@@ -53,12 +53,12 @@ data class Client(
 @Converter
 class MapConverter(private val oAuthJson: OAuthJson) : AttributeConverter<Map<String, Any>, String> {
 
-  override fun convertToDatabaseColumn(attribute: Map<String, Any>): String {
+  override fun convertToDatabaseColumn(attribute: Map<String, Any>?): String? {
     return oAuthJson.toJsonString(attribute)
   }
 
-  override fun convertToEntityAttribute(dbData: String): Map<String, Any> {
-    return oAuthJson.readValueFrom(dbData, LinkedHashMap::class.java) as Map<String, Any>
+  override fun convertToEntityAttribute(dbData: String?): Map<String, Any>? {
+    return oAuthJson.readValueFrom(dbData, LinkedHashMap::class.java) as Map<String, Any>?
   }
 }
 

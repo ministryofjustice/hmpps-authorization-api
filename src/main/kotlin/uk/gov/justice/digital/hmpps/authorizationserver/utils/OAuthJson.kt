@@ -22,11 +22,17 @@ class OAuthJson {
     objectMapper.registerModule(OAuth2AuthorizationServerJackson2Module())
   }
 
-  fun toJsonString(data: Any): String {
-    return objectMapper.writeValueAsString(data)
+  fun toJsonString(data: Any?): String? {
+    data?.let {
+      return objectMapper.writeValueAsString(data)
+    }
+    return null
   }
 
-  fun <T> readValueFrom(data: String, valueType: Class<T>): T {
-    return objectMapper.readValue(data, valueType)
+  fun <T> readValueFrom(data: String?, valueType: Class<T>): T? {
+    data?.let {
+      return objectMapper.readValue(data, valueType)
+    }
+    return null
   }
 }
