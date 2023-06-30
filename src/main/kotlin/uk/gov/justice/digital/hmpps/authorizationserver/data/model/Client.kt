@@ -7,6 +7,8 @@ import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthJson
 import java.time.Instant
 
@@ -40,15 +42,43 @@ data class Client(
   var scopes: List<String> = emptyList(),
 
   @Column(length = 2000)
-  val clientSettings: String,
+  @Convert(converter = ClientSettingsConverter::class)
+  val clientSettings: ClientSettings,
 
   @Column(length = 2000)
-  val tokenSettings: String,
+  @Convert(converter = TokenSettingsConverter::class)
+  val tokenSettings: TokenSettings,
 
   @Column(length = 255)
   @Convert(converter = MapConverter::class)
   var additionalInformation: Map<String, Any>?,
 )
+
+@Converter
+class TokenSettingsConverter(private val oAuthJson: OAuthJson) : AttributeConverter<TokenSettings, String> {
+
+  override fun convertToDatabaseColumn(attribute: TokenSettings): String {
+    return oAuthJson.toJsonString(attribute.settings)!!
+  }
+
+  override fun convertToEntityAttribute(dbData: String): TokenSettings {
+    val settings = oAuthJson.readValueFrom(dbData, Map::class.java) as Map<String, Any>
+    return TokenSettings.withSettings(settings).build()
+  }
+}
+
+@Converter
+class ClientSettingsConverter(private val oAuthJson: OAuthJson) : AttributeConverter<ClientSettings, String> {
+
+  override fun convertToDatabaseColumn(attribute: ClientSettings): String {
+    return oAuthJson.toJsonString(attribute.settings)!!
+  }
+
+  override fun convertToEntityAttribute(dbData: String): ClientSettings {
+    val settings = oAuthJson.readValueFrom(dbData, Map::class.java) as Map<String, Any>
+    return ClientSettings.withSettings(settings).build()
+  }
+}
 
 @Converter
 class MapConverter(private val oAuthJson: OAuthJson) : AttributeConverter<Map<String, Any>, String> {
