@@ -77,6 +77,7 @@ class ClientService(
             .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
             .build().settings,
         ),
+        additionalInformation = clientDetails.additionalInformation,
       )
     }
   }
