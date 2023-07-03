@@ -49,7 +49,6 @@ class OidcIntTest : IntegrationTestBase() {
               "jwks_uri" to "https://client.example.org/my_public_keys.jwks",
               "grant_types" to "authorization_code",
               "redirect_uris" to "http://localhost:3000",
-              "databaseUserName" to "testy",
               "jiraNumber" to "HAAR-1999",
               "response_types" to "id_token",
             ),
@@ -60,8 +59,7 @@ class OidcIntTest : IntegrationTestBase() {
 
       val registeredClient = clientRepository.findClientByClientId("authorization_code_register_test")
       assertNotNull(registeredClient)
-      assertThat(registeredClient!!.additionalInformation!!["databaseUserName"]).isEqualTo("testy")
-      assertThat(registeredClient.additionalInformation!!["jiraNumber"]).isEqualTo("HAAR-1999")
+      assertThat(registeredClient!!.additionalInformation!!["jiraNumber"]).isEqualTo("HAAR-1999")
     }
   }
 }
