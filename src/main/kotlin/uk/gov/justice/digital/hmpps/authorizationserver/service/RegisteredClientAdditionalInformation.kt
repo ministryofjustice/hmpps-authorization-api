@@ -19,7 +19,6 @@ class RegisteredClientAdditionalInformation {
   fun mapFrom(claims: Map<String, Any>): Map<String, Any> {
     val additionalInformation = LinkedHashMap<String, Any>()
     claims[jiraNumber]?.let { additionalInformation[jiraNumber] = it }
-    claims[databaseUserName]?.let { additionalInformation[databaseUserName] = it }
     return additionalInformation
   }
 }
