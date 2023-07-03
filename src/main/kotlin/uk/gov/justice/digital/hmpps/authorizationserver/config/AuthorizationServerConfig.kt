@@ -41,8 +41,10 @@ import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
-import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcClientRegistrationDataHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
+import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegistrationAdditionalDataHandler
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientDataService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -61,7 +63,11 @@ class AuthorizationServerConfig(
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  fun authorizationServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+  fun authorizationServerSecurityFilterChain(
+    http: HttpSecurity,
+    registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
+    registeredClientDataService: RegisteredClientDataService,
+  ): SecurityFilterChain {
     val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer()
     http.apply(authorizationServerConfigurer)
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
@@ -74,6 +80,7 @@ class AuthorizationServerConfig(
     http.oauth2ResourceServer { resourceServer -> resourceServer.jwt { jwtCustomizer -> jwtCustomizer.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
 
     authorizationServerConfigurer.oidc { oidcCustomizer ->
+
       oidcCustomizer.clientRegistrationEndpoint { clientRegistrationEndpoint ->
         clientRegistrationEndpoint.authenticationProviders { authenticationProviders ->
           authenticationProviders.filterIsInstance<OidcClientRegistrationAuthenticationProvider>()[0].let {
@@ -81,7 +88,9 @@ class AuthorizationServerConfig(
             it.setRegisteredClientConverter(OidcRegisteredClientConverterDecorator(registeredClientConverter))
           }
 
-          authenticationProviders.replaceAll { authenticationProvider -> withAuthorizationCodeClientConfigurationDataHandler(authenticationProvider) }
+          authenticationProviders.replaceAll { authenticationProvider ->
+            withAdditionalDataHandler(authenticationProvider, registeredClientAdditionalInformation, registeredClientDataService)
+          }
         }
       }
     }
@@ -164,9 +173,13 @@ class AuthorizationServerConfig(
     return authenticationProvider
   }
 
-  private fun withAuthorizationCodeClientConfigurationDataHandler(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+  private fun withAdditionalDataHandler(
+    authenticationProvider: AuthenticationProvider,
+    registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
+    registeredClientDataService: RegisteredClientDataService,
+  ): AuthenticationProvider {
     if (authenticationProvider.supports(OidcClientRegistrationAuthenticationToken::class.java)) {
-      return OidcClientRegistrationDataHandler(authenticationProvider)
+      return OidcRegistrationAdditionalDataHandler(authenticationProvider, registeredClientAdditionalInformation, registeredClientDataService)
     }
 
     return authenticationProvider

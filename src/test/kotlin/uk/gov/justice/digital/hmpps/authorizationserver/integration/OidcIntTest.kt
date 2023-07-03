@@ -1,19 +1,20 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
-import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import java.util.Base64
 
 class OidcIntTest : IntegrationTestBase() {
 
   @Autowired
-  lateinit var jdbcRegisteredClientRepository: JdbcRegisteredClientRepository
+  lateinit var clientRepository: ClientRepository
 
   @Nested
   inner class Registration {
@@ -48,7 +49,8 @@ class OidcIntTest : IntegrationTestBase() {
               "jwks_uri" to "https://client.example.org/my_public_keys.jwks",
               "grant_types" to "authorization_code",
               "redirect_uris" to "http://localhost:3000",
-              "databaseUsername" to "fred",
+              "databaseUserName" to "testy",
+              "jiraNumber" to "HAAR-1999",
               "response_types" to "id_token",
             ),
           ),
@@ -56,7 +58,10 @@ class OidcIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isCreated
 
-      assertNotNull(jdbcRegisteredClientRepository.findByClientId("authorization_code_register_test"))
+      val registeredClient = clientRepository.findClientByClientId("authorization_code_register_test")
+      assertNotNull(registeredClient)
+      assertThat(registeredClient!!.additionalInformation!!["databaseUserName"]).isEqualTo("testy")
+      assertThat(registeredClient.additionalInformation!!["jiraNumber"]).isEqualTo("HAAR-1999")
     }
   }
 }
