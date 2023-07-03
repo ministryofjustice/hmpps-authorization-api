@@ -35,12 +35,16 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.oidc.OidcClientRegistration
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationProvider
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
+import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegistrationAdditionalDataHandler
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientDataService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -59,7 +63,11 @@ class AuthorizationServerConfig(
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  fun authorizationServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+  fun authorizationServerSecurityFilterChain(
+    http: HttpSecurity,
+    registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
+    registeredClientDataService: RegisteredClientDataService,
+  ): SecurityFilterChain {
     val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer()
     http.apply(authorizationServerConfigurer)
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
@@ -72,11 +80,16 @@ class AuthorizationServerConfig(
     http.oauth2ResourceServer { resourceServer -> resourceServer.jwt { jwtCustomizer -> jwtCustomizer.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
 
     authorizationServerConfigurer.oidc { oidcCustomizer ->
+
       oidcCustomizer.clientRegistrationEndpoint { clientRegistrationEndpoint ->
         clientRegistrationEndpoint.authenticationProviders { authenticationProviders ->
           authenticationProviders.filterIsInstance<OidcClientRegistrationAuthenticationProvider>()[0].let {
             val registeredClientConverter = it.getRegisteredClientConverter()
             it.setRegisteredClientConverter(OidcRegisteredClientConverterDecorator(registeredClientConverter))
+          }
+
+          authenticationProviders.replaceAll { authenticationProvider ->
+            withAdditionalDataHandler(authenticationProvider, registeredClientAdditionalInformation, registeredClientDataService)
           }
         }
       }
@@ -155,6 +168,18 @@ class AuthorizationServerConfig(
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
       return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
+    }
+
+    return authenticationProvider
+  }
+
+  private fun withAdditionalDataHandler(
+    authenticationProvider: AuthenticationProvider,
+    registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
+    registeredClientDataService: RegisteredClientDataService,
+  ): AuthenticationProvider {
+    if (authenticationProvider.supports(OidcClientRegistrationAuthenticationToken::class.java)) {
+      return OidcRegistrationAdditionalDataHandler(authenticationProvider, registeredClientAdditionalInformation, registeredClientDataService)
     }
 
     return authenticationProvider

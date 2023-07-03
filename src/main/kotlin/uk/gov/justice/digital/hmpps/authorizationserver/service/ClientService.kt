@@ -25,6 +25,7 @@ class ClientService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
+  private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
 ) {
   private val clientSecretGenerator: StringKeyGenerator = Base64StringKeyGenerator(
     Base64.getUrlEncoder().withoutPadding(),
@@ -63,16 +64,9 @@ class ClientService(
         TokenSettings.builder()
           .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
           .build(),
-        additionalInformation = buildAdditionalInformationMap(this),
+        additionalInformation = registeredClientAdditionalInformation.mapFrom(this),
       )
     }
-  }
-
-  private fun buildAdditionalInformationMap(clientDetails: ClientDetails): Map<String, Any> {
-    val additionalInformation = LinkedHashMap<String, Any>()
-    clientDetails.jiraNumber?.let { additionalInformation["jiraNumber"] = it }
-    clientDetails.databaseUserName?.let { additionalInformation["databaseUserName"] = it }
-    return additionalInformation
   }
 }
 
