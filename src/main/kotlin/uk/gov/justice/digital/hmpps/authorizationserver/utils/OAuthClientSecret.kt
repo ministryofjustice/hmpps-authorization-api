@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import java.util.Base64
 
 @Component
-class OAuthClientSecretGenerator {
+class OAuthClientSecret {
 
   private val clientSecretGenerator: StringKeyGenerator = Base64StringKeyGenerator(
     Base64.getUrlEncoder().withoutPadding(),
@@ -16,7 +16,11 @@ class OAuthClientSecretGenerator {
 
   private val passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
 
-  fun generateEncodedPassword(): String {
-    return passwordEncoder.encode(clientSecretGenerator.generateKey())
+  fun generate(): String {
+    return clientSecretGenerator.generateKey()
+  }
+
+  fun encode(secret: String): String {
+    return passwordEncoder.encode(secret)
   }
 }

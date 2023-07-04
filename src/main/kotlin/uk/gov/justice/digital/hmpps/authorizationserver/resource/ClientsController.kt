@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
@@ -16,12 +17,12 @@ class ClientsController(
   @PostMapping("clients/client-credentials/add")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun addClient(@RequestBody clientDetails: ClientDetails) {
-    clientService.addClientCredentials(clientDetails)
+  fun addClient(@RequestBody clientDetails: ClientCredentialsRegistrationRequest): ResponseEntity<Any> {
+    return ResponseEntity.ok(clientService.addClientCredentials(clientDetails))
   }
 }
 
-data class ClientDetails(
+data class ClientCredentialsRegistrationRequest(
   val clientId: String,
   val clientName: String,
   val scopes: List<String>,
@@ -31,4 +32,9 @@ data class ClientDetails(
   val databaseUserName: String?,
   val clientValidityDays: Int?,
   val accessTokenValidityMinutes: Int?,
+)
+
+data class ClientCredentialsRegistrationResponse(
+  val clientId: String,
+  val clientSecret: String,
 )

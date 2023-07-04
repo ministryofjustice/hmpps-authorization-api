@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
@@ -13,6 +15,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Authorization
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 
 class ClientsControllerIntTest : IntegrationTestBase() {
 
@@ -27,6 +30,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var clientRepository: ClientRepository
+
+  @MockBean
+  lateinit var oAuthClientSecretGenerator: OAuthClientSecret
 
   @Nested
   inner class AddClient {
@@ -121,6 +127,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     @Test
     fun `register client success`() {
       assertNull(clientRepository.findClientByClientId("testy"))
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
 
       webTestClient.post().uri("/clients/client-credentials/add")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
@@ -139,12 +147,16 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         )
         .exchange()
         .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("testy")
+        .jsonPath("clientSecret").isEqualTo("external-client-secret")
 
       val client = clientRepository.findClientByClientId("testy")
 
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo("testy")
       assertThat(client.clientName).isEqualTo("test client")
+      assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.additionalInformation?.get("databaseUserName")).isEqualTo("testy-mctest")
