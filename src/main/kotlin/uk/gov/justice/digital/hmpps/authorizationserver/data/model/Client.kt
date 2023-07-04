@@ -21,7 +21,7 @@ data class Client(
   val clientId: String,
 
   val clientIdIssuedAt: Instant,
-  val clientSecret: String?,
+  val clientSecret: String,
   val clientSecretExpiresAt: Instant? = null,
   val clientName: String,
 

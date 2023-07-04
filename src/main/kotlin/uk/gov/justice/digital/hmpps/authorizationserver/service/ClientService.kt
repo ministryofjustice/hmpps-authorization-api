@@ -13,8 +13,9 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDetails
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecretGenerator
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.util.UUID
 
@@ -24,28 +25,31 @@ class ClientService(
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
-  private val oAuthClientSecretGenerator: OAuthClientSecretGenerator,
+  private val oAuthClientSecret: OAuthClientSecret,
 ) {
 
   @Transactional
-  fun addClientCredentials(clientDetails: ClientDetails) {
+  fun addClientCredentials(clientDetails: ClientCredentialsRegistrationRequest): ClientCredentialsRegistrationResponse {
     val existingClient = clientRepository.findClientByClientId(clientDetails.clientId)
     existingClient?.let {
       throw ClientAlreadyExistsException(clientDetails.clientId)
     }
 
-    val client = clientRepository.save(buildNewClient(clientDetails))
+    val externalClientSecret = oAuthClientSecret.generate()
+    val client = clientRepository.save(buildNewClient(clientDetails, oAuthClientSecret.encode(externalClientSecret)))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
     clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, null))
+
+    return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
   }
 
-  private fun buildNewClient(clientDetails: ClientDetails): Client {
+  private fun buildNewClient(clientDetails: ClientCredentialsRegistrationRequest, encodedClientSecret: String): Client {
     with(clientDetails) {
       return Client(
         id = UUID.randomUUID().toString(),
         clientId = clientId,
         clientIdIssuedAt = Instant.now(),
-        clientSecret = oAuthClientSecretGenerator.generateEncodedPassword(),
+        clientSecret = encodedClientSecret,
         clientSecretExpiresAt = null,
         clientName = clientName,
         clientAuthenticationMethods = ClientAuthenticationMethod.CLIENT_SECRET_BASIC.value,
