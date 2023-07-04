@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
-import org.springframework.security.crypto.keygen.Base64StringKeyGenerator
-import org.springframework.security.crypto.keygen.StringKeyGenerator
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
@@ -16,8 +14,8 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDetails
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecretGenerator
 import java.time.Instant
-import java.util.Base64
 import java.util.UUID
 
 @Service
@@ -26,11 +24,8 @@ class ClientService(
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
+  private val oAuthClientSecretGenerator: OAuthClientSecretGenerator,
 ) {
-  private val clientSecretGenerator: StringKeyGenerator = Base64StringKeyGenerator(
-    Base64.getUrlEncoder().withoutPadding(),
-    48,
-  )
 
   @Transactional
   fun addClientCredentials(clientDetails: ClientDetails) {
@@ -50,7 +45,7 @@ class ClientService(
         id = UUID.randomUUID().toString(),
         clientId = clientId,
         clientIdIssuedAt = Instant.now(),
-        clientSecret = clientSecretGenerator.generateKey(),
+        clientSecret = oAuthClientSecretGenerator.generateEncodedPassword(),
         clientSecretExpiresAt = null,
         clientName = clientName,
         clientAuthenticationMethods = ClientAuthenticationMethod.CLIENT_SECRET_BASIC.value,
