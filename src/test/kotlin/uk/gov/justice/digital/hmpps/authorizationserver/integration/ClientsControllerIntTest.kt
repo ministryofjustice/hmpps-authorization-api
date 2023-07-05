@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
+import java.time.LocalDate
 
 class ClientsControllerIntTest : IntegrationTestBase() {
 
@@ -142,6 +143,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
             ),
           ),
         )
@@ -164,6 +166,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
+      assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
 
       val authorizationConsent = authorizationConsentRepository.findById(
         AuthorizationConsent.AuthorizationConsentId(

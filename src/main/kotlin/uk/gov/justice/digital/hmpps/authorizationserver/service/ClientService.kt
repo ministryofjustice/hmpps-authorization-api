@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentia
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
@@ -38,9 +39,16 @@ class ClientService(
     val externalClientSecret = oAuthClientSecret.generate()
     val client = clientRepository.save(buildNewClient(clientDetails, oAuthClientSecret.encode(externalClientSecret)))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
-    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, null))
+    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, determineClientEndDate(clientDetails)))
 
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
+  }
+
+  private fun determineClientEndDate(clientDetails: ClientCredentialsRegistrationRequest): LocalDate? {
+    return clientDetails.validDays?.let {
+      val validDaysIncludeToday = it.minus(1)
+      LocalDate.now().plusDays(validDaysIncludeToday)
+    }
   }
 
   private fun buildNewClient(clientDetails: ClientCredentialsRegistrationRequest, encodedClientSecret: String): Client {
