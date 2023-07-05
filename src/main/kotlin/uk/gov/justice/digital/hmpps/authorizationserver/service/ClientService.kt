@@ -16,7 +16,9 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRe
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
+import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
@@ -38,13 +40,25 @@ class ClientService(
     val externalClientSecret = oAuthClientSecret.generate()
     val client = clientRepository.save(buildNewClient(clientDetails, oAuthClientSecret.encode(externalClientSecret)))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
-    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, null))
+    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails)))
 
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
   }
 
+  private fun getClientEndDate(clientDetails: ClientCredentialsRegistrationRequest): LocalDate? {
+    return clientDetails.validDays?.let {
+      val validDaysIncludeToday = it.minus(1)
+      LocalDate.now().plusDays(validDaysIncludeToday)
+    }
+  }
+
   private fun buildNewClient(clientDetails: ClientCredentialsRegistrationRequest, encodedClientSecret: String): Client {
     with(clientDetails) {
+      val tokenSettingsBuilder = TokenSettings.builder().idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
+      accessTokenValidity?.let {
+        tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofMinutes(it))
+      }
+
       return Client(
         id = UUID.randomUUID().toString(),
         clientId = clientId,
@@ -59,10 +73,7 @@ class ClientService(
         ClientSettings.builder()
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
-        tokenSettings =
-        TokenSettings.builder()
-          .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
-          .build(),
+        tokenSettings = tokenSettingsBuilder.build(),
         additionalInformation = registeredClientAdditionalInformation.mapFrom(this),
       )
     }

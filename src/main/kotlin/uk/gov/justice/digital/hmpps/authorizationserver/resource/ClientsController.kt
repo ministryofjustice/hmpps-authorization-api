@@ -32,6 +32,8 @@ data class ClientCredentialsRegistrationRequest(
   val databaseUserName: String?,
   val clientValidityDays: Int?,
   val accessTokenValidityMinutes: Int?,
+  val validDays: Long?,
+  val accessTokenValidity: Long?,
 )
 
 data class ClientCredentialsRegistrationResponse(
