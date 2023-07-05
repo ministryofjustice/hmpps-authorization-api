@@ -40,12 +40,12 @@ class ClientService(
     val externalClientSecret = oAuthClientSecret.generate()
     val client = clientRepository.save(buildNewClient(clientDetails, oAuthClientSecret.encode(externalClientSecret)))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
-    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, determineClientEndDate(clientDetails)))
+    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails)))
 
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
   }
 
-  private fun determineClientEndDate(clientDetails: ClientCredentialsRegistrationRequest): LocalDate? {
+  private fun getClientEndDate(clientDetails: ClientCredentialsRegistrationRequest): LocalDate? {
     return clientDetails.validDays?.let {
       val validDaysIncludeToday = it.minus(1)
       LocalDate.now().plusDays(validDaysIncludeToday)
