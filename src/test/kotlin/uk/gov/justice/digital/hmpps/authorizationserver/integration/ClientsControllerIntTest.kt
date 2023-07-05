@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
+import java.time.Duration
 import java.time.LocalDate
 
 class ClientsControllerIntTest : IntegrationTestBase() {
@@ -144,6 +145,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
+              "accessTokenValidity" to 20,
             ),
           ),
         )
@@ -161,6 +163,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
       assertThat(client.additionalInformation?.get("databaseUserName")).isEqualTo("testy-mctest")
       assertThat(client.additionalInformation?.get("jiraNumber")).isEqualTo("HAAR-9999")
 
