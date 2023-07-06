@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.apache.commons.lang3.StringUtils.isNotEmpty
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
@@ -15,6 +17,10 @@ import java.util.stream.Collectors
 class TokenCustomizer(
   private val authorizationConsentService: OAuth2AuthorizationConsentService,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
+
+  companion object {
+    private const val REQUEST_PARAM_USER_NAME = "username"
+  }
 
   override fun customize(context: JwtEncodingContext?) {
     context?.let {
@@ -52,6 +58,13 @@ class TokenCustomizer(
 
   private fun customizeClientCredentials(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     with(context.claims) {
+      val token: OAuth2ClientCredentialsAuthenticationToken = context.getAuthorizationGrant()
+
+      if (token.additionalParameters.containsKey(REQUEST_PARAM_USER_NAME) && isNotEmpty(token.additionalParameters[REQUEST_PARAM_USER_NAME] as String)) {
+        claim("user_name", token.additionalParameters[REQUEST_PARAM_USER_NAME])
+        claim("sub", token.additionalParameters[REQUEST_PARAM_USER_NAME])
+      }
+
       claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
       claim("scope", principal.registeredClient?.scopes)
       claim("grant_type", context.authorizationGrantType.value)
