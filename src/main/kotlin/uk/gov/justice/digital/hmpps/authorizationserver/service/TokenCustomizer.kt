@@ -58,11 +58,12 @@ class TokenCustomizer(
 
   private fun customizeClientCredentials(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     with(context.claims) {
-      val token: OAuth2ClientCredentialsAuthenticationToken = context.getAuthorizationGrant()
-
-      if (token.additionalParameters.containsKey(REQUEST_PARAM_USER_NAME) && isNotEmpty(token.additionalParameters[REQUEST_PARAM_USER_NAME] as String)) {
-        claim("user_name", token.additionalParameters[REQUEST_PARAM_USER_NAME])
-        claim("sub", token.additionalParameters[REQUEST_PARAM_USER_NAME])
+      val token: OAuth2ClientCredentialsAuthenticationToken? = context.getAuthorizationGrant()
+      token?.let {
+        if (it.additionalParameters.containsKey(REQUEST_PARAM_USER_NAME) && isNotEmpty(token.additionalParameters[REQUEST_PARAM_USER_NAME] as String)) {
+          claim("user_name", it.additionalParameters[REQUEST_PARAM_USER_NAME])
+          claim("sub", it.additionalParameters[REQUEST_PARAM_USER_NAME])
+        }
       }
 
       claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
