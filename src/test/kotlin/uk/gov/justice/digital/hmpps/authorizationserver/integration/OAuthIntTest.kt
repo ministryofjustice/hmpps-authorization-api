@@ -25,6 +25,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
     val payload = getTokenPayload(String(clientCredentialsResponse))
     assertThat(payload.get("sub")).isEqualTo("test-client-id")
+    assertThat(payload.get("auth_source")).isEqualTo("none")
     assertTrue(payload.isNull("user_name"))
   }
 
@@ -44,6 +45,40 @@ class OAuthIntTest : IntegrationTestBase() {
     val payload = getTokenPayload(String(clientCredentialsResponse))
     assertThat(payload.get("sub")).isEqualTo("testy")
     assertThat(payload.get("user_name")).isEqualTo("testy")
+  }
+
+  @Test
+  fun `client credentials token request with auth source`() {
+    val clientCredentialsResponse = webTestClient
+      .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=delius")
+      .header(
+        HttpHeaders.AUTHORIZATION,
+        "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+      )
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .returnResult().responseBody
+
+    val payload = getTokenPayload(String(clientCredentialsResponse))
+    assertThat(payload.get("auth_source")).isEqualTo("delius")
+  }
+
+  @Test
+  fun `client credentials token request with unrecognised auth source`() {
+    val clientCredentialsResponse = webTestClient
+      .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=xdelius")
+      .header(
+        HttpHeaders.AUTHORIZATION,
+        "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+      )
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .returnResult().responseBody
+
+    val payload = getTokenPayload(String(clientCredentialsResponse))
+    assertThat(payload.get("auth_source")).isEqualTo("none")
   }
 
   @Test

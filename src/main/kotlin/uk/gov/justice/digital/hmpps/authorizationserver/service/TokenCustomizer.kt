@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.authorizationserver.service.AuthSource.Companion.fromNullableString
 import java.util.UUID
 import java.util.stream.Collectors
 
@@ -20,6 +21,7 @@ class TokenCustomizer(
 
   companion object {
     private const val REQUEST_PARAM_USER_NAME = "username"
+    private const val REQUEST_PARAM_AUTH_SOURCE = "auth_source"
   }
 
   override fun customize(context: JwtEncodingContext?) {
@@ -64,12 +66,12 @@ class TokenCustomizer(
           claim("user_name", it.additionalParameters[REQUEST_PARAM_USER_NAME])
           claim("sub", it.additionalParameters[REQUEST_PARAM_USER_NAME])
         }
+        claim("auth_source", fromNullableString(it.additionalParameters[REQUEST_PARAM_AUTH_SOURCE] as String?).source)
       }
 
       claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
       claim("scope", principal.registeredClient?.scopes)
       claim("grant_type", context.authorizationGrantType.value)
-      claim("auth_source", "none")
       claim("jti", UUID.randomUUID().toString())
     }
   }
