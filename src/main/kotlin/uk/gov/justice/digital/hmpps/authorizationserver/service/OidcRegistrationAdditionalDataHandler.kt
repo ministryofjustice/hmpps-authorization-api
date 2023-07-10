@@ -11,10 +11,10 @@ class OidcRegistrationAdditionalDataHandler(
   private val registeredClientDataService: RegisteredClientDataService,
 ) : AuthenticationProvider {
 
-  override fun authenticate(authentication: Authentication?): Authentication {
+  override fun authenticate(authentication: Authentication?): Authentication? {
     val clientRegistrationAuthentication = authentication as OidcClientRegistrationAuthenticationToken
 
-    val authenticationResult = delegate.authenticate(authentication).let {
+    val authenticationResult = delegate.authenticate(authentication)?.let {
       val claims = clientRegistrationAuthentication.clientRegistration.claims
       registeredClientDataService.updateAdditionalInformation(
         claims[OidcClientMetadataClaimNames.CLIENT_ID].toString(),

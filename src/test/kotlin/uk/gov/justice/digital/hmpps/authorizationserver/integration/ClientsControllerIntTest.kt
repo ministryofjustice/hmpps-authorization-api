@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Authorization
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
@@ -164,8 +165,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
-      assertThat(client.additionalInformation?.get("databaseUserName")).isEqualTo("testy-mctest")
-      assertThat(client.additionalInformation?.get("jiraNumber")).isEqualTo("HAAR-9999")
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testy-mctest")
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-9999")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")

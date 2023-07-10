@@ -47,11 +47,7 @@ data class Client(
 
   @Column(length = 2000)
   @Convert(converter = TokenSettingsConverter::class)
-  val tokenSettings: TokenSettings,
-
-  @Column(length = 255)
-  @Convert(converter = MapConverter::class)
-  var additionalInformation: Map<String, Any>?,
+  var tokenSettings: TokenSettings,
 )
 
 @Converter
@@ -77,18 +73,6 @@ class ClientSettingsConverter(private val oAuthJson: OAuthJson) : AttributeConve
   override fun convertToEntityAttribute(dbData: String): ClientSettings {
     val settings = oAuthJson.readValueFrom(dbData, Map::class.java) as Map<String, Any>
     return ClientSettings.withSettings(settings).build()
-  }
-}
-
-@Converter
-class MapConverter(private val oAuthJson: OAuthJson) : AttributeConverter<Map<String, Any>, String> {
-
-  override fun convertToDatabaseColumn(attribute: Map<String, Any>?): String? {
-    return oAuthJson.toJsonString(attribute)
-  }
-
-  override fun convertToEntityAttribute(dbData: String?): Map<String, Any>? {
-    return oAuthJson.readValueFrom(dbData, LinkedHashMap::class.java) as Map<String, Any>?
   }
 }
 

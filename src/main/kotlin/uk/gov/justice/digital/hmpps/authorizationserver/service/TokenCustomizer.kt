@@ -17,6 +17,7 @@ import java.util.stream.Collectors
 @Component
 class TokenCustomizer(
   private val authorizationConsentService: OAuth2AuthorizationConsentService,
+  private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
   companion object {
@@ -66,7 +67,11 @@ class TokenCustomizer(
           claim("user_name", it.additionalParameters[REQUEST_PARAM_USER_NAME])
           claim("sub", it.additionalParameters[REQUEST_PARAM_USER_NAME])
         }
+
         claim("auth_source", fromNullableString(it.additionalParameters[REQUEST_PARAM_AUTH_SOURCE] as String?).source)
+        registeredClientAdditionalInformation.getDatabaseUserName(principal.registeredClient)?.let { databaseUsername ->
+          claim("database_username", databaseUsername)
+        }
       }
 
       claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
