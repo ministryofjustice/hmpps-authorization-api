@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
@@ -12,7 +13,8 @@ class RegisteredClientDataService(private val clientRepository: ClientRepository
     val registeredClient = clientRepository.findClientByClientId(clientId)
     registeredClient?.let { client ->
       if (additionalInformation.isNotEmpty()) {
-        client.additionalInformation = additionalInformation
+        val tokenSettingsBuilder = TokenSettings.withSettings(client.tokenSettings.settings)
+        client.tokenSettings = tokenSettingsBuilder.settings { it.putAll(additionalInformation) }.build()
       }
     }
   }

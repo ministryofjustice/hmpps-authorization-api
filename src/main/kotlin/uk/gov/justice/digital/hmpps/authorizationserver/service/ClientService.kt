@@ -2,9 +2,7 @@ package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
-import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
-import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -16,7 +14,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRe
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -54,11 +51,6 @@ class ClientService(
 
   private fun buildNewClient(clientDetails: ClientCredentialsRegistrationRequest, encodedClientSecret: String): Client {
     with(clientDetails) {
-      val tokenSettingsBuilder = TokenSettings.builder().idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
-      accessTokenValidity?.let {
-        tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofMinutes(it))
-      }
-
       return Client(
         id = UUID.randomUUID().toString(),
         clientId = clientId,
@@ -73,8 +65,7 @@ class ClientService(
         ClientSettings.builder()
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
-        tokenSettings = tokenSettingsBuilder.build(),
-        additionalInformation = registeredClientAdditionalInformation.mapFrom(this),
+        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(this),
       )
     }
   }

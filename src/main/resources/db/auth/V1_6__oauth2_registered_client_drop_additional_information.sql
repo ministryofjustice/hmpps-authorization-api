@@ -1,0 +1,1 @@
+ALTER TABLE oauth2_registered_client DROP COLUMN additional_information;
