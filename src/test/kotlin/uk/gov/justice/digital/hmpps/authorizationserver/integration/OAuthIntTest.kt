@@ -121,6 +121,14 @@ class OAuthIntTest : IntegrationTestBase() {
       .expectStatus().isUnauthorized
   }
 
+  @Test
+  fun `client credentials - anonymous token request`() {
+    webTestClient
+      .post().uri("/oauth2/token?grant_type=client_credentials")
+      .exchange()
+      .expectStatus().isUnauthorized
+  }
+
   private fun getTokenPayload(response: String): JSONObject {
     val accessToken = JSONObject(response).get("access_token") as String
     val tokenParts = accessToken.split(".")

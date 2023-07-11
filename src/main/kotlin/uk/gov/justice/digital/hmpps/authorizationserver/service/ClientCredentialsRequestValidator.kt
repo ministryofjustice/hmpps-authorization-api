@@ -23,23 +23,28 @@ class ClientCredentialsRequestValidator(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  override fun authenticate(authentication: Authentication?): Authentication {
+  override fun authenticate(authentication: Authentication?): Authentication? {
     val clientCredentialsAuthentication = authentication as OAuth2ClientCredentialsAuthenticationToken
-    val clientId = (clientCredentialsAuthentication.principal as OAuth2ClientAuthenticationToken).registeredClient?.clientId
-    val baseClientId = baseClientId(clientId!!)
-    val clientConfig = clientConfigRepository.findByIdOrNull(baseClientId)
-    val clientIpAddress = ipAddressHelper.retrieveIpFromRequest()
 
-    if (clientConfig?.clientEndDate != null && clientConfig.clientEndDate!!.isBefore(LocalDate.now())) {
-      log.warn("Client id $baseClientId has expired")
-      throw ClientExpiredException(clientConfig.baseClientId)
+    if (clientCredentialsAuthentication.principal is OAuth2ClientAuthenticationToken) {
+      val clientId = (clientCredentialsAuthentication.principal as OAuth2ClientAuthenticationToken).registeredClient?.clientId
+      val baseClientId = baseClientId(clientId!!)
+      val clientConfig = clientConfigRepository.findByIdOrNull(baseClientId)
+      val clientIpAddress = ipAddressHelper.retrieveIpFromRequest()
+
+      if (clientConfig?.clientEndDate != null && clientConfig.clientEndDate!!.isBefore(LocalDate.now())) {
+        log.warn("Client id $baseClientId has expired")
+        throw ClientExpiredException(clientConfig.baseClientId)
+      }
+
+      if (!clientConfig?.ips.isNullOrEmpty()) {
+        validateClientIpAllowed(clientIpAddress, clientConfig?.ips!!)
+      }
+
+      return delegate.authenticate(authentication)
     }
 
-    if (!clientConfig?.ips.isNullOrEmpty()) {
-      validateClientIpAllowed(clientIpAddress, clientConfig?.ips!!)
-    }
-
-    return delegate.authenticate(authentication)
+    return null
   }
 
   override fun supports(authentication: Class<*>?): Boolean {
