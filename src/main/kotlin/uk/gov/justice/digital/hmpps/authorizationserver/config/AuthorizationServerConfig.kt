@@ -95,10 +95,7 @@ class AuthorizationServerConfig(
       }
     }
 
-    // TODO - confirm cors and csrf configuration
-    http.cors { it.disable() }
-    http.csrf { it.disable() }
-
+    http.cors { it.disable() }.csrf { it.disable() }
     return http.build()
   }
 
