@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -28,10 +30,17 @@ class ClientCredentialsRequestValidatorTest {
 
   private val clientCredentialsRequestValidator = ClientCredentialsRequestValidator(delegate, clientConfigRepository, ipAddressHelper, baseClientId)
 
+  private val clientId = "testy_mc_tester"
+  private lateinit var authenticationToken: OAuth2ClientCredentialsAuthenticationToken
+
+  @BeforeEach
+  fun setUp() {
+    whenever(baseClientId.toBase(anyString())).thenReturn(clientId)
+    authenticationToken = givenAToken()
+  }
+
   @Test
   fun shouldNotValidateClientIPWhenClientConfigNotPresent() {
-    val clientId = "testy_mc_tester"
-    val authenticationToken = givenAToken(clientId)
     whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.empty())
     whenever(ipAddressHelper.retrieveIpFromRequest()).thenReturn("1.2.3.4")
     whenever(delegate.authenticate(authenticationToken)).thenReturn(authenticationToken)
@@ -43,9 +52,7 @@ class ClientCredentialsRequestValidatorTest {
 
   @Test
   fun shouldNotValidateClientIPWhenClientConfigPresentButContainsNoAllowedIPAddresses() {
-    val clientId = "testy_mc_tester"
-    val authenticationToken = givenAToken(clientId)
-    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(clientId, LocalDate.now().plusDays(2))))
+    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(LocalDate.now().plusDays(2))))
     whenever(ipAddressHelper.retrieveIpFromRequest()).thenReturn("1.2.3.4")
     whenever(delegate.authenticate(authenticationToken)).thenReturn(authenticationToken)
 
@@ -56,9 +63,7 @@ class ClientCredentialsRequestValidatorTest {
 
   @Test
   fun shouldFailWhenClientConfigExpired() {
-    val clientId = "testy_mc_tester"
-    val authenticationToken = givenAToken(clientId)
-    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(clientId, LocalDate.now().minusDays(2))))
+    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(LocalDate.now().minusDays(2))))
 
     assertThatThrownBy {
       clientCredentialsRequestValidator.authenticate(authenticationToken)
@@ -69,10 +74,8 @@ class ClientCredentialsRequestValidatorTest {
 
   @Test
   fun shouldFailWhenClientIPNotPresentInClientConfig() {
-    val clientId = "testy_mc_tester"
-    val authenticationToken = givenAToken(clientId)
     whenever(ipAddressHelper.retrieveIpFromRequest()).thenReturn("1.2.3.4")
-    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(clientId, LocalDate.now().plusDays(2), "1.2.3.5")))
+    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(LocalDate.now().plusDays(2), "1.2.3.5")))
 
     assertThatThrownBy {
       clientCredentialsRequestValidator.authenticate(authenticationToken)
@@ -83,10 +86,8 @@ class ClientCredentialsRequestValidatorTest {
 
   @Test
   fun shouldDelegateWhenClientIPIsAllowed() {
-    val clientId = "testy_mc_tester"
-    val authenticationToken = givenAToken(clientId)
     whenever(ipAddressHelper.retrieveIpFromRequest()).thenReturn("1.2.3.4")
-    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(clientId, LocalDate.now().plusDays(2), "1.2.3.4")))
+    whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(LocalDate.now().plusDays(2), "1.2.3.4")))
     whenever(delegate.authenticate(authenticationToken)).thenReturn(authenticationToken)
 
     val actualToken = clientCredentialsRequestValidator.authenticate(authenticationToken)
@@ -95,11 +96,11 @@ class ClientCredentialsRequestValidatorTest {
     assertThat(actualToken).isEqualTo(authenticationToken)
   }
 
-  private fun givenAClientConfig(clientId: String, expiryDate: LocalDate, vararg allowedIPs: String): ClientConfig {
+  private fun givenAClientConfig(expiryDate: LocalDate, vararg allowedIPs: String): ClientConfig {
     return ClientConfig(clientId, allowedIPs.asList(), expiryDate)
   }
 
-  private fun givenAToken(clientId: String): OAuth2ClientCredentialsAuthenticationToken {
+  private fun givenAToken(): OAuth2ClientCredentialsAuthenticationToken {
     val registeredClient = RegisteredClient.withId("1234")
       .clientId(clientId)
       .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
