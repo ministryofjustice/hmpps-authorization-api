@@ -180,12 +180,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.put().uri("/clients/client-credentials/update")
+      webTestClient.put().uri("/clients/client-credentials/testy/update")
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
-              "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -202,13 +200,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.put().uri("/clients/client-credentials/update")
+      webTestClient.put().uri("/clients/client-credentials/testy/update")
         .headers(setAuthorisation(roles = listOf()))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
-              "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -225,13 +221,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.put().uri("/clients/client-credentials/update")
+      webTestClient.put().uri("/clients/client-credentials/testy/update")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
-              "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -248,13 +242,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `not found when client not found`() {
-      webTestClient.put().uri("/clients/client-credentials/update")
+      webTestClient.put().uri("/clients/client-credentials/not-found/update")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "not-found",
-              "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -271,13 +263,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `not found when client config not found`() {
-      webTestClient.put().uri("/clients/client-credentials/update")
+      webTestClient.put().uri("/clients/client-credentials/test-client-create-id/update")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "test-client-create-id",
-              "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -317,13 +307,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.put().uri("/clients/client-credentials/update")
+      webTestClient.put().uri("/clients/client-credentials/test-test/update")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "test-test",
-              "clientName" to "testing testing renamed",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
@@ -338,8 +326,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
 
       val client = clientRepository.findClientByClientId("test-test")
-      assertThat(client!!.clientName).isEqualTo("testing testing renamed")
-      assertThat(client.scopes).contains("read")
+      assertThat(client!!.scopes).contains("read")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(10))
       assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testy-mctest-2")
       assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-8888")

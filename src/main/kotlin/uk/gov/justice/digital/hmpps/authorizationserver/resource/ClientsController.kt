@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -22,13 +23,23 @@ class ClientsController(
     return ResponseEntity.ok(clientService.addClientCredentials(clientDetails))
   }
 
-  @PutMapping("clients/client-credentials/update")
+  @PutMapping("clients/client-credentials/{clientId}/update")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun editClient(@RequestBody clientDetails: ClientCredentialsRegistrationRequest) {
-    clientService.editClientCredentials(clientDetails)
+  fun editClient(@PathVariable clientId: String, @RequestBody clientDetails: ClientCredentialsUpdateRequest) {
+    clientService.editClientCredentials(clientId, clientDetails)
   }
 }
+
+data class ClientCredentialsUpdateRequest(
+  val scopes: List<String>,
+  val authorities: List<String>,
+  val ips: List<String>,
+  val jiraNumber: String?,
+  val databaseUserName: String?,
+  val validDays: Long?,
+  val accessTokenValidity: Long?,
+)
 
 data class ClientCredentialsRegistrationRequest(
   val clientId: String,

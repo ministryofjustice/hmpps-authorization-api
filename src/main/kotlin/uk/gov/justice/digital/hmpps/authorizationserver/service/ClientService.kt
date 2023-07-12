@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientCo
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.BaseClientId
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
@@ -40,27 +41,26 @@ class ClientService(
     val externalClientSecret = oAuthClientSecret.generate()
     val client = clientRepository.save(buildNewClient(clientDetails, oAuthClientSecret.encode(externalClientSecret)))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
-    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails)))
+    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails.validDays)))
 
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
   }
 
   @Transactional
-  fun editClientCredentials(clientDetails: ClientCredentialsRegistrationRequest) {
-    val existingClient = clientRepository.findClientByClientId(clientDetails.clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientDetails.clientId)
-    val existingClientConfig = clientConfigRepository.findByIdOrNull(baseClientId.toBase(clientDetails.clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientDetails.clientId)
+  fun editClientCredentials(clientId: String, clientDetails: ClientCredentialsUpdateRequest) {
+    val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(baseClientId.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
 
     with(clientDetails) {
-      existingClient.clientName = clientName
       existingClient.scopes = scopes
-      existingClient.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(this)
+      existingClient.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber)
       existingClientConfig.ips = ips
-      existingClientConfig.clientEndDate = getClientEndDate(this)
+      existingClientConfig.clientEndDate = getClientEndDate(validDays)
     }
   }
 
-  private fun getClientEndDate(clientDetails: ClientCredentialsRegistrationRequest): LocalDate? {
-    return clientDetails.validDays?.let {
+  private fun getClientEndDate(validDays: Long?): LocalDate? {
+    return validDays?.let {
       val validDaysIncludeToday = it.minus(1)
       LocalDate.now().plusDays(validDaysIncludeToday)
     }
@@ -82,7 +82,7 @@ class ClientService(
         ClientSettings.builder()
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
-        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(this),
+        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber),
       )
     }
   }

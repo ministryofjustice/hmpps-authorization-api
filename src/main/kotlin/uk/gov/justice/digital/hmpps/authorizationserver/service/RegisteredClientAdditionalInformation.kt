@@ -4,7 +4,6 @@ import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import java.time.Duration
 
 @Component
@@ -19,20 +18,18 @@ class RegisteredClientAdditionalInformation {
     const val CLAIMS_JIRA_NUMBER = "jira_number"
   }
 
-  fun buildTokenSettings(clientDetails: ClientCredentialsRegistrationRequest): TokenSettings {
+  fun buildTokenSettings(accessTokenValidity: Long?, databaseUserName: String?, jiraNumber: String?): TokenSettings {
     val tokenSettingsBuilder = TokenSettings.builder().idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
-    with(clientDetails) {
-      accessTokenValidity?.let {
-        tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofMinutes(it))
-      }
+    accessTokenValidity?.let {
+      tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofMinutes(it))
+    }
 
-      databaseUserName?.let {
-        tokenSettingsBuilder.settings { it[DATABASE_USER_NAME_KEY] = databaseUserName }
-      }
+    databaseUserName?.let {
+      tokenSettingsBuilder.settings { it[DATABASE_USER_NAME_KEY] = databaseUserName }
+    }
 
-      jiraNumber?.let {
-        tokenSettingsBuilder.settings { it[JIRA_NUMBER_KEY] = jiraNumber }
-      }
+    jiraNumber?.let {
+      tokenSettingsBuilder.settings { it[JIRA_NUMBER_KEY] = jiraNumber }
     }
 
     return tokenSettingsBuilder.build()
