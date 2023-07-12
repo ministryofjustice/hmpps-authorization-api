@@ -18,12 +18,12 @@ data class Client(
 
   @Id
   val id: String?, // TODO configure generation
-  val clientId: String,
+  var clientId: String,
 
   val clientIdIssuedAt: Instant,
   val clientSecret: String,
   val clientSecretExpiresAt: Instant? = null,
-  val clientName: String,
+  var clientName: String,
 
   @Column(length = 1000)
   val clientAuthenticationMethods: String,

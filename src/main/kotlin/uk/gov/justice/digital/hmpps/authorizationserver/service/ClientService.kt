@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
@@ -13,6 +14,8 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientCo
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsUpdateRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.BaseClientId
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
@@ -25,6 +28,7 @@ class ClientService(
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oAuthClientSecret: OAuthClientSecret,
+  private val baseClientId: BaseClientId,
 ) {
 
   @Transactional
@@ -37,13 +41,26 @@ class ClientService(
     val externalClientSecret = oAuthClientSecret.generate()
     val client = clientRepository.save(buildNewClient(clientDetails, oAuthClientSecret.encode(externalClientSecret)))
     authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
-    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails)))
+    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails.validDays)))
 
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
   }
 
-  private fun getClientEndDate(clientDetails: ClientCredentialsRegistrationRequest): LocalDate? {
-    return clientDetails.validDays?.let {
+  @Transactional
+  fun editClientCredentials(clientId: String, clientDetails: ClientCredentialsUpdateRequest) {
+    val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(baseClientId.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
+
+    with(clientDetails) {
+      existingClient.scopes = scopes
+      existingClient.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber)
+      existingClientConfig.ips = ips
+      existingClientConfig.clientEndDate = getClientEndDate(validDays)
+    }
+  }
+
+  private fun getClientEndDate(validDays: Long?): LocalDate? {
+    return validDays?.let {
       val validDaysIncludeToday = it.minus(1)
       LocalDate.now().plusDays(validDaysIncludeToday)
     }
@@ -65,10 +82,12 @@ class ClientService(
         ClientSettings.builder()
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
-        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(this),
+        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber),
       )
     }
   }
 }
 
 class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")
+
+class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")

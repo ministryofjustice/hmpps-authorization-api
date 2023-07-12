@@ -39,7 +39,7 @@ class DefaultSecurityConfig {
       allowedOrigins = listOf("yourAllowedOrigin.com", "127.0.0.1")
       allowCredentials = true
       allowedHeaders = listOf("Origin", "Content-Type", "Accept", "responseType", "Authorization")
-      allowedMethods = listOf("GET", "POST")
+      allowedMethods = listOf("GET", "POST", "PUT")
     }
     source.registerCorsConfiguration("/**", corsConfig)
     return source

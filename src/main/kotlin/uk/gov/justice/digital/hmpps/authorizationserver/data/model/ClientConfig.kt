@@ -20,12 +20,4 @@ data class ClientConfig(
 
   @Column(name = "client_end_date")
   var clientEndDate: LocalDate? = null,
-) {
-
-  companion object {
-    // TODO decision required on whether we will use this
-
-    private val clientIdSuffixRegex = "-[0-9]*$".toRegex()
-    fun baseClientId(clientId: String): String = clientId.replace(regex = clientIdSuffixRegex, replacement = "")
-  }
-}
+)

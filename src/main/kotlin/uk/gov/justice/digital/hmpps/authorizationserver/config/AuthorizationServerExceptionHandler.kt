@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientAlreadyExistsException
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientNotFoundException
 
 @RestControllerAdvice
 @Order(Ordered.LOWEST_PRECEDENCE)
@@ -25,6 +26,21 @@ class AuthorizationServerExceptionHandler {
       .body(
         ErrorResponse(
           status = HttpStatus.BAD_REQUEST,
+          userMessage = e.message,
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(ClientNotFoundException::class)
+  fun handleClientNotFoundException(e: ClientNotFoundException): ResponseEntity<ErrorResponse> {
+    log.debug("Not found returned with message {}", e.message)
+    return ResponseEntity
+      .status(HttpStatus.NOT_FOUND)
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.NOT_FOUND,
           userMessage = e.message,
           developerMessage = e.message,
         ),
