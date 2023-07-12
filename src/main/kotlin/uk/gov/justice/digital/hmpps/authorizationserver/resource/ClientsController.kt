@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientService
@@ -20,6 +21,13 @@ class ClientsController(
   fun addClient(@RequestBody clientDetails: ClientCredentialsRegistrationRequest): ResponseEntity<Any> {
     return ResponseEntity.ok(clientService.addClientCredentials(clientDetails))
   }
+
+  @PutMapping("clients/client-credentials/update")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun editClient(@RequestBody clientDetails: ClientCredentialsRegistrationRequest) {
+    clientService.editClientCredentials(clientDetails)
+  }
 }
 
 data class ClientCredentialsRegistrationRequest(
@@ -30,8 +38,6 @@ data class ClientCredentialsRegistrationRequest(
   val ips: List<String>,
   val jiraNumber: String?,
   val databaseUserName: String?,
-  val clientValidityDays: Int?,
-  val accessTokenValidityMinutes: Int?,
   val validDays: Long?,
   val accessTokenValidity: Long?,
 )

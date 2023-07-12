@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredCl
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegistrationAdditionalDataHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientDataService
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.BaseClientId
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -59,6 +60,7 @@ class AuthorizationServerConfig(
 
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
+  private val baseClientId: BaseClientId,
 ) {
 
   @Bean
@@ -164,7 +166,7 @@ class AuthorizationServerConfig(
 
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper)
+      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, baseClientId)
     }
 
     return authenticationProvider
