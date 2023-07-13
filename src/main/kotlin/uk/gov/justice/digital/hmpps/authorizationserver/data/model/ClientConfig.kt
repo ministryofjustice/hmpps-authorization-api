@@ -20,4 +20,7 @@ data class ClientConfig(
 
   @Column(name = "client_end_date")
   var clientEndDate: LocalDate? = null,
+
+  @jakarta.persistence.Transient
+  var validDays: Long? = null,
 )

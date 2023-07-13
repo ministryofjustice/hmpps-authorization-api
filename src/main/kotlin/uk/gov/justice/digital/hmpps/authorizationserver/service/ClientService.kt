@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.utils.BaseClientId
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Service
@@ -48,8 +49,11 @@ class ClientService(
 
   @Transactional
   fun editClientCredentials(clientId: String, clientDetails: ClientCredentialsUpdateRequest) {
-    val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
-    val existingClientConfig = clientConfigRepository.findByIdOrNull(baseClientId.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
+    // TODO authorities update !
+
+    val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
+    val existingClient = clientClientConfigPair.first
+    val existingClientConfig = clientClientConfigPair.second
 
     with(clientDetails) {
       existingClient.scopes = scopes
@@ -58,6 +62,32 @@ class ClientService(
       existingClientConfig.clientEndDate = getClientEndDate(validDays)
     }
   }
+
+  @Transactional(readOnly = true)
+  fun retrieveAllClientDetails(clientId: String): AllClientDetails {
+    val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
+    val client = clientClientConfigPair.first
+    val clientConfig = clientClientConfigPair.second
+    setValidDays(clientConfig)
+
+    val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(client.id, clientId))
+      ?: throw ClientNotFoundException(AuthorizationConsent::class.simpleName, clientId)
+
+    return AllClientDetails(listOf(client), client, clientConfig, authorizationConsent)
+  }
+
+  private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig> {
+    val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(baseClientId.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
+    return Pair(existingClient, existingClientConfig)
+  }
+
+  private fun setValidDays(clientConfig: ClientConfig) =
+    clientConfig.clientEndDate?.let {
+      val daysToClientExpiry = ChronoUnit.DAYS.between(LocalDate.now(), clientConfig.clientEndDate)
+      val daysToClientExpiryIncludingToday = daysToClientExpiry + 1
+      clientConfig.validDays = if (daysToClientExpiry < 0) 0 else daysToClientExpiryIncludingToday
+    }
 
   private fun getClientEndDate(validDays: Long?): LocalDate? {
     return validDays?.let {
@@ -87,6 +117,13 @@ class ClientService(
     }
   }
 }
+
+data class AllClientDetails(
+  val clients: List<Client>,
+  val latestClient: Client,
+  val clientConfig: ClientConfig,
+  val authorizationConsent: AuthorizationConsent,
+)
 
 class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")
 
