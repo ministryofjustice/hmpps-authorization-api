@@ -49,17 +49,18 @@ class ClientService(
 
   @Transactional
   fun editClientCredentials(clientId: String, clientDetails: ClientCredentialsUpdateRequest) {
-    // TODO authorities update !
-
     val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
-    val existingClient = clientClientConfigPair.first
-    val existingClientConfig = clientClientConfigPair.second
+    val client = clientClientConfigPair.first
+    val clientConfig = clientClientConfigPair.second
+
+    val authorizationConsent = retrieveAuthorizationConsent(client)
 
     with(clientDetails) {
-      existingClient.scopes = scopes
-      existingClient.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber)
-      existingClientConfig.ips = ips
-      existingClientConfig.clientEndDate = getClientEndDate(validDays)
+      client.scopes = scopes
+      client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber)
+      clientConfig.ips = ips
+      clientConfig.clientEndDate = getClientEndDate(validDays)
+      authorizationConsent.authorities = authorities
     }
   }
 
@@ -69,11 +70,7 @@ class ClientService(
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
     setValidDays(clientConfig)
-
-    val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(client.id, clientId))
-      ?: throw ClientNotFoundException(AuthorizationConsent::class.simpleName, clientId)
-
-    return AllClientDetails(listOf(client), client, clientConfig, authorizationConsent)
+    return AllClientDetails(listOf(client), client, clientConfig, retrieveAuthorizationConsent(client))
   }
 
   private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig> {
@@ -81,6 +78,15 @@ class ClientService(
     val existingClientConfig = clientConfigRepository.findByIdOrNull(baseClientId.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
     return Pair(existingClient, existingClientConfig)
   }
+
+  private fun retrieveAuthorizationConsent(client: Client) =
+    authorizationConsentRepository.findByIdOrNull(
+      AuthorizationConsent.AuthorizationConsentId(
+        client.id,
+        client.clientId,
+      ),
+    )
+      ?: throw ClientNotFoundException(AuthorizationConsent::class.simpleName, client.clientId)
 
   private fun setValidDays(clientConfig: ClientConfig) =
     clientConfig.clientEndDate?.let {

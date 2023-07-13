@@ -17,7 +17,7 @@ data class AuthorizationConsent(
 
   @Column(name = "authorities")
   @Convert(converter = StringListConverter::class)
-  val authorities: List<String> = emptyList(),
+  var authorities: List<String> = emptyList(),
 ) {
 
   class AuthorizationConsentId(
