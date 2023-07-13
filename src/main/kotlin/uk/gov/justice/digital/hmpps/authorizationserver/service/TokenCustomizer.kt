@@ -69,7 +69,7 @@ class TokenCustomizer(
         }
 
         claim("auth_source", fromNullableString(it.additionalParameters[REQUEST_PARAM_AUTH_SOURCE] as String?).source)
-        registeredClientAdditionalInformation.getDatabaseUserName(principal.registeredClient)?.let { databaseUsername ->
+        registeredClientAdditionalInformation.getDatabaseUserName(principal.registeredClient?.tokenSettings)?.let { databaseUsername ->
           claim("database_username", databaseUsername)
         }
       }

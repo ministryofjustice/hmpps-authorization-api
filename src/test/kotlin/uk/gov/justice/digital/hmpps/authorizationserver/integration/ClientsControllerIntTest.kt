@@ -339,6 +339,85 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class ViewClient {
+
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.get().uri("/clients/client-credentials/testy/view")
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.get().uri("/clients/client-credentials/testy/view")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.get().uri("/clients/client-credentials/testy/view")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `not found`() {
+      webTestClient.get().uri("/clients/client-credentials/not-found/view")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `view client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/clients/client-credentials/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-more-test",
+              "clientName" to "test more testing",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-more-mctest-1",
+              "jiraNumber" to "HAAR-7777",
+              "validDays" to 5,
+              "accessTokenValidity" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/clients/client-credentials/test-more-test/view")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-more-test")
+        .jsonPath("clientName").isEqualTo("test more testing")
+        .jsonPath("scopes[0]").isEqualTo("read")
+        .jsonPath("scopes[1]").isEqualTo("write")
+        .jsonPath("authorities[0]").isEqualTo("CURIOUS_API")
+        .jsonPath("authorities[1]").isEqualTo("VIEW_PRISONER_DATA")
+        .jsonPath("authorities[2]").isEqualTo("COMMUNITY")
+        .jsonPath("ips[0]").isEqualTo("81.134.202.29/32")
+        .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
+        .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
+        .jsonPath("validDays").isEqualTo(5)
+        .jsonPath("accessTokenValidity").isEqualTo(20)
+    }
+  }
+
   private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String) {
     val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId)).get()
     assertThat(authorizationConsent.authorities).contains(*authorities)
