@@ -9,7 +9,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
-import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.DATABASE_USER_NAME_KEY
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.JIRA_NUMBER_KEY
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthJson
 import java.time.Instant
 
@@ -52,11 +53,11 @@ data class Client(
 ) {
 
   fun getDatabaseUserName(): String? {
-    return tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY] as String?
+    return tokenSettings.settings[DATABASE_USER_NAME_KEY] as String?
   }
 
   fun getJiraNumber(): String? {
-    return tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY] as String?
+    return tokenSettings.settings[JIRA_NUMBER_KEY] as String?
   }
 }
 

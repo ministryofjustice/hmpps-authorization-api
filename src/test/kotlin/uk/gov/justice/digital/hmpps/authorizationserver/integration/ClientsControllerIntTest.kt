@@ -334,7 +334,6 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
-
       verifyAuthorities(client.id!!, client.clientId, "VIEW_PRISONER_DATA", "COMMUNITY")
     }
   }
@@ -420,6 +419,6 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
   private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String) {
     val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId)).get()
-    assertThat(authorizationConsent.authorities).contains(*authorities)
+    assertThat(authorizationConsent.authorities).containsOnly(*authorities)
   }
 }
