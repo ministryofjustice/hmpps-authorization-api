@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -163,7 +162,6 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
 
       val clientDeployment = clientDeploymentRepository.findById("mctesty").get()
-      assertNotNull(clientDeployment)
       assertThat(clientDeployment.baseClientId).isEqualTo("mctesty")
       assertThat(clientDeployment.clientType).isEqualTo(ClientType.PERSONAL)
       assertThat(clientDeployment.team).isEqualTo("testing team")
