@@ -6,14 +6,18 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDeploymentService
 
 @Controller
-class ClientDeploymentController {
+class ClientDeploymentController(
+  private val clientDeploymentService: ClientDeploymentService,
+) {
 
   @PostMapping("clients/deployment/add")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun addDeployment(@RequestBody clientDeployment: ClientDeploymentDetailsRequest) {
+    clientDeploymentService.add(clientDeployment)
   }
 }
 

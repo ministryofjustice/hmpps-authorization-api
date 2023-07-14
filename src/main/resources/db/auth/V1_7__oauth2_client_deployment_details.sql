@@ -1,4 +1,4 @@
-CREATE TABLE oauth_client_deployment_details
+CREATE TABLE oauth2_client_deployment_details
 (
     base_client_id  varchar(100) NOT NULL,
     client_type     varchar(255),

@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRe
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsUpdateRequest
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.BaseClientId
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
@@ -29,7 +29,7 @@ class ClientService(
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oAuthClientSecret: OAuthClientSecret,
-  private val baseClientId: BaseClientId,
+  private val clientIdConverter: ClientIdConverter,
 ) {
 
   @Transactional
@@ -75,7 +75,7 @@ class ClientService(
 
   private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig> {
     val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
-    val existingClientConfig = clientConfigRepository.findByIdOrNull(baseClientId.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdConverter.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
     return Pair(existingClient, existingClientConfig)
   }
 
