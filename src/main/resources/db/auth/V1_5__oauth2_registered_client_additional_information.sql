@@ -1,1 +1,0 @@
-ALTER TABLE oauth2_registered_client ADD COLUMN additional_information varchar(255) DEFAULT NULL;
