@@ -28,7 +28,7 @@ CREATE TABLE oauth2_authorization
     user_code_value               text          DEFAULT NULL,
     user_code_issued_at           timestamp     DEFAULT NULL,
     user_code_expires_at          timestamp     DEFAULT NULL,
-    oauth2_authorization          text          DEFAULT NULL,
+    user_code_metadata            text          DEFAULT NULL,
     device_code_value             text          DEFAULT NULL,
     device_code_issued_at         timestamp     DEFAULT NULL,
     device_code_expires_at        timestamp     DEFAULT NULL,
