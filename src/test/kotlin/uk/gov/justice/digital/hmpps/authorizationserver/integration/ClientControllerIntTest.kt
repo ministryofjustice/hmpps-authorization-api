@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
 
-class ClientsControllerIntTest : IntegrationTestBase() {
+class ClientControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var jdbcRegisteredClientRepository: JdbcRegisteredClientRepository

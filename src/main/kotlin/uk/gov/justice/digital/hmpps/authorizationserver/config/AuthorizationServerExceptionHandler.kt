@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientAlreadyExistsException
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDeploymentAlreadyExistsException
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientNotFoundException
 
 @RestControllerAdvice
@@ -19,6 +20,21 @@ class AuthorizationServerExceptionHandler {
 
   @ExceptionHandler(ClientAlreadyExistsException::class)
   fun handleClientAlreadyExistsException(e: ClientAlreadyExistsException): ResponseEntity<ErrorResponse> {
+    log.debug("Bad request returned with message {}", e.message)
+    return ResponseEntity
+      .status(HttpStatus.BAD_REQUEST)
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.BAD_REQUEST,
+          userMessage = e.message,
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(ClientDeploymentAlreadyExistsException::class)
+  fun handleClientDeploymentAlreadyExistsException(e: ClientDeploymentAlreadyExistsException): ResponseEntity<ErrorResponse> {
     log.debug("Bad request returned with message {}", e.message)
     return ResponseEntity
       .status(HttpStatus.BAD_REQUEST)

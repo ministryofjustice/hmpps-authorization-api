@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.AllClientDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientService
 
 @Controller
-class ClientsController(
+class ClientController(
   private val clientService: ClientService,
 ) {
 
