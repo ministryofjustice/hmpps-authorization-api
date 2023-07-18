@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
+import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -10,12 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
-import uk.gov.justice.digital.hmpps.authorizationserver.service.AllClientDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientService
 
 @Controller
 class ClientController(
   private val clientService: ClientService,
+  private val conversionService: ConversionService,
 ) {
 
   @PostMapping("clients/client-credentials/add")
@@ -36,8 +37,12 @@ class ClientController(
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun viewClient(@PathVariable clientId: String): ResponseEntity<Any> {
-    val allClientDetails = clientService.retrieveAllClientDetails(clientId)
-    return ResponseEntity.ok(ClientCredentialsViewResponse.fromAllClientDetails(allClientDetails))
+    return ResponseEntity.ok(
+      conversionService.convert(
+        clientService.retrieveAllClientDetails(clientId),
+        ClientCredentialsViewResponse::class.java,
+      ),
+    )
   }
 }
 
@@ -51,25 +56,7 @@ data class ClientCredentialsViewResponse(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValidity: Long?,
-) {
-  companion object {
-    fun fromAllClientDetails(allClientDetails: AllClientDetails): ClientCredentialsViewResponse {
-      with(allClientDetails) {
-        return ClientCredentialsViewResponse(
-          latestClient.clientId,
-          latestClient.clientName,
-          latestClient.scopes,
-          authorizationConsent.authorities,
-          clientConfig.ips,
-          latestClient.getJiraNumber(),
-          latestClient.getDatabaseUserName(),
-          clientConfig.validDays,
-          latestClient.tokenSettings.accessTokenTimeToLive.toMinutes(),
-        )
-      }
-    }
-  }
-}
+)
 
 data class ClientCredentialsUpdateRequest(
   val scopes: List<String>,
