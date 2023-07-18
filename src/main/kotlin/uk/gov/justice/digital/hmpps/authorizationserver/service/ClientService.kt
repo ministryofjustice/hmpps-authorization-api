@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.springframework.core.convert.ConversionService
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.oauth2.core.AuthorizationGrantType
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod
-import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -17,10 +15,8 @@ import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentia
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
-import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 @Service
 class ClientService(
@@ -30,6 +26,7 @@ class ClientService(
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oAuthClientSecret: OAuthClientSecret,
   private val clientIdConverter: ClientIdConverter,
+  private val conversionService: ConversionService,
 ) {
 
   @Transactional
@@ -39,9 +36,12 @@ class ClientService(
       throw ClientAlreadyExistsException(clientDetails.clientId)
     }
 
+    var client = conversionService.convert(clientDetails, Client::class.java)
     val externalClientSecret = oAuthClientSecret.generate()
-    val client = clientRepository.save(buildNewClient(clientDetails, oAuthClientSecret.encode(externalClientSecret)))
-    authorizationConsentRepository.save(AuthorizationConsent(client.id!!, client.clientId, clientDetails.authorities))
+    client!!.clientSecret = oAuthClientSecret.encode(externalClientSecret)
+
+    client = clientRepository.save(client)
+    authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, clientDetails.authorities))
     clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails.validDays)))
 
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
@@ -99,27 +99,6 @@ class ClientService(
     return validDays?.let {
       val validDaysIncludeToday = it.minus(1)
       LocalDate.now().plusDays(validDaysIncludeToday)
-    }
-  }
-
-  private fun buildNewClient(clientDetails: ClientCredentialsRegistrationRequest, encodedClientSecret: String): Client {
-    with(clientDetails) {
-      return Client(
-        id = UUID.randomUUID().toString(),
-        clientId = clientId,
-        clientIdIssuedAt = Instant.now(),
-        clientSecret = encodedClientSecret,
-        clientSecretExpiresAt = null,
-        clientName = clientName,
-        clientAuthenticationMethods = ClientAuthenticationMethod.CLIENT_SECRET_BASIC.value,
-        authorizationGrantTypes = AuthorizationGrantType.CLIENT_CREDENTIALS.value,
-        scopes = scopes,
-        clientSettings =
-        ClientSettings.builder()
-          .requireProofKey(false)
-          .requireAuthorizationConsent(false).build(),
-        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber),
-      )
     }
   }
 }

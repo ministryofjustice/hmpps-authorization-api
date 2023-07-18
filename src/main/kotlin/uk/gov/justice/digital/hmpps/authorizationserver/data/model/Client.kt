@@ -23,7 +23,7 @@ data class Client(
   var clientId: String,
 
   val clientIdIssuedAt: Instant,
-  val clientSecret: String,
+  var clientSecret: String? = null,
   val clientSecretExpiresAt: Instant? = null,
   var clientName: String,
 
