@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.apache.commons.codec.binary.Base64.encodeBase64URLSafe
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.crypto.keygen.KeyGenerators.secureRandom
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
@@ -11,7 +13,7 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationserver.service.AuthSource.Companion.fromNullableString
-import java.util.UUID
+import java.nio.charset.Charset.forName
 import java.util.stream.Collectors
 
 @Component
@@ -23,6 +25,7 @@ class TokenCustomizer(
   companion object {
     private const val REQUEST_PARAM_USER_NAME = "username"
     private const val REQUEST_PARAM_AUTH_SOURCE = "auth_source"
+    private const val US_ASCII_CHARS_SET = "US-ASCII"
   }
 
   override fun customize(context: JwtEncodingContext?) {
@@ -53,12 +56,15 @@ class TokenCustomizer(
     }
   }
 
+  private fun generateTokenId() = String(
+    encodeBase64URLSafe(secureRandom(20).generateKey()),
+    forName(US_ASCII_CHARS_SET),
+  )
   private fun addAuthorities(context: JwtEncodingContext, grantedAuthorities: Collection<GrantedAuthority>) {
     val authorities = grantedAuthorities.stream().map { obj: GrantedAuthority -> obj.authority }
       .collect(Collectors.toSet())
     context.claims.claim("authorities", authorities)
   }
-
   private fun customizeClientCredentials(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     with(context.claims) {
       val token: OAuth2ClientCredentialsAuthenticationToken? = context.getAuthorizationGrant()
@@ -77,7 +83,7 @@ class TokenCustomizer(
       claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
       claim("scope", principal.registeredClient?.scopes)
       claim("grant_type", context.authorizationGrantType.value)
-      claim("jti", UUID.randomUUID().toString())
+      claim("jti", generateTokenId())
     }
   }
 }
