@@ -11,13 +11,14 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationserver.service.AuthSource.Companion.fromNullableString
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthJtiGenerator
 import java.util.stream.Collectors
 
 @Component
 class TokenCustomizer(
   private val authorizationConsentService: OAuth2AuthorizationConsentService,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
+  private val oauthJtiGenerator: OAuthJtiGenerator,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
   companion object {
@@ -58,7 +59,6 @@ class TokenCustomizer(
       .collect(Collectors.toSet())
     context.claims.claim("authorities", authorities)
   }
-
   private fun customizeClientCredentials(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     with(context.claims) {
       val token: OAuth2ClientCredentialsAuthenticationToken? = context.getAuthorizationGrant()
@@ -77,7 +77,7 @@ class TokenCustomizer(
       claim("client_id", principal.registeredClient?.clientId ?: "Unknown")
       claim("scope", principal.registeredClient?.scopes)
       claim("grant_type", context.authorizationGrantType.value)
-      claim("jti", UUID.randomUUID().toString())
+      claim("jti", oauthJtiGenerator.generateTokenId())
     }
   }
 }
