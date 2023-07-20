@@ -151,6 +151,9 @@ class AuthorizationServerConfig(
   @Bean
   fun authenticationEventPublisher
   (applicationEventPublisher: ApplicationEventPublisher?): AuthenticationEventPublisher {
+    // Note: DefaultAuthenticationEventPublisher provides a mapping between a number of exception types and corresponding events.
+    // We could set up subscriptions (very simple using @EventListener annotation) to any of these as necessary,
+    // plus add additional mappings, as below.
     val eventPublisher = DefaultAuthenticationEventPublisher(applicationEventPublisher)
     eventPublisher.setAdditionalExceptionMappings(
       mapOf(OAuth2AuthenticationException::class.java to OAuth2AuthenticationFailureEvent::class.java),
