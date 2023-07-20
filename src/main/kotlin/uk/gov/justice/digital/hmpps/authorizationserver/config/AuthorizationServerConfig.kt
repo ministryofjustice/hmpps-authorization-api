@@ -7,13 +7,16 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.core.convert.converter.Converter
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.security.authentication.AuthenticationEventPublisher
 import org.springframework.security.authentication.AuthenticationProvider
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -22,6 +25,7 @@ import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
@@ -41,6 +45,8 @@ import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.service.LoggingAuthenticationFailureHandler
+import uk.gov.justice.digital.hmpps.authorizationserver.service.OAuth2AuthenticationFailureEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegistrationAdditionalDataHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
@@ -69,6 +75,7 @@ class AuthorizationServerConfig(
     http: HttpSecurity,
     registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
     registeredClientDataService: RegisteredClientDataService,
+    loggingAuthenticationFailureHandler: LoggingAuthenticationFailureHandler,
   ): SecurityFilterChain {
     val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer()
     http.apply(authorizationServerConfigurer)
@@ -139,6 +146,19 @@ class AuthorizationServerConfig(
     // NOTE: Further encoders could be added here if required
     encoders[idForEncode] = BCryptPasswordEncoder(10)
     return DelegatingPasswordEncoder(idForEncode, encoders)
+  }
+
+  @Bean
+  fun authenticationEventPublisher
+  (applicationEventPublisher: ApplicationEventPublisher?): AuthenticationEventPublisher {
+    // Note: DefaultAuthenticationEventPublisher provides a mapping between a number of exception types and corresponding events.
+    // We could set up subscriptions (very simple using @EventListener annotation) to any of these as necessary,
+    // plus add additional mappings, as below.
+    val eventPublisher = DefaultAuthenticationEventPublisher(applicationEventPublisher)
+    eventPublisher.setAdditionalExceptionMappings(
+      mapOf(OAuth2AuthenticationException::class.java to OAuth2AuthenticationFailureEvent::class.java),
+    )
+    return eventPublisher
   }
 
   @Bean

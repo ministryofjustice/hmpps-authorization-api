@@ -1,132 +1,170 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.verify
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpHeaders
 import java.util.Base64
 
 class OAuthIntTest : IntegrationTestBase() {
 
-  @Test
-  fun `client credentials token request - client with database username`() {
-    val clientCredentialsResponse = webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials")
-      .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secret").toByteArray()))
-      .exchange()
-      .expectStatus().isOk
-      .expectBody()
-      .jsonPath("$").value<Map<String, Any>> {
-        assertThat(it).containsKey("expires_in")
-        assertThat(it["expires_in"] as Int).isLessThan(301)
-      }
-      .returnResult().responseBody
+  @MockBean
+  private lateinit var telemetryClient: TelemetryClient
 
-    val payload = getTokenPayload(String(clientCredentialsResponse))
-    assertThat(payload.get("sub")).isEqualTo("test-client-id")
-    assertThat(payload.get("auth_source")).isEqualTo("none")
-    assertThat(payload.get("database_username")).isEqualTo("testy-db")
-    assertTrue(payload.isNull("user_name"))
-  }
+  @Nested
+  inner class ClientCredentials {
 
-  @Test
-  fun `client credentials token request - client without database username`() {
-    val clientCredentialsResponse = webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials")
-      .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("ip-allow-a-client-1:test-secret").toByteArray()))
-      .exchange()
-      .expectStatus().isOk
-      .expectBody()
-      .jsonPath("$").value<Map<String, Any>> {
-        assertThat(it).containsKey("expires_in")
-        assertThat(it["expires_in"] as Int).isLessThan(301)
-      }
-      .returnResult().responseBody
+    @Test
+    fun `client with database username`() {
+      val clientCredentialsResponse = webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials")
+        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secret").toByteArray()))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("$").value<Map<String, Any>> {
+          assertThat(it["expires_in"] as Int).isLessThan(301)
+        }
+        .returnResult().responseBody
 
-    val payload = getTokenPayload(String(clientCredentialsResponse))
-    assertThat(payload.get("sub")).isEqualTo("ip-allow-a-client-1")
-    assertThat(payload.get("auth_source")).isEqualTo("none")
-    assertTrue(payload.isNull("database_username"))
-    assertTrue(payload.isNull("user_name"))
-  }
+      val token = getTokenPayload(String(clientCredentialsResponse!!))
+      assertThat(token.get("sub")).isEqualTo("test-client-id")
+      assertThat(token.get("auth_source")).isEqualTo("none")
+      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
 
-  @Test
-  fun `client credentials token request with user name`() {
-    val clientCredentialsResponse = webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials&username=testy")
-      .header(
-        HttpHeaders.AUTHORIZATION,
-        "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+      assertThat(token.get("database_username")).isEqualTo("testy-db")
+      assertTrue(token.isNull("user_name"))
+    }
+
+    @Test
+    fun `client without database username`() {
+      val clientCredentialsResponse = webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials")
+        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("ip-allow-a-client-1:test-secret").toByteArray()))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("$").value<Map<String, Any>> {
+          assertThat(it["expires_in"] as Int).isLessThan(301)
+        }
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(clientCredentialsResponse!!))
+      assertThat(token.get("sub")).isEqualTo("ip-allow-a-client-1")
+      assertThat(token.get("auth_source")).isEqualTo("none")
+      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+
+      assertTrue(token.isNull("database_username"))
+      assertTrue(token.isNull("user_name"))
+    }
+
+    @Test
+    fun `client with user name`() {
+      val clientCredentialsResponse = webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials&username=testy")
+        .header(
+          HttpHeaders.AUTHORIZATION,
+          "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(clientCredentialsResponse!!))
+      assertThat(token.get("sub")).isEqualTo("testy")
+      assertThat(token.get("auth_source")).isEqualTo("none")
+      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+
+      assertTrue(token.isNull("database_username"))
+      assertThat(token.get("user_name")).isEqualTo("testy")
+    }
+
+    @Test
+    fun `client with auth source`() {
+      val clientCredentialsResponse = webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=delius")
+        .header(
+          HttpHeaders.AUTHORIZATION,
+          "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(clientCredentialsResponse!!))
+      assertThat(token.get("sub")).isEqualTo("test-client-create-id")
+      assertThat(token.get("auth_source")).isEqualTo("delius")
+      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+
+      assertTrue(token.isNull("user_name"))
+      assertTrue(token.isNull("database_username"))
+    }
+
+    @Test
+    fun `client with unrecognised auth source`() {
+      val clientCredentialsResponse = webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=xdelius")
+        .header(
+          HttpHeaders.AUTHORIZATION,
+          "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(clientCredentialsResponse))
+      assertThat(token.get("sub")).isEqualTo("test-client-create-id")
+      assertThat(token.get("auth_source")).isEqualTo("none")
+      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+
+      assertTrue(token.isNull("user_name"))
+    }
+
+    @Test
+    fun `incorrect secret`() {
+      webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials")
+        .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secretx").toByteArray()))
+        .exchange()
+        .expectStatus().isUnauthorized
+
+      verify(telemetryClient).trackEvent(
+        "CreateAccessTokenFailure",
+        mapOf("clientId" to "test-client-id", "clientIpAddress" to "127.0.0.1"),
+        null,
       )
-      .exchange()
-      .expectStatus().isOk
-      .expectBody()
-      .returnResult().responseBody
+    }
 
-    val payload = getTokenPayload(String(clientCredentialsResponse))
-    assertThat(payload.get("sub")).isEqualTo("testy")
-    assertThat(payload.get("user_name")).isEqualTo("testy")
-  }
+    @Test
+    fun `unrecognised client id`() {
+      webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials")
+        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("unrecognised-client-id:test-secret").toByteArray()))
+        .exchange()
+        .expectStatus().isUnauthorized
 
-  @Test
-  fun `client credentials token request with auth source`() {
-    val clientCredentialsResponse = webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=delius")
-      .header(
-        HttpHeaders.AUTHORIZATION,
-        "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+      verify(telemetryClient).trackEvent(
+        "CreateAccessTokenFailure",
+        mapOf("clientId" to "unrecognised-client-id", "clientIpAddress" to "127.0.0.1"),
+        null,
       )
-      .exchange()
-      .expectStatus().isOk
-      .expectBody()
-      .returnResult().responseBody
+    }
 
-    val payload = getTokenPayload(String(clientCredentialsResponse))
-    assertThat(payload.get("auth_source")).isEqualTo("delius")
-  }
-
-  @Test
-  fun `client credentials token request with unrecognised auth source`() {
-    val clientCredentialsResponse = webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=xdelius")
-      .header(
-        HttpHeaders.AUTHORIZATION,
-        "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
-      )
-      .exchange()
-      .expectStatus().isOk
-      .expectBody()
-      .returnResult().responseBody
-
-    val payload = getTokenPayload(String(clientCredentialsResponse))
-    assertThat(payload.get("auth_source")).isEqualTo("none")
-  }
-
-  @Test
-  fun `client credentials login - incorrect secret`() {
-    webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials")
-      .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secretx").toByteArray()))
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
-
-  @Test
-  fun `client credentials login - unrecognised client id`() {
-    webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials")
-      .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("unrecognised-client-id:test-secret").toByteArray()))
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
-
-  @Test
-  fun `client credentials - anonymous token request`() {
-    webTestClient
-      .post().uri("/oauth2/token?grant_type=client_credentials")
-      .exchange()
-      .expectStatus().isUnauthorized
+    @Test
+    fun `anonymous token request`() {
+      webTestClient
+        .post().uri("/oauth2/token?grant_type=client_credentials")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
   }
 
   private fun getTokenPayload(response: String): JSONObject {

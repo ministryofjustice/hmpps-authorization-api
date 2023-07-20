@@ -20,6 +20,7 @@ dependencies {
 
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.10.0")
+  implementation("io.opentelemetry:opentelemetry-api:1.27.0")
 
   runtimeOnly("com.h2database:h2:2.1.214")
   runtimeOnly("org.postgresql:postgresql:42.6.0")
