@@ -46,7 +46,7 @@ class TokenCustomizer(
 
   private fun addClientAuthorities(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     principal.registeredClient?.let { registeredClient ->
-      val oAuth2AuthorizationConsent = authorizationConsentService.findById(registeredClient.id, registeredClient.clientName)
+      val oAuth2AuthorizationConsent = authorizationConsentService.findById(registeredClient.id, registeredClient.clientId)
 
       oAuth2AuthorizationConsent?.let {
         addAuthorities(context, it.authorities)

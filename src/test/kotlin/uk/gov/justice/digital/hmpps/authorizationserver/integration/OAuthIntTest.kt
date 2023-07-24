@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
@@ -36,6 +37,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("test-client-id")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING")))
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertTrue(token.isNull("user_name"))
@@ -64,12 +66,12 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `client with user name`() {
+    fun `user name passed in`() {
       val clientCredentialsResponse = webTestClient
         .post().uri("/oauth2/token?grant_type=client_credentials&username=testy")
         .header(
           HttpHeaders.AUTHORIZATION,
-          "Basic " + Base64.getEncoder().encodeToString(("test-client-create-id:test-secret").toByteArray()),
+          "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secret").toByteArray()),
         )
         .exchange()
         .expectStatus().isOk
@@ -80,13 +82,14 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("testy")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING")))
 
-      assertTrue(token.isNull("database_username"))
+      assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertThat(token.get("user_name")).isEqualTo("testy")
     }
 
     @Test
-    fun `client with auth source`() {
+    fun `auth source passed in`() {
       val clientCredentialsResponse = webTestClient
         .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=delius")
         .header(
@@ -102,13 +105,14 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
       assertThat(token.get("auth_source")).isEqualTo("delius")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+      assertTrue(token.isNull("authorities"))
 
       assertTrue(token.isNull("user_name"))
       assertTrue(token.isNull("database_username"))
     }
 
     @Test
-    fun `client with unrecognised auth source`() {
+    fun `unrecognised auth source passed in`() {
       val clientCredentialsResponse = webTestClient
         .post().uri("/oauth2/token?grant_type=client_credentials&auth_source=xdelius")
         .header(
@@ -124,8 +128,10 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+      assertTrue(token.isNull("authorities"))
 
       assertTrue(token.isNull("user_name"))
+      assertTrue(token.isNull("database_username"))
     }
 
     @Test
