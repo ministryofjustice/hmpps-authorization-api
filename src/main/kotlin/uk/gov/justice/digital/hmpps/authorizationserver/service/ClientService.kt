@@ -41,7 +41,7 @@ class ClientService(
     client!!.clientSecret = oAuthClientSecret.encode(externalClientSecret)
 
     client = clientRepository.save(client)
-    authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientName, clientDetails.authorities))
+    authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, clientDetails.authorities))
     clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails.validDays)))
 
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
