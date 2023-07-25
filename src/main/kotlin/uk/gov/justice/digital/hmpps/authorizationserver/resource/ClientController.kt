@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -11,19 +12,26 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
+import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
+import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientService
 
 @Controller
 class ClientController(
   private val clientService: ClientService,
   private val conversionService: ConversionService,
+  private val telemetryClient: TelemetryClient,
+  private val authenticationFacade: AuthenticationFacade,
 ) {
 
   @PostMapping("clients/client-credentials/add")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun addClient(@RequestBody clientDetails: ClientCredentialsRegistrationRequest): ResponseEntity<Any> {
-    return ResponseEntity.ok(clientService.addClientCredentials(clientDetails))
+    val registrationResponse = clientService.addClientCredentials(clientDetails)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId)
+    telemetryClient.trackEvent("AuthorizationServerClientCredentialsDetailsAdd", telemetryMap)
+    return ResponseEntity.ok(registrationResponse)
   }
 
   @PutMapping("clients/client-credentials/{clientId}/update")
@@ -31,6 +39,8 @@ class ClientController(
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun editClient(@PathVariable clientId: String, @RequestBody clientDetails: ClientCredentialsUpdateRequest) {
     clientService.editClientCredentials(clientId, clientDetails)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientId)
+    telemetryClient.trackEvent("AuthorizationServerClientCredentialsUpdate", telemetryMap, null)
   }
 
   @GetMapping("clients/client-credentials/{clientId}/view")
