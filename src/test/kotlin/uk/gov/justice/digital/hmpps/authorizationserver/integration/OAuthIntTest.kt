@@ -143,7 +143,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectStatus().isUnauthorized
 
       verify(telemetryClient).trackEvent(
-        "CreateAccessTokenFailure",
+        "AuthorizationServerCreateAccessTokenFailure",
         mapOf("clientId" to "test-client-id", "clientIpAddress" to "127.0.0.1"),
         null,
       )
@@ -158,7 +158,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectStatus().isUnauthorized
 
       verify(telemetryClient).trackEvent(
-        "CreateAccessTokenFailure",
+        "AuthorizationServerCreateAccessTokenFailure",
         mapOf("clientId" to "unrecognised-client-id", "clientIpAddress" to "127.0.0.1"),
         null,
       )

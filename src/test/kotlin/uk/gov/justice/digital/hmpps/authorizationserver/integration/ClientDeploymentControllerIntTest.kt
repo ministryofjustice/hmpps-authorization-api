@@ -1,15 +1,21 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 
 class ClientDeploymentControllerIntTest : IntegrationTestBase() {
+
+  @MockBean
+  private lateinit var telemetryClient: TelemetryClient
 
   @Autowired
   lateinit var clientDeploymentRepository: ClientDeploymentRepository
@@ -173,6 +179,12 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
       assertThat(clientDeployment.secretName).isEqualTo("hmpps-testing")
       assertThat(clientDeployment.clientIdKey).isEqualTo("SYSTEM_CLIENT_ID")
       assertThat(clientDeployment.secretKey).isEqualTo("SYSTEM_CLIENT_SECRET")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientDeploymentDetailsUpdated",
+        mapOf("username" to "AUTH_ADM", "baseClientId" to "mctesty"),
+        null,
+      )
     }
   }
 }

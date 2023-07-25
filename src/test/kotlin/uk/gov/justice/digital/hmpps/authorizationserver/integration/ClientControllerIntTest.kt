@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -36,6 +38,9 @@ class ClientControllerIntTest : IntegrationTestBase() {
 
   @MockBean
   lateinit var oAuthClientSecretGenerator: OAuthClientSecret
+
+  @MockBean
+  private lateinit var telemetryClient: TelemetryClient
 
   @Nested
   inner class AddClient {
@@ -172,6 +177,12 @@ class ClientControllerIntTest : IntegrationTestBase() {
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
       verifyAuthorities(client.id!!, client.clientId, "CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientCredentialsDetailsAdd",
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        null,
+      )
     }
   }
 
@@ -335,6 +346,12 @@ class ClientControllerIntTest : IntegrationTestBase() {
       assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
       verifyAuthorities(client.id!!, client.clientId, "VIEW_PRISONER_DATA", "COMMUNITY")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientCredentialsUpdate",
+        mapOf("username" to "AUTH_ADM", "clientId" to "test-test"),
+        null,
+      )
     }
   }
 
