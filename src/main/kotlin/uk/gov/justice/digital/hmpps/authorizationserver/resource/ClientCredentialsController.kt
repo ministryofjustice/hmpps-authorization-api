@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
-import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientService
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsService
 
 @Controller
-class ClientController(
-  private val clientService: ClientService,
+class ClientCredentialsController(
+  private val clientService: ClientCredentialsService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
@@ -49,7 +49,7 @@ class ClientController(
   fun viewClient(@PathVariable clientId: String): ResponseEntity<Any> {
     return ResponseEntity.ok(
       conversionService.convert(
-        clientService.retrieveAllClientDetails(clientId),
+        clientService.retrieveClientFullDetails(clientId),
         ClientCredentialsViewResponse::class.java,
       ),
     )
