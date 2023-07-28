@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
 
-class ClientControllerIntTest : IntegrationTestBase() {
+class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var jdbcRegisteredClientRepository: JdbcRegisteredClientRepository
@@ -183,6 +183,8 @@ class ClientControllerIntTest : IntegrationTestBase() {
         mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
         null,
       )
+
+      clientRepository.delete(client)
     }
   }
 
@@ -352,6 +354,8 @@ class ClientControllerIntTest : IntegrationTestBase() {
         mapOf("username" to "AUTH_ADM", "clientId" to "test-test"),
         null,
       )
+
+      clientRepository.delete(client)
     }
   }
 
@@ -431,6 +435,9 @@ class ClientControllerIntTest : IntegrationTestBase() {
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
         .jsonPath("accessTokenValidity").isEqualTo(20)
+
+      val client = clientRepository.findClientByClientId("test-more-test")
+      clientRepository.delete(client)
     }
   }
 

@@ -13,12 +13,15 @@ import java.io.Serializable
 @Table(name = "oauth2_authorization_consent")
 data class AuthorizationConsent(
   @Id private val registeredClientId: String,
-  @Id private val principalName: String,
+  @Id val principalName: String,
 
   @Column(name = "authorities")
   @Convert(converter = StringListConverter::class)
   var authorities: List<String> = emptyList(),
 ) {
+
+  val authoritiesWithoutPrefix: List<String>
+    get() = authorities.map { it.substringAfter("ROLE_") }
 
   class AuthorizationConsentId(
     private var registeredClientId: String?,

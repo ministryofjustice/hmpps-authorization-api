@@ -19,7 +19,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 @Service
-class ClientService(
+class ClientCredentialsService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
@@ -65,12 +65,12 @@ class ClientService(
   }
 
   @Transactional(readOnly = true)
-  fun retrieveAllClientDetails(clientId: String): AllClientDetails {
+  fun retrieveClientFullDetails(clientId: String): ClientComposite {
     val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
     setValidDays(clientConfig)
-    return AllClientDetails(listOf(client), client, clientConfig, retrieveAuthorizationConsent(client))
+    return ClientComposite(listOf(client), client, clientConfig, retrieveAuthorizationConsent(client))
   }
 
   private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig> {
@@ -103,7 +103,7 @@ class ClientService(
   }
 }
 
-data class AllClientDetails(
+data class ClientComposite(
   val clients: List<Client>,
   val latestClient: Client,
   val clientConfig: ClientConfig,
