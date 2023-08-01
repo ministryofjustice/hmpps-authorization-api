@@ -59,6 +59,8 @@ CREATE TABLE oauth2_registered_client
     client_settings               varchar(2000)                           NOT NULL,
     token_settings                varchar(2000)                           NOT NULL,
     post_logout_redirect_uris     varchar(1000) DEFAULT NULL,
+    last_accessed                 timestamp     DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    secret_updated                timestamp     DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY KEY (id)
 );
 

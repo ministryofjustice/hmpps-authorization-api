@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClient
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.JIRA_NUMBER_KEY
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthJson
 import java.time.Instant
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "oauth2_registered_client")
@@ -50,6 +51,12 @@ data class Client(
   @Column(length = 2000)
   @Convert(converter = TokenSettingsConverter::class)
   var tokenSettings: TokenSettings,
+
+  @Column(name = "last_accessed")
+  var lastAccessed: LocalDateTime = LocalDateTime.now(),
+
+  @Column(name = "secret_updated")
+  var secretUpdated: LocalDateTime = LocalDateTime.now(),
 ) {
 
   fun getDatabaseUserName(): String? {

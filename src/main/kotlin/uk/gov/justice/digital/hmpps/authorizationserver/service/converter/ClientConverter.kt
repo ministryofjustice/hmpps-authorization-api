@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
+import java.time.LocalDateTime
 
 @Component
 class ClientConverter(
@@ -28,6 +29,8 @@ class ClientConverter(
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber),
+        lastAccessed = LocalDateTime.now(),
+        secretUpdated = LocalDateTime.now(),
       )
     }
   }
