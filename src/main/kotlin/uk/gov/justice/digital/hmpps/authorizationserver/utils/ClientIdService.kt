@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.authorizationserver.utils
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.service.MaxDuplicateClientsException
 
 @Component
 class ClientIdService(private val clientRepository: ClientRepository) {
@@ -31,3 +30,6 @@ class ClientIdService(private val clientRepository: ClientRepository) {
     return "$baseClientId-$increment"
   }
 }
+
+class MaxDuplicateClientsException(baseClientId: String) :
+  RuntimeException("Unable to create further clients for baseClientId: $baseClientId as maximum of 3 already reached")
