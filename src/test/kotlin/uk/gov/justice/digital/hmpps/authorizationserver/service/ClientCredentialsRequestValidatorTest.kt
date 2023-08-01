@@ -17,7 +17,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.time.LocalDate
 import java.util.Optional
@@ -26,16 +26,16 @@ class ClientCredentialsRequestValidatorTest {
   private val delegate: AuthenticationProvider = mock()
   private val clientConfigRepository: ClientConfigRepository = mock()
   private val ipAddressHelper: IpAddressHelper = mock()
-  private val clientIdConverter: ClientIdConverter = mock()
+  private val clientIdService: ClientIdService = mock()
 
-  private val clientCredentialsRequestValidator = ClientCredentialsRequestValidator(delegate, clientConfigRepository, ipAddressHelper, clientIdConverter)
+  private val clientCredentialsRequestValidator = ClientCredentialsRequestValidator(delegate, clientConfigRepository, ipAddressHelper, clientIdService)
 
   private val clientId = "testy_mc_tester"
   private lateinit var authenticationToken: OAuth2ClientCredentialsAuthenticationToken
 
   @BeforeEach
   fun setUp() {
-    whenever(clientIdConverter.toBase(anyString())).thenReturn(clientId)
+    whenever(clientIdService.toBase(anyString())).thenReturn(clientId)
     authenticationToken = givenAToken()
   }
 

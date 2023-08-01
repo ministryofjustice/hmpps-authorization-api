@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDeploymentService
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 
 @Controller
 class ClientDeploymentController(
   private val clientDeploymentService: ClientDeploymentService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
-  private val clientIdConverter: ClientIdConverter,
+  private val clientIdService: ClientIdService,
 ) {
 
   @PostMapping("clients/deployment/add")
@@ -27,7 +27,7 @@ class ClientDeploymentController(
     clientDeploymentService.add(clientDeployment)
     val telemetryMap = mapOf(
       "username" to authenticationFacade.currentUsername!!,
-      "baseClientId" to clientIdConverter.toBase(clientDeployment.clientId),
+      "baseClientId" to clientIdService.toBase(clientDeployment.clientId),
     )
     telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsUpdated", telemetryMap)
   }

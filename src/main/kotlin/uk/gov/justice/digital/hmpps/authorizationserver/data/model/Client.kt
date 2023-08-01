@@ -19,7 +19,7 @@ import java.time.Instant
 data class Client(
 
   @Id
-  val id: String?, // TODO configure generation
+  val id: String?,
   var clientId: String,
 
   val clientIdIssuedAt: Instant,

@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.core.convert.ConversionService
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -13,7 +15,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRe
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsUpdateRequest
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -25,8 +27,9 @@ class ClientCredentialsService(
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oAuthClientSecret: OAuthClientSecret,
-  private val clientIdConverter: ClientIdConverter,
+  private val clientIdService: ClientIdService,
   private val conversionService: ConversionService,
+  private val registeredClientRepository: JdbcRegisteredClientRepository,
 ) {
 
   @Transactional
@@ -43,7 +46,6 @@ class ClientCredentialsService(
     client = clientRepository.save(client)
     authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, clientDetails.authorities))
     clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails.validDays)))
-
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
   }
 
@@ -73,9 +75,31 @@ class ClientCredentialsService(
     return ClientComposite(listOf(client), client, clientConfig, retrieveAuthorizationConsent(client))
   }
 
+  @Transactional
+  fun duplicate(clientId: String): ClientCredentialsRegistrationResponse {
+    val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
+    if (clientsByBaseClientId.isEmpty()) {
+      throw ClientNotFoundException(Client::class.simpleName, clientId)
+    }
+
+    val client = clientsByBaseClientId.last()
+    val registeredClient = registeredClientRepository.findByClientId(client.clientId)
+    val registeredClientBuilder = RegisteredClient.from(registeredClient)
+
+    val externalClientSecret = oAuthClientSecret.generate()
+    val duplicatedRegisteredClient = registeredClientBuilder
+      .clientId(clientIdService.incrementClientId(client.clientId))
+      .clientIdIssuedAt(java.time.Instant.now())
+      .clientSecret(oAuthClientSecret.encode(externalClientSecret))
+      .build()
+
+    registeredClientRepository.save(duplicatedRegisteredClient)
+    return ClientCredentialsRegistrationResponse(duplicatedRegisteredClient.clientId, externalClientSecret)
+  }
+
   private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig> {
     val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
-    val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdConverter.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
     return Pair(existingClient, existingClientConfig)
   }
 
@@ -113,3 +137,6 @@ data class ClientComposite(
 class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")
 
 class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")
+
+class MaxDuplicateClientsException(baseClientId: String) :
+  RuntimeException("Unable to create further clients for baseClientId: $baseClientId as maximum of 2 already reached")
