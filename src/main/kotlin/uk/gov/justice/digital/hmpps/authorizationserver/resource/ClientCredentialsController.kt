@@ -40,7 +40,7 @@ class ClientCredentialsController(
   fun editClient(@PathVariable clientId: String, @RequestBody clientDetails: ClientCredentialsUpdateRequest) {
     clientService.editClientCredentials(clientId, clientDetails)
     val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientId)
-    telemetryClient.trackEvent("AuthorizationServerClientCredentialsUpdate", telemetryMap, null)
+    telemetryClient.trackEvent("AuthorizationServerClientCredentialsUpdate", telemetryMap)
   }
 
   @GetMapping("clients/client-credentials/{clientId}/view")

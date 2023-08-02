@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientDeployment
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
@@ -43,6 +45,22 @@ class ClientsService(
       )
     }
   }
+
+  @Transactional
+  fun deleteClient(clientId: String) {
+    val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
+    if (clientsByBaseClientId.isEmpty()) {
+      throw ClientNotFoundException(Client::class.simpleName, clientId)
+    }
+
+    if (clientsByBaseClientId.size == 1) {
+      val baseClientId = clientIdService.toBase(clientId)
+      clientDeploymentRepository.deleteByBaseClientId(baseClientId)
+      clientConfigRepository.deleteByBaseClientId(baseClientId)
+    }
+
+    clientRepository.deleteByClientId(clientId)
+  }
 }
 
 data class ClientSummary(
@@ -54,3 +72,5 @@ data class ClientSummary(
   val count: Int,
   val expired: String?,
 )
+
+class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")

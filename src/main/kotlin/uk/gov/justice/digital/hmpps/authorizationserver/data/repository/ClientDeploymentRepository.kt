@@ -5,4 +5,5 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientDeploym
 
 interface ClientDeploymentRepository : CrudRepository<ClientDeployment, String> {
   fun findClientDeploymentByBaseClientId(baseClientId: String): ClientDeployment?
+  fun deleteByBaseClientId(baseClientId: String)
 }
