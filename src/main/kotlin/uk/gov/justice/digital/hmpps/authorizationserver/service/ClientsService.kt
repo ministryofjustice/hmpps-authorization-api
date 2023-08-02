@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import java.time.LocalDate
 
 @Service
@@ -17,14 +17,14 @@ class ClientsService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
-  private val clientIdConverter: ClientIdConverter,
+  private val clientIdService: ClientIdService,
   private val clientDeploymentRepository: ClientDeploymentRepository,
 ) {
   fun retrieveAllClients(): List<ClientSummary> {
-    val baseClients = clientRepository.findAll().groupBy { clientIdConverter.toBase(it.clientId) }.toSortedMap()
+    val baseClients = clientRepository.findAll().groupBy { clientIdService.toBase(it.clientId) }.toSortedMap()
     val configs = clientConfigRepository.findAll().associateBy { it.baseClientId }
     val deployments = clientDeploymentRepository.findAll().associateBy { it.baseClientId }
-    val authorizationConsents = authorizationConsentRepository.findAll().associateBy { clientIdConverter.toBase(it.principalName) }
+    val authorizationConsents = authorizationConsentRepository.findAll().associateBy { clientIdService.toBase(it.principalName) }
 
     return baseClients.toList().map { client ->
       val config: ClientConfig? = configs[client.first]

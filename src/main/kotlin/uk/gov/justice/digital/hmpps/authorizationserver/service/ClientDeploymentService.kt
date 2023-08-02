@@ -7,17 +7,17 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDeploymentDetailsRequest
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 
 @Service
 class ClientDeploymentService(
   private val clientDeploymentRepository: ClientDeploymentRepository,
-  private val clientIdConverter: ClientIdConverter,
+  private val clientIdService: ClientIdService,
 ) {
 
   @Transactional
   fun add(clientDeployment: ClientDeploymentDetailsRequest) {
-    val baseClientId = clientIdConverter.toBase(clientDeployment.clientId)
+    val baseClientId = clientIdService.toBase(clientDeployment.clientId)
     val existingClientDeployment = clientDeploymentRepository.findClientDeploymentByBaseClientId(baseClientId)
     existingClientDeployment?.let {
       throw ClientDeploymentAlreadyExistsException(clientDeployment.clientId)

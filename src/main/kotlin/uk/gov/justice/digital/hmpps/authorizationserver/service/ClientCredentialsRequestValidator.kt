@@ -9,7 +9,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.web.util.matcher.IpAddressMatcher
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdConverter
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.time.LocalDate
 
@@ -17,7 +17,7 @@ class ClientCredentialsRequestValidator(
   private val delegate: AuthenticationProvider,
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
-  private val clientIdConverter: ClientIdConverter,
+  private val clientIdService: ClientIdService,
 ) : AuthenticationProvider {
 
   companion object {
@@ -29,7 +29,7 @@ class ClientCredentialsRequestValidator(
 
     if (clientCredentialsAuthentication.principal is OAuth2ClientAuthenticationToken) {
       val clientId = (clientCredentialsAuthentication.principal as OAuth2ClientAuthenticationToken).registeredClient?.clientId
-      val baseClientId = clientIdConverter.toBase(clientId!!)
+      val baseClientId = clientIdService.toBase(clientId!!)
       val clientConfig = clientConfigRepository.findByIdOrNull(baseClientId)
       val clientIpAddress = ipAddressHelper.retrieveIpFromRequest()
 
