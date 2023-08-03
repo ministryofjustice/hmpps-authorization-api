@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.stereotype.Service
@@ -10,6 +12,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientCo
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
+import java.time.Instant
 import java.time.LocalDate
 
 @Service
@@ -20,7 +23,7 @@ class ClientsService(
   private val clientIdService: ClientIdService,
   private val clientDeploymentRepository: ClientDeploymentRepository,
 ) {
-  fun retrieveAllClients(): List<ClientSummary> {
+  fun retrieveAllClients(sortBy: SortBy, filterBy: ClientFilter?): List<ClientSummary> {
     val baseClients = clientRepository.findAll().groupBy { clientIdService.toBase(it.clientId) }.toSortedMap()
     val configs = clientConfigRepository.findAll().associateBy { it.baseClientId }
     val deployments = clientDeploymentRepository.findAll().associateBy { it.baseClientId }
@@ -32,6 +35,9 @@ class ClientsService(
       val authorities: AuthorizationConsent? = authorizationConsents[client.first]
       val firstClient = client.second[0]
       val roles = authorities?.authoritiesWithoutPrefix?.sorted()?.joinToString("\n")
+      val lastAccessed = client.second[0].getLastAccessedDate()
+      val secretUpdated = client.second[0].clientIdIssuedAt
+
       ClientSummary(
         baseClientId = client.first,
         clientType = deployment?.clientType,
@@ -40,8 +46,27 @@ class ClientsService(
         roles = roles,
         count = client.second.size,
         expired = if (config?.clientEndDate?.isBefore(LocalDate.now()) == true)"EXPIRED" else null,
+        secretUpdated = secretUpdated,
+        lastAccessed = lastAccessed,
       )
-    }
+    }.filter { cs ->
+      filterBy?.let { filter ->
+        (filter.clientType == null || filter.clientType == cs.clientType) &&
+          (filter.grantType.isNullOrBlank() || cs.grantType.contains(filter.grantType)) &&
+          (filter.role.isNullOrBlank() || cs.roles?.contains(filter.role.uppercase()) ?: false)
+      } ?: true
+    }.sortedWith(
+      compareBy {
+        when (sortBy) {
+          SortBy.type -> it.clientType
+          SortBy.team -> it.teamName
+          SortBy.count -> it.count
+          SortBy.lastAccessed -> it.lastAccessed
+          SortBy.secretUpdated -> it.secretUpdated
+          else -> it.baseClientId
+        }
+      },
+    )
   }
 }
 
@@ -53,4 +78,16 @@ data class ClientSummary(
   val roles: String?,
   val count: Int,
   val expired: String?,
+  val secretUpdated: Instant?,
+  val lastAccessed: Instant?,
+)
+
+enum class SortBy {
+  client, type, team, lastAccessed, secretUpdated, count // ktlint-disable enum-entry-name-case
+}
+
+data class ClientFilter(
+  val grantType: String? = null,
+  val role: String? = null,
+  val clientType: ClientType? = null,
 )
