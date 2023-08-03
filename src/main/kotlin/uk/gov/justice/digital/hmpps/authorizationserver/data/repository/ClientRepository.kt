@@ -7,4 +7,6 @@ interface ClientRepository : CrudRepository<Client, String> {
   fun findClientByClientId(clientId: String): Client?
 
   fun findByClientIdStartsWithOrderByClientId(clientId: String): List<Client>
+
+  fun deleteByClientId(clientId: String)
 }
