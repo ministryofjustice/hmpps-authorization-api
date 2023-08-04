@@ -58,7 +58,7 @@ data class Client(
   @OneToMany
   @JoinColumn(name = "registeredClientId")
   @Where(clause = "access_token_issued_at =(select max(oa.access_token_issued_at) from oauth2_authorization oa)")
-  val authorization: MutableSet<Authorization> ? = mutableSetOf(),
+  val latestClientCredentialsAuthorization: MutableSet<Authorization> ? = mutableSetOf(),
 ) {
 
   fun getDatabaseUserName(): String? {
@@ -66,7 +66,7 @@ data class Client(
   }
 
   fun getLastAccessedDate(): Instant? {
-    return this.authorization?.stream()?.findFirst()?.map { it.accessTokenIssuedAt }?.getOrElse { clientIdIssuedAt }
+    return this.latestClientCredentialsAuthorization?.stream()?.findFirst()?.map { it.accessTokenIssuedAt }?.getOrElse { clientIdIssuedAt }
   }
 
   fun getJiraNumber(): String? {

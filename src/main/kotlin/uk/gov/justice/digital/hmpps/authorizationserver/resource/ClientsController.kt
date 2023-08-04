@@ -28,7 +28,7 @@ class ClientsController(
   @GetMapping("clients/all")
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun list(
-    @RequestParam(defaultValue = "client") sort: SortBy,
+    @RequestParam(defaultValue = "CLIENT") sort: SortBy,
     @RequestParam role: String? = null,
     @RequestParam grantType: String? = null,
     @RequestParam clientType: ClientType? = null,

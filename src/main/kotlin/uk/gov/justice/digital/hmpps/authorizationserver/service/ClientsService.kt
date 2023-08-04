@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.stereotype.Service
@@ -60,11 +58,11 @@ class ClientsService(
     }.sortedWith(
       compareBy {
         when (sortBy) {
-          SortBy.type -> it.clientType
-          SortBy.team -> it.teamName
-          SortBy.count -> it.count
-          SortBy.lastAccessed -> it.lastAccessed
-          SortBy.secretUpdated -> it.secretUpdated
+          SortBy.TYPE -> it.clientType
+          SortBy.TEAM -> it.teamName
+          SortBy.COUNT -> it.count
+          SortBy.LAST_ACCESSED -> it.lastAccessed
+          SortBy.SECRET_UPDATED -> it.secretUpdated
           else -> it.baseClientId
         }
       },
@@ -102,7 +100,7 @@ data class ClientSummary(
 
 class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")
 enum class SortBy {
-  client, type, team, lastAccessed, secretUpdated, count // ktlint-disable enum-entry-name-case
+  CLIENT, TYPE, TEAM, LAST_ACCESSED, SECRET_UPDATED, COUNT
 }
 
 data class ClientFilter(

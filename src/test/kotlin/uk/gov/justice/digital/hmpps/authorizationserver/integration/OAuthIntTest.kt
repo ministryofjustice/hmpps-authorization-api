@@ -105,7 +105,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
       assertThat(token.get("auth_source")).isEqualTo("delius")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_VIEW_GROUPS")))
+      assertTrue(token.isNull("authorities"))
 
       assertTrue(token.isNull("user_name"))
       assertTrue(token.isNull("database_username"))
@@ -128,7 +128,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_VIEW_GROUPS")))
+      assertTrue(token.isNull("authorities"))
 
       assertTrue(token.isNull("user_name"))
       assertTrue(token.isNull("database_username"))

@@ -28,7 +28,7 @@ class ClientConverter(
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber),
-        authorization = mutableSetOf(),
+        latestClientCredentialsAuthorization = mutableSetOf(),
       )
     }
   }
