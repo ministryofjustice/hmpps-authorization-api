@@ -57,7 +57,7 @@ data class Client(
 
   @OneToMany
   @JoinColumn(name = "registeredClientId")
-  @Where(clause = "access_token_issued_at =(select max(oa.access_token_issued_at) from oauth2_authorization oa)")
+  @Where(clause = "access_token_issued_at =(select max(oa.access_token_issued_at) from oauth2_authorization oa where oa.authorization_grant_type='client_credentials')")
   val latestClientCredentialsAuthorization: MutableSet<Authorization> ? = mutableSetOf(),
 ) {
 
