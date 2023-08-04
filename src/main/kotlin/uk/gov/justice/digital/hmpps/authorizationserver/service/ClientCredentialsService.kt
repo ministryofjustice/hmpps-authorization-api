@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRe
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsUpdateRequest
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit

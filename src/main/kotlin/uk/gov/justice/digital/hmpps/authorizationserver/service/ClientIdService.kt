@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.authorizationserver.utils
+package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDeploymentService
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 
 @Controller
 class ClientDeploymentController(
