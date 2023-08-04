@@ -44,6 +44,7 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
 import uk.gov.justice.digital.hmpps.authorizationserver.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OAuth2AuthenticationFailureEvent
@@ -51,7 +52,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredCl
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegistrationAdditionalDataHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientDataService
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
