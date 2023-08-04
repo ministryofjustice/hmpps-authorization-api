@@ -17,7 +17,6 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
 import java.time.LocalDate
 import java.util.Optional
