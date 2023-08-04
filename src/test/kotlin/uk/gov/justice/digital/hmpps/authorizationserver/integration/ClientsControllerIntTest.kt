@@ -89,6 +89,31 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           )
         }
     }
+
+    @Test
+    fun `list clients filtered by roles, grantType and clientType`() {
+      webTestClient.get().uri("/clients/all?role=AUDIT&grantType=client_credentials&clientType=PERSONAL")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody()
+        .jsonPath("$.clients[0].baseClientId").isEqualTo("test-client-id")
+        .jsonPath("$.clients[0].clientType").isEqualTo("PERSONAL")
+        .jsonPath("$.clients[0].teamName").isEqualTo("HAAR")
+        .jsonPath("$.clients[0].grantType").isEqualTo("client_credentials")
+        .jsonPath("$.clients[0].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
+        .jsonPath("$.clients[0].count").isEqualTo(1)
+        .jsonPath("$.clients[0].expired").isEmpty
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(1) }
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> {
+          assertThat(it).containsAll(
+            listOf(
+              "test-client-id",
+            ),
+          )
+        }
+    }
   }
 
   @Nested

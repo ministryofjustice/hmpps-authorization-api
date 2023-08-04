@@ -6,13 +6,17 @@ import jakarta.persistence.Convert
 import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.annotations.Where
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.DATABASE_USER_NAME_KEY
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.JIRA_NUMBER_KEY
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthJson
 import java.time.Instant
+import kotlin.jvm.optionals.getOrElse
 
 @Entity
 @Table(name = "oauth2_registered_client")
@@ -50,10 +54,19 @@ data class Client(
   @Column(length = 2000)
   @Convert(converter = TokenSettingsConverter::class)
   var tokenSettings: TokenSettings,
+
+  @OneToMany
+  @JoinColumn(name = "registeredClientId")
+  @Where(clause = "access_token_issued_at =(select max(oa.access_token_issued_at) from oauth2_authorization oa where oa.authorization_grant_type='client_credentials')")
+  val latestClientCredentialsAuthorization: MutableSet<Authorization>?,
 ) {
 
   fun getDatabaseUserName(): String? {
     return tokenSettings.settings[DATABASE_USER_NAME_KEY] as String?
+  }
+
+  fun getLastAccessedDate(): Instant? {
+    return this.latestClientCredentialsAuthorization?.stream()?.findFirst()?.map { it.accessTokenIssuedAt }?.getOrElse { clientIdIssuedAt }
   }
 
   fun getJiraNumber(): String? {
