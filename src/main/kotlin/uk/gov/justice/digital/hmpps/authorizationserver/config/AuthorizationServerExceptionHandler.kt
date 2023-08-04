@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientAlreadyExistsException
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDeploymentAlreadyExistsException
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientNotFoundException
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.MaxDuplicateClientsException
+import uk.gov.justice.digital.hmpps.authorizationserver.service.MaxDuplicateClientsException
 
 @RestControllerAdvice
 @Order(Ordered.LOWEST_PRECEDENCE)

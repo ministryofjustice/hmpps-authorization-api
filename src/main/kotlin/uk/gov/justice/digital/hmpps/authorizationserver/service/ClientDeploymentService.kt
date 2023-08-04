@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDeploymentDetailsRequest
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 
 @Service
 class ClientDeploymentService(

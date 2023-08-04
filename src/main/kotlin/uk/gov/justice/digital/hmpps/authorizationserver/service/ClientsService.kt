@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.ClientIdService
 import java.time.Instant
 import java.time.LocalDate
 
@@ -37,7 +36,6 @@ class ClientsService(
       val roles = authorities?.authoritiesWithoutPrefix?.sorted()?.joinToString("\n")
       val lastAccessed = client.second[0].getLastAccessedDate()
       val secretUpdated = client.second[0].clientIdIssuedAt
-
       ClientSummary(
         baseClientId = client.first,
         clientType = deployment?.clientType,
@@ -99,6 +97,7 @@ data class ClientSummary(
 )
 
 class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")
+
 enum class SortBy {
   CLIENT, TYPE, TEAM, LAST_ACCESSED, SECRET_UPDATED, COUNT
 }
