@@ -24,11 +24,10 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
   inner class AddClientDeployment {
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/testy/deployment")
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",
@@ -48,12 +47,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/testy/deployment")
         .headers(setAuthorisation(roles = listOf()))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",
@@ -73,12 +71,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/testy/deployment")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",
@@ -98,12 +95,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `bad request when deployment already exists`() {
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/testy/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",
@@ -120,7 +116,7 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/testy/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
@@ -145,12 +141,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `add client deployment success`() {
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/mctesty/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "mctesty",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",
@@ -193,12 +188,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `update client deployment success`() {
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/dctesty/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "dctesty",
               "clientType" to "PERSONAL",
               "team" to "HAAR",
               "teamContact" to "testy lead",
@@ -214,12 +208,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
         )
         .exchange()
         .expectStatus().isOk
-      webTestClient.put().uri("/clients/deployment/dctesty")
+      webTestClient.put().uri("/clients/dctesty/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "dctesty",
               "clientType" to "PERSONAL",
               "team" to "HAAR team",
               "teamContact" to "testy lead",
@@ -258,11 +251,10 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.put().uri("/clients/deployment/testy")
+      webTestClient.put().uri("/clients/testy/deployment")
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",
@@ -282,12 +274,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `unrecognised client id`() {
-      webTestClient.put().uri("/clients/deployment/testy_unknown")
+      webTestClient.put().uri("/clients/testy_unknown/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy_unknown",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",
@@ -317,12 +308,11 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.put().uri("/clients/deployment/testy")
+      webTestClient.put().uri("/clients/testy/deployment")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to "testy",
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",

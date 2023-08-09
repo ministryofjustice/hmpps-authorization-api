@@ -231,12 +231,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.post().uri("/clients/deployment/add")
+      webTestClient.post().uri("/clients/$clientId/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
             mapOf(
-              "clientId" to clientId,
               "clientType" to "PERSONAL",
               "team" to "testing team",
               "teamContact" to "testy lead",

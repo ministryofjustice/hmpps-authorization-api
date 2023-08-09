@@ -15,11 +15,11 @@ class ClientDeploymentService(
 ) {
 
   @Transactional
-  fun add(clientDeployment: ClientDeploymentDetailsRequest) {
-    val baseClientId = clientIdService.toBase(clientDeployment.clientId)
+  fun add(clientId: String, clientDeployment: ClientDeploymentDetailsRequest) {
+    val baseClientId = clientIdService.toBase(clientId)
     val existingClientDeployment = clientDeploymentRepository.findClientDeploymentByBaseClientId(baseClientId)
     existingClientDeployment?.let {
-      throw ClientDeploymentAlreadyExistsException(clientDeployment.clientId)
+      throw ClientDeploymentAlreadyExistsException(clientId)
     }
 
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))

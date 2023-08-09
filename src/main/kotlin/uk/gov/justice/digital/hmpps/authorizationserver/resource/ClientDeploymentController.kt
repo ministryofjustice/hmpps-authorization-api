@@ -22,19 +22,23 @@ class ClientDeploymentController(
   private val clientIdService: ClientIdService,
 ) {
 
-  @PostMapping("clients/deployment/add")
+  @PostMapping("clients/{clientId}/deployment")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun addDeployment(@RequestBody clientDeployment: ClientDeploymentDetailsRequest) {
-    clientDeploymentService.add(clientDeployment)
+  fun addDeployment(
+    @PathVariable
+    clientId: String,
+    @RequestBody clientDeployment: ClientDeploymentDetailsRequest,
+  ) {
+    clientDeploymentService.add(clientId, clientDeployment)
     val telemetryMap = mapOf(
       "username" to authenticationFacade.currentUsername!!,
-      "baseClientId" to clientIdService.toBase(clientDeployment.clientId),
+      "baseClientId" to clientIdService.toBase(clientId),
     )
     telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsAdded", telemetryMap)
   }
 
-  @PutMapping("clients/deployment/{clientId}")
+  @PutMapping("clients/{clientId}/deployment")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun updateDeployment(
@@ -45,14 +49,13 @@ class ClientDeploymentController(
     clientDeploymentService.update(clientId, clientDeployment)
     val telemetryMap = mapOf(
       "username" to authenticationFacade.currentUsername!!,
-      "baseClientId" to clientIdService.toBase(clientDeployment.clientId),
+      "baseClientId" to clientIdService.toBase(clientId),
     )
     telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsUpdated", telemetryMap)
   }
 }
 
 data class ClientDeploymentDetailsRequest(
-  val clientId: String,
   val clientType: String?,
   val team: String?,
   val teamContact: String?,
