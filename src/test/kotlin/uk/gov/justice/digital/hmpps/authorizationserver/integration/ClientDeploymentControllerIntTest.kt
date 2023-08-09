@@ -214,7 +214,7 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
         )
         .exchange()
         .expectStatus().isOk
-      webTestClient.put().uri("/clients/deployment/update")
+      webTestClient.put().uri("/clients/deployment/dctesty")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
@@ -258,7 +258,7 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.put().uri("/clients/deployment/update")
+      webTestClient.put().uri("/clients/deployment/testy")
         .body(
           BodyInserters.fromValue(
             mapOf(
@@ -282,7 +282,7 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `unrecognised client id`() {
-      webTestClient.put().uri("/clients/deployment/update")
+      webTestClient.put().uri("/clients/deployment/testy_unknown")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
@@ -317,7 +317,7 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.put().uri("/clients/deployment/update")
+      webTestClient.put().uri("/clients/deployment/testy")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .body(
           BodyInserters.fromValue(

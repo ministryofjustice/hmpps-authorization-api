@@ -26,8 +26,8 @@ class ClientDeploymentService(
   }
 
   @Transactional
-  fun update(clientDeployment: ClientDeploymentDetailsRequest) {
-    val baseClientId = clientIdService.toBase(clientDeployment.clientId)
+  fun update(clientId: String, clientDeployment: ClientDeploymentDetailsRequest) {
+    val baseClientId = clientIdService.toBase(clientId)
     val existingClientDeployment =
       clientDeploymentRepository.findById(baseClientId)
     if (existingClientDeployment.isEmpty) {

@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -33,11 +34,15 @@ class ClientDeploymentController(
     telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsAdded", telemetryMap)
   }
 
-  @PutMapping("clients/deployment/update")
+  @PutMapping("clients/deployment/{clientId}")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun updateDeployment(@RequestBody clientDeployment: ClientDeploymentDetailsRequest) {
-    clientDeploymentService.update(clientDeployment)
+  fun updateDeployment(
+    @PathVariable
+    clientId: String,
+    @RequestBody clientDeployment: ClientDeploymentDetailsRequest,
+  ) {
+    clientDeploymentService.update(clientId, clientDeployment)
     val telemetryMap = mapOf(
       "username" to authenticationFacade.currentUsername!!,
       "baseClientId" to clientIdService.toBase(clientDeployment.clientId),
