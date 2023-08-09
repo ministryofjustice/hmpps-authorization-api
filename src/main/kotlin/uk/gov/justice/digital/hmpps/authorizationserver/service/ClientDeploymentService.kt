@@ -25,6 +25,17 @@ class ClientDeploymentService(
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
 
+  @Transactional
+  fun update(clientDeployment: ClientDeploymentDetailsRequest) {
+    val baseClientId = clientIdService.toBase(clientDeployment.clientId)
+    val existingClientDeployment =
+      clientDeploymentRepository.findById(baseClientId)
+    if (existingClientDeployment.isEmpty) {
+      throw ClientNotFoundException(ClientDeployment::class.simpleName, baseClientId)
+    }
+    clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
+  }
+
   private fun toClientDeploymentEntity(clientDeployment: ClientDeploymentDetailsRequest, baseClientId: String): ClientDeployment {
     with(clientDeployment) {
       return ClientDeployment(

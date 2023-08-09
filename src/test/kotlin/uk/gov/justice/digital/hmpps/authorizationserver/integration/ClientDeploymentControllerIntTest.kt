@@ -181,10 +181,163 @@ class ClientDeploymentControllerIntTest : IntegrationTestBase() {
       assertThat(clientDeployment.secretKey).isEqualTo("SYSTEM_CLIENT_SECRET")
 
       verify(telemetryClient).trackEvent(
-        "AuthorizationServerClientDeploymentDetailsUpdated",
+        "AuthorizationServerClientDeploymentDetailsAdded",
         mapOf("username" to "AUTH_ADM", "baseClientId" to "mctesty"),
         null,
       )
+    }
+  }
+
+  @Nested
+  inner class UpdateClientDeployment {
+
+    @Test
+    fun `update client deployment success`() {
+      webTestClient.post().uri("/clients/deployment/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "dctesty",
+              "clientType" to "PERSONAL",
+              "team" to "HAAR",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+      webTestClient.put().uri("/clients/deployment/update")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "dctesty",
+              "clientType" to "PERSONAL",
+              "team" to "HAAR team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val clientDeployment = clientDeploymentRepository.findById("dctesty").get()
+      assertThat(clientDeployment.baseClientId).isEqualTo("dctesty")
+      assertThat(clientDeployment.clientType).isEqualTo(ClientType.PERSONAL)
+      assertThat(clientDeployment.team).isEqualTo("HAAR team")
+      assertThat(clientDeployment.teamContact).isEqualTo("testy lead")
+      assertThat(clientDeployment.teamSlack).isEqualTo("#testy")
+      assertThat(clientDeployment.hosting).isEqualTo(Hosting.CLOUDPLATFORM)
+      assertThat(clientDeployment.namespace).isEqualTo("testy-testing-dev")
+      assertThat(clientDeployment.deployment).isEqualTo("hmpps-testing-dev")
+      assertThat(clientDeployment.secretName).isEqualTo("hmpps-testing")
+      assertThat(clientDeployment.clientIdKey).isEqualTo("SYSTEM_CLIENT_ID")
+      assertThat(clientDeployment.secretKey).isEqualTo("SYSTEM_CLIENT_SECRET")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientDeploymentDetailsUpdated",
+        mapOf("username" to "AUTH_ADM", "baseClientId" to "dctesty"),
+        null,
+      )
+    }
+
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("/clients/deployment/update")
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `unrecognised client id`() {
+      webTestClient.put().uri("/clients/deployment/update")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy_unknown",
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody()
+        .json(
+          """
+              {
+              "userMessage":"ClientDeployment for client id testy_unknown not found",
+              "developerMessage":"ClientDeployment for client id testy_unknown not found"
+              }
+          """
+            .trimIndent(),
+        )
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.put().uri("/clients/deployment/update")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
     }
   }
 }

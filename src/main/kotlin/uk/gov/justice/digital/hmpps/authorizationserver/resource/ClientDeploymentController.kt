@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
@@ -25,6 +26,18 @@ class ClientDeploymentController(
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun addDeployment(@RequestBody clientDeployment: ClientDeploymentDetailsRequest) {
     clientDeploymentService.add(clientDeployment)
+    val telemetryMap = mapOf(
+      "username" to authenticationFacade.currentUsername!!,
+      "baseClientId" to clientIdService.toBase(clientDeployment.clientId),
+    )
+    telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsAdded", telemetryMap)
+  }
+
+  @PutMapping("clients/deployment/update")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun updateDeployment(@RequestBody clientDeployment: ClientDeploymentDetailsRequest) {
+    clientDeploymentService.update(clientDeployment)
     val telemetryMap = mapOf(
       "username" to authenticationFacade.currentUsername!!,
       "baseClientId" to clientIdService.toBase(clientDeployment.clientId),
