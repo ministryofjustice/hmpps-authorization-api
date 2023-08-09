@@ -4,7 +4,9 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
@@ -20,21 +22,40 @@ class ClientDeploymentController(
   private val clientIdService: ClientIdService,
 ) {
 
-  @PostMapping("clients/deployment/add")
+  @PostMapping("clients/{clientId}/deployment")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun addDeployment(@RequestBody clientDeployment: ClientDeploymentDetailsRequest) {
-    clientDeploymentService.add(clientDeployment)
+  fun addDeployment(
+    @PathVariable
+    clientId: String,
+    @RequestBody clientDeployment: ClientDeploymentDetailsRequest,
+  ) {
+    clientDeploymentService.add(clientId, clientDeployment)
     val telemetryMap = mapOf(
       "username" to authenticationFacade.currentUsername!!,
-      "baseClientId" to clientIdService.toBase(clientDeployment.clientId),
+      "baseClientId" to clientIdService.toBase(clientId),
+    )
+    telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsAdded", telemetryMap)
+  }
+
+  @PutMapping("clients/{clientId}/deployment")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun updateDeployment(
+    @PathVariable
+    clientId: String,
+    @RequestBody clientDeployment: ClientDeploymentDetailsRequest,
+  ) {
+    clientDeploymentService.update(clientId, clientDeployment)
+    val telemetryMap = mapOf(
+      "username" to authenticationFacade.currentUsername!!,
+      "baseClientId" to clientIdService.toBase(clientId),
     )
     telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsUpdated", telemetryMap)
   }
 }
 
 data class ClientDeploymentDetailsRequest(
-  val clientId: String,
   val clientType: String?,
   val team: String?,
   val teamContact: String?,
