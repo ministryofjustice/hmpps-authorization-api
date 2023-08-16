@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientDeploym
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDeploymentDetailsRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDeploymentDetails
 
 @Service
 class ClientDeploymentService(
@@ -15,7 +15,7 @@ class ClientDeploymentService(
 ) {
 
   @Transactional
-  fun add(clientId: String, clientDeployment: ClientDeploymentDetailsRequest) {
+  fun add(clientId: String, clientDeployment: ClientDeploymentDetails) {
     val baseClientId = clientIdService.toBase(clientId)
     val existingClientDeployment = clientDeploymentRepository.findClientDeploymentByBaseClientId(baseClientId)
     existingClientDeployment?.let {
@@ -26,7 +26,7 @@ class ClientDeploymentService(
   }
 
   @Transactional
-  fun update(clientId: String, clientDeployment: ClientDeploymentDetailsRequest) {
+  fun update(clientId: String, clientDeployment: ClientDeploymentDetails) {
     val baseClientId = clientIdService.toBase(clientId)
     val existingClientDeployment =
       clientDeploymentRepository.findById(baseClientId)
@@ -36,7 +36,34 @@ class ClientDeploymentService(
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
 
-  private fun toClientDeploymentEntity(clientDeployment: ClientDeploymentDetailsRequest, baseClientId: String): ClientDeployment {
+  @Transactional
+  fun getDeployment(clientId: String): ClientDeploymentDetails {
+    val baseClientId = clientIdService.toBase(clientId)
+    val clientDeployment =
+      clientDeploymentRepository.findById(baseClientId)
+    if (clientDeployment.isEmpty) {
+      throw ClientNotFoundException(ClientDeployment::class.simpleName, baseClientId)
+    }
+    return toClientDeploymentDetails(clientDeployment.get())
+  }
+  private fun toClientDeploymentDetails(clientDeployment: ClientDeployment): ClientDeploymentDetails {
+    with(clientDeployment) {
+      return ClientDeploymentDetails(
+        clientType = clientType?.name,
+        team = team,
+        teamContact = teamContact,
+        teamSlack = teamSlack,
+        hosting = hosting?.name,
+        namespace = namespace,
+        deployment = deployment,
+        secretName = secretName,
+        clientIdKey = clientIdKey,
+        secretKey = secretKey,
+        deploymentInfo = deploymentInfo,
+      )
+    }
+  }
+  private fun toClientDeploymentEntity(clientDeployment: ClientDeploymentDetails, baseClientId: String): ClientDeployment {
     with(clientDeployment) {
       return ClientDeployment(
         baseClientId = baseClientId,
