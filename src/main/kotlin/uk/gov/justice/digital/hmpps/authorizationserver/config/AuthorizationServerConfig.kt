@@ -1,12 +1,9 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.config
 
-import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWKSet
-import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
-import org.apache.commons.lang3.ObjectUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
@@ -46,7 +43,7 @@ import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
-import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
 import uk.gov.justice.digital.hmpps.authorizationserver.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OAuth2AuthenticationFailureEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
@@ -64,11 +61,6 @@ class AuthorizationServerConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
-  @Value("#{'\${jwt.auxiliary.jwk.key.id}' <= '' ? null : '\${jwt.auxiliary.jwk.key.id}'}") private val keyIdAuxiliary: String?,
-  @Value("#{'\${jwt.auxiliary.keystore.alias}' <= '' ? null : '\${jwt.auxiliary.keystore.alias}'}") private val keystoreAliasAuxiliary: String?,
-  @Value("#{'\${jwt.auxiliary.keystore.password}' <= '' ? null : '\${jwt.auxiliary.keystore.password}'}") private val keystorePasswordAuxiliary: String?,
-  @Value("#{'\${jwt.auxiliary.signing.key.pair}' <= '' ? null : '\${jwt.auxiliary.signing.key.pair}'}") private val privateKeyPairAuxiliary: String?,
-
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
@@ -113,38 +105,20 @@ class AuthorizationServerConfig(
     return http.build()
   }
 
-  fun auxiliaryJwkKey(keyPairAccessor: KeyPairAccessor): RSAKey.Builder? {
-    return if (ObjectUtils.anyNull(keyIdAuxiliary, keystoreAliasAuxiliary, keystorePasswordAuxiliary, privateKeyPairAuxiliary)) {
-      null
-    } else {
-      return keyPairAccessor.getAuxiliaryKeyPair().let { RSAKey.Builder(it?.public as? RSAPublicKey) }
-        .keyUse(KeyUse.SIGNATURE)
-        .algorithm(JWSAlgorithm.RS256)
-        .keyID(keyIdAuxiliary)
-    }
-  }
-
-  fun primaryJwkKey(keyPairAccessor: KeyPairAccessor): RSAKey.Builder {
-    return RSAKey.Builder(keyPairAccessor.getPrimaryKeyPair().public as RSAPublicKey)
-      .keyUse(KeyUse.SIGNATURE)
-      .algorithm(JWSAlgorithm.RS256)
-      .keyID(keyId)
-  }
-
   @Bean
-  fun jwkSet(keyPairAccessor: KeyPairAccessor): JWKSet {
+  fun jwkSet(jwkKeyAccessor: JWKKeyAccessor): JWKSet {
     val jwkSet = JWKSet(
       buildList {
-        add(primaryJwkKey(keyPairAccessor).build())
-        auxiliaryJwkKey(keyPairAccessor)?.build()?.let { add(it) }
+        add(jwkKeyAccessor.getPrimaryPublicKey())
+        jwkKeyAccessor.getAuxiliaryPublicKey()?.let { add(it) }
       },
     )
     return jwkSet
   }
 
   @Bean
-  fun jwkSource(keyPairAccessor: KeyPairAccessor): JWKSource<SecurityContext> {
-    val keyPair = keyPairAccessor.getPrimaryKeyPair()
+  fun jwkSource(jwkKeyAccessor: JWKKeyAccessor): JWKSource<SecurityContext> {
+    val keyPair = jwkKeyAccessor.getPrimaryKeyPair()
     val rsaKey = RSAKey.Builder(keyPair.public as RSAPublicKey)
       .privateKey(keyPair.private as RSAPrivateKey)
       .keyID(keyId)

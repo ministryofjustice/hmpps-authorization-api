@@ -4,13 +4,13 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
 import java.time.Duration
 import java.util.Date
 import java.util.UUID
 
 @Component
-class JwtAuthHelper(private val keyPair: KeyPairAccessor) {
+class JwtAuthHelper(private val keyPair: JWKKeyAccessor) {
 
   fun setAuthorisation(
     user: String = "hmpps-manage-users",
