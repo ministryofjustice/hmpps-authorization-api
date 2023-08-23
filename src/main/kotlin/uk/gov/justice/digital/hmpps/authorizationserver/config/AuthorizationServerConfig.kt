@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.config
 
-import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWKSet
-import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
@@ -45,7 +43,7 @@ import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
-import uk.gov.justice.digital.hmpps.authorizationserver.service.KeyPairAccessor
+import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
 import uk.gov.justice.digital.hmpps.authorizationserver.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OAuth2AuthenticationFailureEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
@@ -63,7 +61,6 @@ class AuthorizationServerConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
-
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
@@ -109,17 +106,19 @@ class AuthorizationServerConfig(
   }
 
   @Bean
-  fun jwkSet(keyPairAccessor: KeyPairAccessor): JWKSet {
-    val builder = RSAKey.Builder(keyPairAccessor.getKeyPair().public as RSAPublicKey)
-      .keyUse(KeyUse.SIGNATURE)
-      .algorithm(JWSAlgorithm.RS256)
-      .keyID(keyId)
-    return JWKSet(builder.build())
+  fun jwkSet(jwkKeyAccessor: JWKKeyAccessor): JWKSet {
+    val jwkSet = JWKSet(
+      buildList {
+        add(jwkKeyAccessor.getPrimaryPublicKey())
+        jwkKeyAccessor.getAuxiliaryPublicKey()?.let { add(it) }
+      },
+    )
+    return jwkSet
   }
 
   @Bean
-  fun jwkSource(keyPairAccessor: KeyPairAccessor): JWKSource<SecurityContext> {
-    val keyPair = keyPairAccessor.getKeyPair()
+  fun jwkSource(jwkKeyAccessor: JWKKeyAccessor): JWKSource<SecurityContext> {
+    val keyPair = jwkKeyAccessor.getPrimaryKeyPair()
     val rsaKey = RSAKey.Builder(keyPair.public as RSAPublicKey)
       .privateKey(keyPair.private as RSAPrivateKey)
       .keyID(keyId)
