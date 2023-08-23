@@ -50,7 +50,7 @@ class JWKKeyAccessor(
     return if (ObjectUtils.anyNull(keyIdAuxiliary, keystoreAliasAuxiliary, keystorePasswordAuxiliary, privateKeyPairAuxiliary)) {
       null
     } else {
-      return return buildRSAKey(getAuxiliaryKeyPair(), keyIdAuxiliary)
+      return buildRSAKey(getAuxiliaryKeyPair(), keyIdAuxiliary)
     }
   }
 
