@@ -29,6 +29,7 @@ class JWKKeyAccessor(
 ) {
   private val primaryKeyStore: KeyStore = initializePrimaryKeyStore()
   private val auxiliaryKeyStore: KeyStore = initializeAuxiliaryKeyStore()
+
   fun getPrimaryKeyPair() = getKeyPair(primaryKeyStore, keystoreAlias, keystorePassword)
 
   fun getAuxiliaryKeyPair(): KeyPair? {
@@ -39,13 +40,6 @@ class JWKKeyAccessor(
     }
   }
 
-  private fun getKeyPair(keyStore: KeyStore, keystoreAlias: String?, keystorePassword: String?): KeyPair {
-    val privateKey =
-      keyStore.getKey(keystoreAlias, keystorePassword!!.toCharArray()) as RSAPrivateCrtKey
-    val rsaPublicKeySpec = RSAPublicKeySpec(privateKey.modulus, privateKey.publicExponent)
-    val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec)
-    return KeyPair(publicKey, privateKey)
-  }
   fun getAuxiliaryPublicKey(): RSAKey? {
     return if (ObjectUtils.anyNull(keyIdAuxiliary, keystoreAliasAuxiliary, keystorePasswordAuxiliary, privateKeyPairAuxiliary)) {
       null
@@ -56,6 +50,14 @@ class JWKKeyAccessor(
 
   fun getPrimaryPublicKey() = buildRSAKey(getPrimaryKeyPair(), keyId)
 
+  private fun getKeyPair(keyStore: KeyStore, keystoreAlias: String?, keystorePassword: String?): KeyPair {
+    val privateKey =
+      keyStore.getKey(keystoreAlias, keystorePassword!!.toCharArray()) as RSAPrivateCrtKey
+    val rsaPublicKeySpec = RSAPublicKeySpec(privateKey.modulus, privateKey.publicExponent)
+    val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec)
+    return KeyPair(publicKey, privateKey)
+  }
+
   private fun initializeKeyStore(privateKeyPair: String?, keystorePassword: String?): KeyStore {
     val store = KeyStore.getInstance("jks")
     val auxiliaryKeyStoreInputStream: InputStream? = privateKeyPair?.let { ByteArrayResource(decodeBase64(it)) }?.inputStream
@@ -65,6 +67,7 @@ class JWKKeyAccessor(
     }
     return store
   }
+
   private fun initializePrimaryKeyStore() = initializeKeyStore(privateKeyPair, keystorePassword)
 
   private fun initializeAuxiliaryKeyStore() = initializeKeyStore(privateKeyPairAuxiliary, keystorePasswordAuxiliary)
