@@ -29,24 +29,23 @@ class JWKKeyAccessor(
 ) {
   private val primaryKeyStore: KeyStore = initializePrimaryKeyStore()
   private val auxiliaryKeyStore: KeyStore = initializeAuxiliaryKeyStore()
-  fun getPrimaryKeyPair(): KeyPair {
-    val privateKey = primaryKeyStore.getKey(keystoreAlias, keystorePassword.toCharArray()) as? RSAPrivateCrtKey
-    val rsaPublicKeySpec = RSAPublicKeySpec(privateKey!!.modulus, privateKey.publicExponent)
-    val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec)
-    return KeyPair(publicKey, privateKey)
-  }
+  fun getPrimaryKeyPair() = getKeyPair(primaryKeyStore, keystoreAlias, keystorePassword)
+
   fun getAuxiliaryKeyPair(): KeyPair? {
     return if (ObjectUtils.anyNull(keystoreAliasAuxiliary, keystorePasswordAuxiliary, keyIdAuxiliary)) {
       null
     } else {
-      val privateKey =
-        auxiliaryKeyStore.getKey(keystoreAliasAuxiliary, keystorePasswordAuxiliary!!.toCharArray()) as RSAPrivateCrtKey
-      val rsaPublicKeySpec = RSAPublicKeySpec(privateKey.modulus, privateKey.publicExponent)
-      val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec)
-      return KeyPair(publicKey, privateKey)
+      return getKeyPair(auxiliaryKeyStore, keystoreAliasAuxiliary, keystorePasswordAuxiliary)
     }
   }
 
+  private fun getKeyPair(keyStore: KeyStore, keystoreAlias: String?, keystorePassword: String?): KeyPair {
+    val privateKey =
+      keyStore.getKey(keystoreAlias, keystorePassword!!.toCharArray()) as RSAPrivateCrtKey
+    val rsaPublicKeySpec = RSAPublicKeySpec(privateKey.modulus, privateKey.publicExponent)
+    val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec)
+    return KeyPair(publicKey, privateKey)
+  }
   fun getAuxiliaryPublicKey(): RSAKey? {
     return if (ObjectUtils.anyNull(keyIdAuxiliary, keystoreAliasAuxiliary, keystorePasswordAuxiliary, privateKeyPairAuxiliary)) {
       null
@@ -55,32 +54,25 @@ class JWKKeyAccessor(
     }
   }
 
-  fun getPrimaryPublicKey(): RSAKey {
-    return buildRSAKey(getPrimaryKeyPair(), keyId)
-  }
-  private fun initializePrimaryKeyStore(): KeyStore {
-    val store = KeyStore.getInstance("jks")
-    val primaryStoreInputStream = ByteArrayResource(decodeBase64(privateKeyPair)).inputStream
+  fun getPrimaryPublicKey() = buildRSAKey(getPrimaryKeyPair(), keyId)
 
-    primaryStoreInputStream.use {
-      store.load(it, keystorePassword.toCharArray())
+  private fun initializeKeyStore(privateKeyPair: String?, keystorePassword: String?): KeyStore {
+    val store = KeyStore.getInstance("jks")
+    val auxiliaryKeyStoreInputStream: InputStream? = privateKeyPair?.let { ByteArrayResource(decodeBase64(it)) }?.inputStream
+
+    auxiliaryKeyStoreInputStream.use {
+      store.load(it, keystorePassword?.toCharArray())
     }
     return store
   }
+  private fun initializePrimaryKeyStore() = initializeKeyStore(privateKeyPair, keystorePassword)
+
+  private fun initializeAuxiliaryKeyStore() = initializeKeyStore(privateKeyPairAuxiliary, keystorePasswordAuxiliary)
 
   private fun buildRSAKey(keyPair: KeyPair?, keyId: String?): RSAKey {
     return keyPair.let { RSAKey.Builder(it?.public as? RSAPublicKey) }
       .keyUse(KeyUse.SIGNATURE)
       .algorithm(JWSAlgorithm.RS256)
       .keyID(keyId).build()
-  }
-  private fun initializeAuxiliaryKeyStore(): KeyStore {
-    val store = KeyStore.getInstance("jks")
-    val auxiliaryKeyStoreInputStream: InputStream? = privateKeyPairAuxiliary?.let { ByteArrayResource(decodeBase64(it)) }?.inputStream
-
-    auxiliaryKeyStoreInputStream.use {
-      store.load(it, keystorePasswordAuxiliary?.toCharArray())
-    }
-    return store
   }
 }
