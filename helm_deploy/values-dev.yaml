@@ -9,7 +9,6 @@ generic-service:
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
-    JWT_JWK_KEY_ID: "dev-jwk-kid"
     BASE_URL: https://authorization-server-dev.hmpps.service.justice.gov.uk
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
