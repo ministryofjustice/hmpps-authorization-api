@@ -50,7 +50,7 @@ class JWKKeyAccessor(
     return if (ObjectUtils.anyNull(keyIdAuxiliary, keystoreAliasAuxiliary, keystorePasswordAuxiliary, privateKeyPairAuxiliary)) {
       null
     } else {
-      return buildRSAKey(getAuxiliaryKeyPair(), keyIdAuxiliary)
+      return buildRSAKey(getAuxiliaryKeyPair()!!, keyIdAuxiliary!!)
     }
   }
 
@@ -69,8 +69,8 @@ class JWKKeyAccessor(
 
   private fun initializeAuxiliaryKeyStore() = initializeKeyStore(privateKeyPairAuxiliary, keystorePasswordAuxiliary)
 
-  private fun buildRSAKey(keyPair: KeyPair?, keyId: String?): RSAKey {
-    return keyPair.let { RSAKey.Builder(it?.public as? RSAPublicKey) }
+  private fun buildRSAKey(keyPair: KeyPair, keyId: String): RSAKey {
+    return keyPair.let { RSAKey.Builder(it.public as? RSAPublicKey) }
       .keyUse(KeyUse.SIGNATURE)
       .algorithm(JWSAlgorithm.RS256)
       .keyID(keyId).build()
