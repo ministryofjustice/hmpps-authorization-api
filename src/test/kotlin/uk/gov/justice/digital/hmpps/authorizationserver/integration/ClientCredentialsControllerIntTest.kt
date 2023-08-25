@@ -177,7 +177,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
-      verifyAuthorities(client.id!!, client.clientId, "CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY")
+      verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerClientCredentialsDetailsAdd",
@@ -348,7 +348,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
-      verifyAuthorities(client.id!!, client.clientId, "VIEW_PRISONER_DATA", "COMMUNITY")
+      verifyAuthorities(client.id!!, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerClientCredentialsUpdate",
@@ -527,9 +527,9 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .jsonPath("clientName").isEqualTo("test more testing")
         .jsonPath("scopes[0]").isEqualTo("read")
         .jsonPath("scopes[1]").isEqualTo("write")
-        .jsonPath("authorities[0]").isEqualTo("CURIOUS_API")
-        .jsonPath("authorities[1]").isEqualTo("VIEW_PRISONER_DATA")
-        .jsonPath("authorities[2]").isEqualTo("COMMUNITY")
+        .jsonPath("authorities[0]").isEqualTo("ROLE_CURIOUS_API")
+        .jsonPath("authorities[1]").isEqualTo("ROLE_VIEW_PRISONER_DATA")
+        .jsonPath("authorities[2]").isEqualTo("ROLE_COMMUNITY")
         .jsonPath("ips[0]").isEqualTo("81.134.202.29/32")
         .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
