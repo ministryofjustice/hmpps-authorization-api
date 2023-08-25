@@ -43,7 +43,7 @@ class ClientCredentialsService(
     client!!.clientSecret = oAuthClientSecret.encode(externalClientSecret)
 
     client = clientRepository.save(client)
-    authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, clientDetails.authorities))
+    authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, withAuthoritiesPrefix(clientDetails.authorities)))
     clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails.validDays)))
     return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
   }
@@ -61,7 +61,7 @@ class ClientCredentialsService(
       client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber)
       clientConfig.ips = ips
       clientConfig.clientEndDate = getClientEndDate(validDays)
-      authorizationConsent.authorities = authorities
+      authorizationConsent.authorities = withAuthoritiesPrefix(authorities)
     }
   }
 
@@ -96,6 +96,11 @@ class ClientCredentialsService(
     registeredClientRepository.save(duplicatedRegisteredClient)
     return ClientCredentialsRegistrationResponse(duplicatedRegisteredClient.clientId, externalClientSecret)
   }
+
+  private fun withAuthoritiesPrefix(authorities: List<String>) =
+    authorities
+      .map { it.trim().uppercase() }
+      .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
 
   private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig> {
     val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
