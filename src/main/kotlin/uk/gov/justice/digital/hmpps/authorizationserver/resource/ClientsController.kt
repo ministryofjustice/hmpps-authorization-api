@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
+import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.SortBy
 @Controller
 class ClientsController(
   private val clientsService: ClientsService,
+  private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
 ) {
@@ -36,6 +38,13 @@ class ClientsController(
     return ResponseEntity.ok(AllClientsResponse(clientsService.retrieveAllClients(sort, ClientFilter(grantType = grantType, role = role, clientType = clientType))))
   }
 
+  @GetMapping("clients/exists/{clientId}")
+  @PreAuthorize("hasRole('ROLE_OAUTH_CLIENTS_VIEW')")
+  @ResponseStatus(HttpStatus.OK)
+  fun findClientByClientId(@PathVariable clientId: String): ResponseEntity<Any> {
+    return ResponseEntity.ok(conversionService.convert(clientsService.findClientByClientId(clientId), ClientExistsResponse::class.java))
+  }
+
   @DeleteMapping("clients/{clientId}/delete")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
@@ -46,6 +55,11 @@ class ClientsController(
     telemetryClient.trackEvent("AuthorizationServerClientDeleted", telemetryMap)
   }
 }
+
+data class ClientExistsResponse(
+  val clientId: String,
+  val accessTokenValidityMinutes: Long?,
+)
 
 data class AllClientsResponse(
   val clients: List<ClientSummary>,

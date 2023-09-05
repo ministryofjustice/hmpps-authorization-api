@@ -82,6 +82,10 @@ class ClientsService(
 
     clientRepository.deleteByClientId(clientId)
   }
+
+  fun findClientByClientId(clientId: String) =
+    clientRepository.findClientByClientId(clientId)
+      ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
 }
 
 data class ClientSummary(

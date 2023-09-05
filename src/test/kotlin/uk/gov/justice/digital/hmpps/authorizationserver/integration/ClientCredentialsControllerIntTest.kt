@@ -152,7 +152,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -204,7 +204,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -225,7 +225,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -246,7 +246,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -267,7 +267,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -288,7 +288,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -314,7 +314,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest-1",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -332,7 +332,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest-2",
               "jiraNumber" to "HAAR-8888",
               "validDays" to 3,
-              "accessTokenValidity" to 10,
+              "accessTokenValidityMinutes" to 10,
             ),
           ),
         )
@@ -511,7 +511,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-more-mctest-1",
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -534,7 +534,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
-        .jsonPath("accessTokenValidity").isEqualTo(20)
+        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
 
       val client = clientRepository.findClientByClientId("test-more-test")
       clientRepository.delete(client)
