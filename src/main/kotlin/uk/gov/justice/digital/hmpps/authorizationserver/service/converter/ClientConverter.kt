@@ -27,7 +27,7 @@ class ClientConverter(
         org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
-        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber),
+        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber),
         latestClientCredentialsAuthorization = mutableSetOf(),
       )
     }

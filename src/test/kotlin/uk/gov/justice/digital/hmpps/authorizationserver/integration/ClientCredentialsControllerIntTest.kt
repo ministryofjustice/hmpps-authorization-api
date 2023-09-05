@@ -152,7 +152,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -314,7 +314,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest-1",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -511,7 +511,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-more-mctest-1",
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
