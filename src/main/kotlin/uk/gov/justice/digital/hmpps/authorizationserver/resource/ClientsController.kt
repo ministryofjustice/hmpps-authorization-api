@@ -58,7 +58,7 @@ class ClientsController(
 
 data class ClientExistsResponse(
   val clientId: String,
-  val accessTokenValidity: Long?,
+  val accessTokenValidityMinutes: Long?,
 )
 
 data class AllClientsResponse(

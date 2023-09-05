@@ -300,7 +300,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
         .jsonPath("$.clientId").isEqualTo("test-client-id")
-        .jsonPath("$.accessTokenValidity").isEqualTo(5)
+        .jsonPath("$.accessTokenValidityMinutes").isEqualTo(5)
     }
   }
 }
