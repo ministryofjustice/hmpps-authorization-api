@@ -534,7 +534,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
-        .jsonPath("accessTokenValidity").isEqualTo(20)
+        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
 
       val client = clientRepository.findClientByClientId("test-more-test")
       clientRepository.delete(client)

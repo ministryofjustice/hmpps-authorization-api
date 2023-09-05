@@ -78,7 +78,7 @@ data class ClientCredentialsViewResponse(
   val jiraNumber: String?,
   val databaseUserName: String?,
   val validDays: Long?,
-  val accessTokenValidity: Long?,
+  val accessTokenValidityMinutes: Long?,
 )
 
 data class ClientCredentialsUpdateRequest(
