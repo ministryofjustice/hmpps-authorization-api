@@ -257,4 +257,50 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertTrue(clientConfigRepository.findById("test-test").isPresent)
     }
   }
+
+  @Nested
+  inner class ClientExists {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.get().uri("/clients/exists/test-client-id")
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.get().uri("/clients/exists/test-client-id")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.get().uri("/clients/exists/test-client-id")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `unrecognised client id`() {
+      webTestClient.get().uri("/clients/exists/test-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_CLIENTS_VIEW")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `client exists`() {
+      webTestClient.get().uri("/clients/exists/test-client-id")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_CLIENTS_VIEW")))
+        .exchange()
+        .expectStatus().isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody()
+        .jsonPath("$.clientId").isEqualTo("test-client-id")
+        .jsonPath("$.accessTokenValidity").isEqualTo(5)
+    }
+  }
 }
