@@ -58,7 +58,7 @@ class ClientCredentialsService(
 
     with(clientDetails) {
       client.scopes = scopes
-      client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidity, databaseUserName, jiraNumber)
+      client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber)
       clientConfig.ips = ips
       clientConfig.clientEndDate = getClientEndDate(validDays)
       authorizationConsent.authorities = withAuthoritiesPrefix(authorities)

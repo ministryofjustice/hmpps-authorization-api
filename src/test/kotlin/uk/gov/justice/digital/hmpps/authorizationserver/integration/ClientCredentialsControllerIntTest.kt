@@ -204,7 +204,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -225,7 +225,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -246,7 +246,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -267,7 +267,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -288,7 +288,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidity" to 20,
+              "accessTokenValidityMinutes" to 20,
             ),
           ),
         )
@@ -332,7 +332,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest-2",
               "jiraNumber" to "HAAR-8888",
               "validDays" to 3,
-              "accessTokenValidity" to 10,
+              "accessTokenValidityMinutes" to 10,
             ),
           ),
         )
