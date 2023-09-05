@@ -5,7 +5,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/authorization-server-db
+    url: jdbc:postgresql://localhost:5433/authorization-server-db
     username: admin
     password: admin_password
 
