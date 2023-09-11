@@ -35,6 +35,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("test-client-id")
+      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING")))
@@ -58,6 +59,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("ip-allow-a-client-1")
+      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
 
@@ -80,6 +82,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("testy")
+      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING")))
@@ -103,6 +106,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
+      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("delius")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertTrue(token.isNull("authorities"))
@@ -126,6 +130,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse))
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
+      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertTrue(token.isNull("authorities"))
