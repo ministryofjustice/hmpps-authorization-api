@@ -78,6 +78,7 @@ class TokenCustomizer(
       claim("scope", principal.registeredClient?.scopes)
       claim("grant_type", context.authorizationGrantType.value)
       claim("jti", oauthJtiGenerator.generateTokenId())
+      claim("aud", "oauth2-resource")
     }
   }
 }
