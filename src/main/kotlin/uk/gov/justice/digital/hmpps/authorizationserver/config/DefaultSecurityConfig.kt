@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -19,14 +20,14 @@ class DefaultSecurityConfig {
     http.cors { it.disable() }.csrf { it.disable() }
       .authorizeHttpRequests { auth ->
         auth.requestMatchers(
-          "/h2-console/**",
-          "/health/**",
-          "/info",
-          "/ping",
-          "/error",
-          "/.well-known/jwks.json",
-          "/issuer/.well-known/**",
-          "/favicon.ico",
+          antMatcher("/h2-console/**"),
+          antMatcher("/health/**"),
+          antMatcher("/info"),
+          antMatcher("/ping"),
+          antMatcher("/error"),
+          antMatcher("/.well-known/jwks.json"),
+          antMatcher("/issuer/.well-known/**"),
+          antMatcher("/favicon.ico"),
         ).permitAll().anyRequest().authenticated()
       }
     return http.build()
