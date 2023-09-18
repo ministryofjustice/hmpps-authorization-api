@@ -22,7 +22,7 @@ class ClientsService(
   private val clientIdService: ClientIdService,
   private val clientDeploymentRepository: ClientDeploymentRepository,
 ) {
-  fun retrieveAllClients(sortBy: SortBy, filterBy: ClientFilter?): List<ClientSummary> {
+  fun retrieveAllClients(sortBy: SortBy, filterBy: ClientFilter?): List<ClientDetail> {
     val baseClients = clientRepository.findAll().groupBy { clientIdService.toBase(it.clientId) }.toSortedMap()
     val configs = clientConfigRepository.findAll().associateBy { it.baseClientId }
     val deployments = clientDeploymentRepository.findAll().associateBy { it.baseClientId }
@@ -35,7 +35,7 @@ class ClientsService(
       val firstClient = client.second[0]
       val roles = authorities?.authoritiesWithoutPrefix?.sorted()?.joinToString("\n")
       val lastAccessed = client.second[0].getLastAccessedDate()
-      ClientSummary(
+      ClientDetail(
         baseClientId = client.first,
         clientType = deployment?.clientType,
         teamName = deployment?.team,
@@ -80,12 +80,20 @@ class ClientsService(
     clientRepository.deleteByClientId(clientId)
   }
 
+  fun findClientWithCopies(clientId: String): List<Client> {
+    val clients = clientIdService.findByBaseClientId(clientId)
+    if (clients.isEmpty()) {
+      throw ClientNotFoundException(Client::class.simpleName, clientId)
+    }
+    return clients
+  }
+
   fun findClientByClientId(clientId: String) =
     clientRepository.findClientByClientId(clientId)
       ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
 }
 
-data class ClientSummary(
+data class ClientDetail(
   val baseClientId: String,
   val clientType: ClientType?,
   val teamName: String?,

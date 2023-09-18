@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDetail
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientFilter
-import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientSummary
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientsService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.SortBy
+import java.time.Instant
 
 @Controller
 class ClientsController(
@@ -36,6 +37,14 @@ class ClientsController(
     @RequestParam clientType: ClientType? = null,
   ): ResponseEntity<Any> {
     return ResponseEntity.ok(AllClientsResponse(clientsService.retrieveAllClients(sort, ClientFilter(grantType = grantType, role = role, clientType = clientType))))
+  }
+
+  @GetMapping("clients/duplicates/{clientId}")
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun clients(
+    @PathVariable clientId: String,
+  ): ResponseEntity<Any> {
+    return ResponseEntity.ok(conversionService.convert(clientsService.findClientWithCopies(clientId), ClientDuplicatesResponse::class.java))
   }
 
   @GetMapping("clients/exists/{clientId}")
@@ -61,6 +70,22 @@ data class ClientExistsResponse(
   val accessTokenValidityMinutes: Long?,
 )
 
-data class AllClientsResponse(
-  val clients: List<ClientSummary>,
+data class ClientDateSummary(
+  val clientId: String,
+  val created: Instant,
+  val lastAccessed: Instant?,
 )
+
+data class ClientDuplicatesResponse(
+  val clients: List<ClientDateSummary>,
+  val grantType: GrantType,
+)
+
+data class AllClientsResponse(
+  val clients: List<ClientDetail>,
+)
+
+enum class GrantType {
+  CLIENT_CREDENTIALS,
+  AUTHORIZATION_CODE,
+}
