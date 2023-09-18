@@ -303,4 +303,72 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.accessTokenValidityMinutes").isEqualTo(5)
     }
   }
+
+  @Nested
+  inner class ListCopies {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.get().uri("/clients/duplicates/test-client-id")
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.get().uri("/clients/duplicates/test-client-id")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.get().uri("/clients/duplicates/test-client-id")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `unrecognised client id`() {
+      webTestClient.get().uri("/clients/duplicates/test-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `lists multiple copies ordered by client id`() {
+      webTestClient.get().uri("/clients/duplicates/ip-allow-b-client-8")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("$.clients[*].clientId").value<List<String>> { assertThat(it).hasSize(2) }
+        .jsonPath("$.clients[*].clientId").value<List<String>> {
+          assertThat(it).containsExactly(
+            "ip-allow-b-client",
+            "ip-allow-b-client-8",
+          )
+        }
+        .jsonPath("$.clients[0].clientId").isEqualTo("ip-allow-b-client")
+        .jsonPath("$.clients[0].created").isNotEmpty
+        .jsonPath("$.clients[0].lastAccessed").isNotEmpty
+    }
+
+    @Test
+    fun `returns single client when no other copies`() {
+      webTestClient.get().uri("/clients/duplicates/test-client-id")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("$.clients[*].clientId").value<List<String>> { assertThat(it).hasSize(1) }
+        .jsonPath("$.clients[*].clientId").value<List<String>> {
+          assertThat(it).containsExactly(
+            "test-client-id",
+          )
+        }
+    }
+  }
 }
