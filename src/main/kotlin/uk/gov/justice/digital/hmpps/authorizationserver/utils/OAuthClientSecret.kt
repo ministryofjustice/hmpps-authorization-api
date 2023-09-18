@@ -1,26 +1,25 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.utils
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.factory.PasswordEncoderFactories
-import org.springframework.security.crypto.keygen.Base64StringKeyGenerator
-import org.springframework.security.crypto.keygen.StringKeyGenerator
 import org.springframework.stereotype.Component
-import java.util.Base64
+import java.security.SecureRandom
 
 @Component
-class OAuthClientSecret {
-
-  private val clientSecretGenerator: StringKeyGenerator = Base64StringKeyGenerator(
-    Base64.getUrlEncoder().withoutPadding(),
-    48,
-  )
+class OAuthClientSecret(@Value("\${application.authentication.generated-password.length:60}") private val passwordLength: Int) {
 
   private val passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
 
-  fun generate(): String {
-    return clientSecretGenerator.generateKey()
-  }
+  // ! $ % & * + - < >
+  private val charPoolLimitSpecialChar: List<Char> =
+    ('a'..'z') + ('A'..'Z') + '!' + ('$'..'&') + ('*'..'+') + '-' + ('0'..'9') + '<' + '>'
+  var randomSpecialChar: SecureRandom = SecureRandom()
 
   fun encode(secret: String): String {
     return passwordEncoder.encode(secret)
   }
+  fun generate(): String = (1..passwordLength)
+    .map { randomSpecialChar.nextInt(charPoolLimitSpecialChar.size) }
+    .map(charPoolLimitSpecialChar::get)
+    .joinToString("")
 }
