@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.utils
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.factory.PasswordEncoderFactories
 import org.springframework.stereotype.Component
 import java.security.SecureRandom
