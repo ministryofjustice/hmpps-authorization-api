@@ -35,7 +35,6 @@ class ClientsService(
       val firstClient = client.second[0]
       val roles = authorities?.authoritiesWithoutPrefix?.sorted()?.joinToString("\n")
       val lastAccessed = client.second[0].getLastAccessedDate()
-      val secretUpdated = client.second[0].clientIdIssuedAt
       ClientSummary(
         baseClientId = client.first,
         clientType = deployment?.clientType,
@@ -44,7 +43,6 @@ class ClientsService(
         roles = roles,
         count = client.second.size,
         expired = if (config?.clientEndDate?.isBefore(LocalDate.now()) == true)"EXPIRED" else null,
-        secretUpdated = secretUpdated,
         lastAccessed = lastAccessed,
       )
     }.filter { cs ->
@@ -60,7 +58,6 @@ class ClientsService(
           SortBy.TEAM -> it.teamName
           SortBy.COUNT -> it.count
           SortBy.LAST_ACCESSED -> it.lastAccessed
-          SortBy.SECRET_UPDATED -> it.secretUpdated
           else -> it.baseClientId
         }
       },
@@ -96,14 +93,13 @@ data class ClientSummary(
   val roles: String?,
   val count: Int,
   val expired: String?,
-  val secretUpdated: Instant?,
   val lastAccessed: Instant?,
 )
 
 class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")
 
 enum class SortBy {
-  CLIENT, TYPE, TEAM, LAST_ACCESSED, SECRET_UPDATED, COUNT
+  CLIENT, TYPE, TEAM, LAST_ACCESSED, COUNT
 }
 
 data class ClientFilter(
