@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import java.security.SecureRandom
 
 @Component
-class OAuthClientSecret(@Value("\${application.authentication.generated-password.length:60}") private val passwordLength: Int) {
+class OAuthClientSecret {
 
   private val passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
 
@@ -18,7 +18,7 @@ class OAuthClientSecret(@Value("\${application.authentication.generated-password
   fun encode(secret: String): String {
     return passwordEncoder.encode(secret)
   }
-  fun generate(): String = (1..passwordLength)
+  fun generate(): String = (1..60)
     .map { randomSpecialChar.nextInt(charPoolLimitSpecialChar.size) }
     .map(charPoolLimitSpecialChar::get)
     .joinToString("")
