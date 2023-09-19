@@ -54,19 +54,6 @@ class ClientCredentialsController(
       ),
     )
   }
-
-  @PostMapping("clients/client-credentials/{clientId}/duplicate")
-  @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun duplicate(@PathVariable clientId: String): ResponseEntity<Any> {
-    val duplicateRegistrationResponse = clientService.duplicate(clientId)
-    val telemetryMap = mapOf(
-      "username" to authenticationFacade.currentUsername!!,
-      "clientId" to duplicateRegistrationResponse.clientId,
-    )
-    telemetryClient.trackEvent("AuthorizationServerClientDetailsDuplicated", telemetryMap)
-    return ResponseEntity.ok(duplicateRegistrationResponse)
-  }
 }
 
 data class ClientCredentialsViewResponse(

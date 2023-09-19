@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -11,6 +13,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
 
@@ -21,6 +24,8 @@ class ClientsService(
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val clientIdService: ClientIdService,
   private val clientDeploymentRepository: ClientDeploymentRepository,
+  private val registeredClientRepository: JdbcRegisteredClientRepository,
+  private val oAuthClientSecret: OAuthClientSecret,
 ) {
   fun retrieveAllClients(sortBy: SortBy, filterBy: ClientFilter?): List<ClientDetail> {
     val baseClients = clientRepository.findAll().groupBy { clientIdService.toBase(it.clientId) }.toSortedMap()
@@ -91,6 +96,29 @@ class ClientsService(
   fun findClientByClientId(clientId: String) =
     clientRepository.findClientByClientId(clientId)
       ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+
+  @Transactional
+  fun duplicate(clientId: String): DuplicateRegistrationResponse {
+    val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
+    if (clientsByBaseClientId.isEmpty()) {
+      throw ClientNotFoundException(Client::class.simpleName, clientId)
+    }
+
+    val client = clientsByBaseClientId.last()
+    val registeredClient = registeredClientRepository.findByClientId(client.clientId)
+    val registeredClientBuilder = RegisteredClient.from(registeredClient)
+
+    val externalClientSecret = oAuthClientSecret.generate()
+    val duplicatedRegisteredClient = registeredClientBuilder
+      .id(java.util.UUID.randomUUID().toString())
+      .clientId(clientIdService.incrementClientId(client.clientId))
+      .clientIdIssuedAt(java.time.Instant.now())
+      .clientSecret(oAuthClientSecret.encode(externalClientSecret))
+      .build()
+
+    registeredClientRepository.save(duplicatedRegisteredClient)
+    return DuplicateRegistrationResponse(duplicatedRegisteredClient.clientId, externalClientSecret)
+  }
 }
 
 data class ClientDetail(
@@ -114,4 +142,9 @@ data class ClientFilter(
   val grantType: String? = null,
   val role: String? = null,
   val clientType: ClientType? = null,
+)
+
+data class DuplicateRegistrationResponse(
+  val clientId: String,
+  val clientSecret: String,
 )

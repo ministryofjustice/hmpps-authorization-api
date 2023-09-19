@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.core.convert.ConversionService
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -28,7 +26,7 @@ class ClientCredentialsService(
   private val oAuthClientSecret: OAuthClientSecret,
   private val clientIdService: ClientIdService,
   private val conversionService: ConversionService,
-  private val registeredClientRepository: JdbcRegisteredClientRepository,
+
 ) {
 
   @Transactional
@@ -72,29 +70,6 @@ class ClientCredentialsService(
     val clientConfig = clientClientConfigPair.second
     setValidDays(clientConfig)
     return ClientComposite(listOf(client), client, clientConfig, retrieveAuthorizationConsent(client))
-  }
-
-  @Transactional
-  fun duplicate(clientId: String): ClientCredentialsRegistrationResponse {
-    val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
-    if (clientsByBaseClientId.isEmpty()) {
-      throw ClientNotFoundException(Client::class.simpleName, clientId)
-    }
-
-    val client = clientsByBaseClientId.last()
-    val registeredClient = registeredClientRepository.findByClientId(client.clientId)
-    val registeredClientBuilder = RegisteredClient.from(registeredClient)
-
-    val externalClientSecret = oAuthClientSecret.generate()
-    val duplicatedRegisteredClient = registeredClientBuilder
-      .id(java.util.UUID.randomUUID().toString())
-      .clientId(clientIdService.incrementClientId(client.clientId))
-      .clientIdIssuedAt(java.time.Instant.now())
-      .clientSecret(oAuthClientSecret.encode(externalClientSecret))
-      .build()
-
-    registeredClientRepository.save(duplicatedRegisteredClient)
-    return ClientCredentialsRegistrationResponse(duplicatedRegisteredClient.clientId, externalClientSecret)
   }
 
   private fun withAuthoritiesPrefix(authorities: List<String>) =
