@@ -10,7 +10,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
@@ -357,105 +356,6 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       )
 
       clientRepository.delete(client)
-    }
-  }
-
-  @Nested
-  inner class DuplicateClient {
-
-    @Test
-    fun `access forbidden when no authority`() {
-      webTestClient.post().uri("/clients/client-credentials/test-client-id/duplicate")
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `access forbidden when no role`() {
-      webTestClient.post().uri("/clients/client-credentials/test-client-id/duplicate")
-        .headers(setAuthorisation(roles = listOf()))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `access forbidden when wrong role`() {
-      webTestClient.post().uri("/clients/client-credentials/test-client-id/duplicate")
-        .headers(setAuthorisation(roles = listOf("WRONG")))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `not found when no clients exist for base client id`() {
-      webTestClient.post().uri("/clients/client-credentials/test-client-x-id/duplicate")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .exchange()
-        .expectStatus().isNotFound
-    }
-
-    @Test
-    fun `conflict when the maximum number of clients already exist for base client id`() {
-      whenever(oAuthClientSecretGenerator.generate())
-        .thenReturn("external-client-secret")
-        .thenReturn("external-client-secret-2")
-        .thenReturn("external-client-secret-3")
-
-      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
-      whenever(oAuthClientSecretGenerator.encode("external-client-secret-2")).thenReturn("encoded-client-secret-2")
-      whenever(oAuthClientSecretGenerator.encode("external-client-secret-3")).thenReturn("encoded-client-secret-3")
-
-      webTestClient.post().uri("/clients/client-credentials/test-client-id/duplicate")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .exchange()
-        .expectStatus().isOk
-
-      webTestClient.post().uri("/clients/client-credentials/test-client-id/duplicate")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .exchange()
-        .expectStatus().isOk
-
-      val duplicatedClient = clientRepository.findClientByClientId("test-client-id-1")
-      val duplicatedClient2 = clientRepository.findClientByClientId("test-client-id-2")
-
-      webTestClient.post().uri("/clients/client-credentials/test-client-id/duplicate")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .exchange()
-        .expectStatus().isEqualTo(HttpStatus.CONFLICT)
-
-      clientRepository.delete(duplicatedClient)
-      clientRepository.delete(duplicatedClient2)
-    }
-
-    @Test
-    fun `duplicate success`() {
-      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
-      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
-
-      webTestClient.post().uri("/clients/client-credentials/test-client-id/duplicate")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .exchange()
-        .expectStatus().isOk
-        .expectBody()
-        .jsonPath("clientId").isEqualTo("test-client-id-1")
-        .jsonPath("clientSecret").isEqualTo("external-client-secret")
-
-      val originalClient = clientRepository.findClientByClientId("test-client-id")
-      val duplicatedClient = clientRepository.findClientByClientId("test-client-id-1")
-      assertThat(duplicatedClient!!.clientName).isEqualTo(originalClient!!.clientName)
-      assertThat(duplicatedClient.scopes).isEqualTo(originalClient.scopes)
-      assertThat(duplicatedClient.authorizationGrantTypes).isEqualTo(originalClient.authorizationGrantTypes)
-      assertThat(duplicatedClient.clientAuthenticationMethods).isEqualTo(originalClient.clientAuthenticationMethods)
-      assertThat(duplicatedClient.clientSettings).isEqualTo(originalClient.clientSettings)
-      assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
-
-      verify(telemetryClient).trackEvent(
-        "AuthorizationServerClientDetailsDuplicated",
-        mapOf("username" to "AUTH_ADM", "clientId" to "test-client-id-1"),
-        null,
-      )
-
-      clientRepository.delete(duplicatedClient)
     }
   }
 
