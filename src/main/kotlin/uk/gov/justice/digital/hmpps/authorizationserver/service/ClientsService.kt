@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
@@ -99,7 +98,7 @@ class ClientsService(
       ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
 
   @Transactional
-  fun duplicate(clientId: String): ClientCredentialsRegistrationResponse {
+  fun duplicate(clientId: String): DuplicateRegistrationResponse {
     val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
     if (clientsByBaseClientId.isEmpty()) {
       throw ClientNotFoundException(Client::class.simpleName, clientId)
@@ -118,7 +117,7 @@ class ClientsService(
       .build()
 
     registeredClientRepository.save(duplicatedRegisteredClient)
-    return ClientCredentialsRegistrationResponse(duplicatedRegisteredClient.clientId, externalClientSecret)
+    return DuplicateRegistrationResponse(duplicatedRegisteredClient.clientId, externalClientSecret)
   }
 }
 
@@ -143,4 +142,9 @@ data class ClientFilter(
   val grantType: String? = null,
   val role: String? = null,
   val clientType: ClientType? = null,
+)
+
+data class DuplicateRegistrationResponse(
+  val clientId: String,
+  val clientSecret: String,
 )
