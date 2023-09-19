@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClient
 class ClientConverter(
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
 ) : Converter<ClientCredentialsRegistrationRequest, Client> {
-  override fun convert(source: ClientCredentialsRegistrationRequest): Client? {
+  override fun convert(source: ClientCredentialsRegistrationRequest): Client {
     with(source) {
       return Client(
         id = java.util.UUID.randomUUID().toString(),
@@ -22,7 +22,7 @@ class ClientConverter(
         clientName = clientName,
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
         authorizationGrantTypes = CLIENT_CREDENTIALS.value,
-        scopes = scopes,
+        scopes = scopes ?: listOf("read"),
         clientSettings =
         org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
           .requireProofKey(false)

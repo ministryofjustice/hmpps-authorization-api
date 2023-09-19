@@ -43,9 +43,15 @@ class ClientCredentialsService(
     client!!.clientSecret = oAuthClientSecret.encode(externalClientSecret)
 
     client = clientRepository.save(client)
-    authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, withAuthoritiesPrefix(clientDetails.authorities)))
-    clientConfigRepository.save(ClientConfig(client.clientId, clientDetails.ips, getClientEndDate(clientDetails.validDays)))
-    return ClientCredentialsRegistrationResponse(client.clientId, externalClientSecret)
+    clientDetails.authorities?.let { authorities ->
+      authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, withAuthoritiesPrefix(authorities)))
+    }
+
+    clientDetails.ips?.let { ips ->
+      clientConfigRepository.save(ClientConfig(client!!.clientId, ips, getClientEndDate(clientDetails.validDays)))
+    }
+
+    return ClientCredentialsRegistrationResponse(client!!.clientId, externalClientSecret)
   }
 
   @Transactional
