@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRe
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
+import java.util.Base64.getEncoder
 
 @Service
 class ClientsService(
@@ -117,7 +118,12 @@ class ClientsService(
       .build()
 
     registeredClientRepository.save(duplicatedRegisteredClient)
-    return DuplicateRegistrationResponse(duplicatedRegisteredClient.clientId, externalClientSecret)
+    return DuplicateRegistrationResponse(
+      duplicatedRegisteredClient.clientId,
+      externalClientSecret,
+      getEncoder().encodeToString(duplicatedRegisteredClient.clientId.toByteArray()),
+      getEncoder().encodeToString(externalClientSecret.toByteArray()),
+    )
   }
 }
 
@@ -147,4 +153,6 @@ data class ClientFilter(
 data class DuplicateRegistrationResponse(
   val clientId: String,
   val clientSecret: String,
+  val base64ClientId: String,
+  val base64ClientSecret: String,
 )

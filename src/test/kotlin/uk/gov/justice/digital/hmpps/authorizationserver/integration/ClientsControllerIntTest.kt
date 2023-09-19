@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientCo
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
+import java.util.Base64.getEncoder
 
 class ClientsControllerIntTest : IntegrationTestBase() {
 
@@ -452,6 +453,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("clientId").isEqualTo("test-client-id-1")
         .jsonPath("clientSecret").isEqualTo("external-client-secret")
+        .jsonPath("base64ClientId").isEqualTo(getEncoder().encodeToString("test-client-id-1".toByteArray()))
+        .jsonPath("base64ClientSecret").isEqualTo(getEncoder().encodeToString("external-client-secret".toByteArray()))
 
       val originalClient = clientRepository.findClientByClientId("test-client-id")
       val duplicatedClient = clientRepository.findClientByClientId("test-client-id-1")
