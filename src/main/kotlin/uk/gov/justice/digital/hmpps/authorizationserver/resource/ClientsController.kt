@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
@@ -62,6 +63,19 @@ class ClientsController(
 
     val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientId)
     telemetryClient.trackEvent("AuthorizationServerClientDeleted", telemetryMap)
+  }
+
+  @PostMapping("clients/{clientId}/duplicate")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun duplicate(@PathVariable clientId: String): ResponseEntity<Any> {
+    val duplicateRegistrationResponse = clientsService.duplicate(clientId)
+    val telemetryMap = mapOf(
+      "username" to authenticationFacade.currentUsername!!,
+      "clientId" to duplicateRegistrationResponse.clientId,
+    )
+    telemetryClient.trackEvent("AuthorizationServerClientDetailsDuplicated", telemetryMap)
+    return ResponseEntity.ok(duplicateRegistrationResponse)
   }
 }
 
