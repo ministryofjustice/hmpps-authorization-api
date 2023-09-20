@@ -31,8 +31,8 @@ class ClientCredentialsService(
 
   @Transactional
   fun addClientCredentials(clientDetails: ClientCredentialsRegistrationRequest): ClientCredentialsRegistrationResponse {
-    val existingClient = clientRepository.findClientByClientId(clientDetails.clientId!!)
-    existingClient?.let {
+    val clientList = clientIdService.findByBaseClientId(clientDetails.clientId!!)
+    if (clientList.isNotEmpty()) {
       throw ClientAlreadyExistsException(clientDetails.clientId)
     }
 

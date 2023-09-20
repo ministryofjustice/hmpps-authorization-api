@@ -135,6 +135,38 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `bad request when client with same base client id already exists`() {
+      assertNotNull(jdbcRegisteredClientRepository.findByClientId("ip-allow-a-client-1"))
+      assertNull(jdbcRegisteredClientRepository.findByClientId("ip-allow-a-client"))
+
+      webTestClient.post().uri("/clients/client-credentials/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "ip-allow-a-client",
+              "clientName" to "test client",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody()
+        .json(
+          """
+              {
+              "userMessage":"Client with client id ip-allow-a-client cannot be created as already exists",
+              "developerMessage":"Client with client id ip-allow-a-client cannot be created as already exists"
+              }
+          """
+            .trimIndent(),
+        )
+    }
+
+    @Test
     fun `register client success`() {
       assertNull(clientRepository.findClientByClientId("testy"))
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
