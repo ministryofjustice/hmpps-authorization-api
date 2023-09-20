@@ -178,7 +178,8 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
-      verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+      val authorizationConsent =
+        verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerClientCredentialsDetailsAdd",
@@ -187,6 +188,8 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       )
 
       clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
     }
 
     @Test
@@ -415,7 +418,8 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
-      verifyAuthorities(client.id!!, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+      val authorizationConsent =
+        verifyAuthorities(client.id!!, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerClientCredentialsUpdate",
@@ -424,6 +428,8 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       )
 
       clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
     }
   }
 
@@ -505,12 +511,17 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
 
       val client = clientRepository.findClientByClientId("test-more-test")
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).get()
       clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
     }
   }
 
-  private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String) {
+  private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String): AuthorizationConsent {
     val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId)).get()
     assertThat(authorizationConsent.authorities).containsOnly(*authorities)
+    return authorizationConsent
   }
 }
