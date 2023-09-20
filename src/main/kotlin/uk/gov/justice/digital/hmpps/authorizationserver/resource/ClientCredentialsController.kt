@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -27,9 +30,12 @@ class ClientCredentialsController(
   @PostMapping("clients/client-credentials/add")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun addClient(@RequestBody clientDetails: ClientCredentialsRegistrationRequest): ResponseEntity<Any> {
+  fun addClient(
+    @Valid @RequestBody
+    clientDetails: ClientCredentialsRegistrationRequest,
+  ): ResponseEntity<Any> {
     val registrationResponse = clientService.addClientCredentials(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!)
     telemetryClient.trackEvent("AuthorizationServerClientCredentialsDetailsAdd", telemetryMap)
     return ResponseEntity.ok(registrationResponse)
   }
@@ -79,11 +85,17 @@ data class ClientCredentialsUpdateRequest(
 )
 
 data class ClientCredentialsRegistrationRequest(
-  val clientId: String,
-  val clientName: String,
-  val scopes: List<String>,
-  val authorities: List<String>,
-  val ips: List<String>,
+  @field:NotBlank(message = "clientId must not be blank")
+  @field:Size(max = 100, message = "clientId max size is 100")
+  val clientId: String?,
+
+  @field:NotBlank(message = "clientName must not be blank")
+  @field:Size(max = 100, message = "clientName max size is 200")
+  val clientName: String?,
+
+  val scopes: List<String>?,
+  val authorities: List<String>?,
+  val ips: List<String>?,
   val jiraNumber: String?,
   val databaseUserName: String?,
   val validDays: Long?,
