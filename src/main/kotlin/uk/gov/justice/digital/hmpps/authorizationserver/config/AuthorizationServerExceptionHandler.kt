@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.config
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientAlreadyExistsException
@@ -107,24 +109,44 @@ class AuthorizationServerExceptionHandler {
       )
   }
 
+  @ExceptionHandler(MethodArgumentNotValidException::class)
+  fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse?>? {
+    log.info("Validation exception: {}", e.message)
+    return ResponseEntity
+      .status(HttpStatus.BAD_REQUEST)
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.BAD_REQUEST,
+          userMessage = e.message,
+          developerMessage = e.message,
+          errors = e.asErrorList(),
+        ),
+      )
+  }
+
+  private fun MethodArgumentNotValidException.asErrorList(): List<String> =
+    this.allErrors.mapNotNull { it.defaultMessage }
+
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 }
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class ErrorResponse(
   val status: Int,
   val errorCode: Int? = null,
   val userMessage: String? = null,
   val developerMessage: String? = null,
-  val moreInfo: String? = null,
+  val errors: List<String>? = null,
 ) {
   constructor(
     status: HttpStatus,
     errorCode: Int? = null,
     userMessage: String? = null,
     developerMessage: String? = null,
-    moreInfo: String? = null,
+    errors: List<String>? = null,
   ) :
-    this(status.value(), errorCode, userMessage, developerMessage, moreInfo)
+    this(status.value(), errorCode, userMessage, developerMessage, errors)
 }

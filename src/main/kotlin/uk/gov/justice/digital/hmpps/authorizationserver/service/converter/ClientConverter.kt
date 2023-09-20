@@ -16,10 +16,10 @@ class ClientConverter(
     with(source) {
       return Client(
         id = java.util.UUID.randomUUID().toString(),
-        clientId = clientId,
+        clientId = clientId!!,
         clientIdIssuedAt = java.time.Instant.now(),
         clientSecretExpiresAt = null,
-        clientName = clientName,
+        clientName = clientName!!,
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
         authorizationGrantTypes = CLIENT_CREDENTIALS.value,
         scopes = scopes ?: listOf("read"),

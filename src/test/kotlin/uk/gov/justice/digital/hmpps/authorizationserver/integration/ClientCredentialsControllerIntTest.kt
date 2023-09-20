@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.CoreMatchers.hasItems
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Nested
@@ -185,6 +187,72 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       )
 
       clientRepository.delete(client)
+    }
+
+    @Test
+    fun `register incomplete client`() {
+      assertNull(clientRepository.findClientByClientId("testy"))
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/clients/client-credentials/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "clientName" to "test client",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("testy")
+        .jsonPath("clientSecret").isEqualTo("external-client-secret")
+
+      val client = clientRepository.findClientByClientId("testy")
+
+      assertNotNull(client)
+      assertThat(client!!.clientId).isEqualTo("testy")
+      assertThat(client.clientName).isEqualTo("test client")
+      assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
+      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.scopes).containsOnly("read")
+      assertFalse(clientConfigRepository.findById(client.clientId).isPresent)
+      assertFalse(authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).isPresent)
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientCredentialsDetailsAdd",
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        null,
+      )
+
+      clientRepository.delete(client)
+    }
+
+    @Test
+    fun `omit mandatory fields gives bad request response`() {
+      webTestClient.post().uri("/clients/client-credentials/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody().jsonPath("errors").value(
+          hasItems("clientId must not be blank", "clientName must not be blank"),
+        )
     }
   }
 

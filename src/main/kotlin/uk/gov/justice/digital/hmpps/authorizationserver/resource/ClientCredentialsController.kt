@@ -35,7 +35,7 @@ class ClientCredentialsController(
     clientDetails: ClientCredentialsRegistrationRequest,
   ): ResponseEntity<Any> {
     val registrationResponse = clientService.addClientCredentials(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!)
     telemetryClient.trackEvent("AuthorizationServerClientCredentialsDetailsAdd", telemetryMap)
     return ResponseEntity.ok(registrationResponse)
   }
@@ -87,11 +87,11 @@ data class ClientCredentialsUpdateRequest(
 data class ClientCredentialsRegistrationRequest(
   @field:NotBlank(message = "clientId must not be blank")
   @field:Size(max = 100, message = "clientId max size is 100")
-  val clientId: String,
+  val clientId: String?,
 
   @field:NotBlank(message = "clientName must not be blank")
   @field:Size(max = 100, message = "clientName max size is 200")
-  val clientName: String, // TODO do we need this field?
+  val clientName: String?,
 
   val scopes: List<String>?,
   val authorities: List<String>?,
