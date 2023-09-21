@@ -12,9 +12,13 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
+import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
@@ -28,6 +32,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var clientRepository: ClientRepository
+
+  @Autowired
+  lateinit var authorizationConsentRepository: AuthorizationConsentRepository
 
   @Autowired
   lateinit var clientDeploymentRepository: ClientDeploymentRepository
@@ -464,6 +471,13 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(duplicatedClient.clientAuthenticationMethods).isEqualTo(originalClient.clientAuthenticationMethods)
       assertThat(duplicatedClient.clientSettings).isEqualTo(originalClient.clientSettings)
       assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
+
+      val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(originalClient.id, originalClient.clientId))
+      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(duplicatedClient.id, duplicatedClient.clientId))
+
+      assertThat(duplicateCateAuthorizationConsent?.authorities).isEqualTo(authorizationConsent?.authorities)
+
+      authorizationConsentRepository.delete(duplicateCateAuthorizationConsent)
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerClientDetailsDuplicated",

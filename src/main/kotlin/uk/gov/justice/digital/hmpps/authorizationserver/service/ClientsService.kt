@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientDeployment
@@ -118,6 +120,11 @@ class ClientsService(
       .build()
 
     registeredClientRepository.save(duplicatedRegisteredClient)
+    val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(client.id, client.clientId))
+    authorizationConsent?.let {
+      authorizationConsentRepository.save(AuthorizationConsent(duplicatedRegisteredClient.id, duplicatedRegisteredClient.clientId, it.authorities))
+    }
+
     return DuplicateRegistrationResponse(
       duplicatedRegisteredClient.clientId,
       externalClientSecret,
