@@ -12,6 +12,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
@@ -471,10 +472,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(duplicatedClient.clientSettings).isEqualTo(originalClient.clientSettings)
       assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
 
-      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsentId(originalClient.id, originalClient.clientId)).get()
-      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(duplicatedClient.id, duplicatedClient.clientId)).get()
+      val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(originalClient.id, originalClient.clientId))
+      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(duplicatedClient.id, duplicatedClient.clientId))
 
-      assertThat(duplicateCateAuthorizationConsent.authorities).isEqualTo(authorizationConsent.authorities)
+      assertThat(duplicateCateAuthorizationConsent?.authorities).isEqualTo(authorizationConsent?.authorities)
 
       authorizationConsentRepository.delete(duplicateCateAuthorizationConsent)
 
