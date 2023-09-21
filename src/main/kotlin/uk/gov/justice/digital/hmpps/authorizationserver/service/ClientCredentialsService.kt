@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentia
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import java.util.Base64.getEncoder
 
 @Service
 class ClientCredentialsService(
@@ -49,7 +50,12 @@ class ClientCredentialsService(
       clientConfigRepository.save(ClientConfig(client!!.clientId, ips, getClientEndDate(clientDetails.validDays)))
     }
 
-    return ClientCredentialsRegistrationResponse(client!!.clientId, externalClientSecret)
+    return ClientCredentialsRegistrationResponse(
+      client!!.clientId,
+      externalClientSecret,
+      getEncoder().encodeToString(client!!.clientId.toByteArray()),
+      getEncoder().encodeToString(externalClientSecret.toByteArray()),
+    )
   }
 
   @Transactional
