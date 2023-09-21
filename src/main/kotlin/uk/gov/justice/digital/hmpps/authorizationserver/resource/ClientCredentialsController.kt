@@ -105,4 +105,6 @@ data class ClientCredentialsRegistrationRequest(
 data class ClientCredentialsRegistrationResponse(
   val clientId: String,
   val clientSecret: String,
+  val base64ClientId: String,
+  val base64ClientSecret: String,
 )
