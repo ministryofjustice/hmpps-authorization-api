@@ -118,6 +118,10 @@ class ClientsService(
       .build()
 
     registeredClientRepository.save(duplicatedRegisteredClient)
+    val authorizationConsent = authorizationConsentRepository.findByPrincipalName(clientId)
+
+    authorizationConsent?.let { authorizationConsentRepository.save(AuthorizationConsent(duplicatedRegisteredClient.id, duplicatedRegisteredClient.clientId, authorizationConsent.authorities)) }
+
     return DuplicateRegistrationResponse(
       duplicatedRegisteredClient.clientId,
       externalClientSecret,
