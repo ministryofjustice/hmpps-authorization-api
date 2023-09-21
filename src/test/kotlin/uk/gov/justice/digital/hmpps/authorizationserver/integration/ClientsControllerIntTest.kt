@@ -15,6 +15,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
@@ -469,10 +471,12 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(duplicatedClient.clientSettings).isEqualTo(originalClient.clientSettings)
       assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
 
-      val authorizationConsent = authorizationConsentRepository.findByPrincipalName("test-client-id")
-      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findByPrincipalName("test-client-id-1")
-      assertThat(duplicateCateAuthorizationConsent?.authorities).isEqualTo(authorizationConsent?.authorities)
-      assertThat(duplicateCateAuthorizationConsent?.authoritiesWithoutPrefix).isEqualTo(authorizationConsent?.authoritiesWithoutPrefix)
+      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsentId(originalClient.id, originalClient.clientId)).get()
+      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(duplicatedClient.id, duplicatedClient.clientId)).get()
+
+      assertThat(duplicateCateAuthorizationConsent.authorities).isEqualTo(authorizationConsent.authorities)
+
+      authorizationConsentRepository.delete(duplicateCateAuthorizationConsent)
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerClientDetailsDuplicated",
