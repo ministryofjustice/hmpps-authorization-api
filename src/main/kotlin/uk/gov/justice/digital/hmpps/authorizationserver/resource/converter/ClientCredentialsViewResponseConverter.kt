@@ -14,11 +14,11 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         latestClient.clientId,
         latestClient.clientName,
         latestClient.scopes,
-        authorizationConsent.authorities,
-        clientConfig.ips,
+        authorizationConsent?.authorities,
+        clientConfig?.ips,
         latestClient.getJiraNumber(),
         latestClient.getDatabaseUserName(),
-        clientConfig.validDays,
+        clientConfig?.validDays,
         latestClient.tokenSettings.accessTokenTimeToLive.toMinutes(),
       )
     }
