@@ -64,7 +64,6 @@ class ClientCredentialsController(
 
 data class ClientCredentialsViewResponse(
   val clientId: String,
-  val clientName: String,
   val scopes: List<String>,
   val authorities: List<String>?,
   val ips: List<String>?,
@@ -88,10 +87,6 @@ data class ClientCredentialsRegistrationRequest(
   @field:NotBlank(message = "clientId must not be blank")
   @field:Size(max = 100, message = "clientId max size is 100")
   val clientId: String?,
-
-  @field:NotBlank(message = "clientName must not be blank")
-  @field:Size(max = 100, message = "clientName max size is 200")
-  val clientName: String?,
 
   val scopes: List<String>?,
   val authorities: List<String>?,
