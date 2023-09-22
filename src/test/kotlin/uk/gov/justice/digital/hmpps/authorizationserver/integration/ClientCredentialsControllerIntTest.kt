@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClient
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
+import java.util.Base64.getEncoder
 
 class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
@@ -195,6 +196,8 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("clientId").isEqualTo("testy")
         .jsonPath("clientSecret").isEqualTo("external-client-secret")
+        .jsonPath("base64ClientId").isEqualTo(getEncoder().encodeToString("testy".toByteArray()))
+        .jsonPath("base64ClientSecret").isEqualTo(getEncoder().encodeToString("external-client-secret".toByteArray()))
 
       val client = clientRepository.findClientByClientId("testy")
 
