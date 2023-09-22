@@ -64,14 +64,11 @@ class ClientCredentialsService(
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
 
-    val authorizationConsent = retrieveAuthorizationConsent(client)
-
     with(clientDetails) {
       client.scopes = scopes
       client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber)
-      clientConfig.ips = ips
-      clientConfig.clientEndDate = getClientEndDate(validDays)
-      authorizationConsent.authorities = withAuthoritiesPrefix(authorities)
+      updateClientConfig(clientId, clientConfig, this)
+      updateAuthorizationConsent(client, clientDetails)
     }
   }
 
@@ -81,7 +78,29 @@ class ClientCredentialsService(
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
     setValidDays(clientConfig)
-    return ClientComposite(listOf(client), client, clientConfig, retrieveAuthorizationConsent(client))
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client))
+  }
+
+  private fun updateAuthorizationConsent(client: Client, clientDetails: ClientCredentialsUpdateRequest) {
+    val authorizationConsent = retrieveAuthorizationConsent(client)
+    val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
+      existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities)
+      return@let existingAuthorizationConsent
+    } ?: AuthorizationConsent(client.id!!, client.clientId, withAuthoritiesPrefix(clientDetails.authorities))
+
+    authorizationConsentRepository.save(authorizationConsentToPersist)
+  }
+
+  private fun updateClientConfig(clientId: String, existingClientConfig: ClientConfig?, clientDetails: ClientCredentialsUpdateRequest) {
+    with(clientDetails) {
+      val clientConfigToPersist = existingClientConfig?.let { clientConfig ->
+        clientConfig.ips = ips
+        clientConfig.clientEndDate = getClientEndDate(validDays)
+        return@let clientConfig
+      } ?: ClientConfig(clientIdService.toBase(clientId), ips, getClientEndDate(validDays))
+
+      clientConfigRepository.save(clientConfigToPersist)
+    }
   }
 
   private fun withAuthoritiesPrefix(authorities: List<String>) =
@@ -89,9 +108,9 @@ class ClientCredentialsService(
       .map { it.trim().uppercase() }
       .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
 
-  private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig> {
+  private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig?> {
     val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
-    val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId)) ?: throw ClientNotFoundException(ClientConfig::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId))
     return Pair(existingClient, existingClientConfig)
   }
 
@@ -102,10 +121,9 @@ class ClientCredentialsService(
         client.clientId,
       ),
     )
-      ?: throw ClientNotFoundException(AuthorizationConsent::class.simpleName, client.clientId)
 
-  private fun setValidDays(clientConfig: ClientConfig) =
-    clientConfig.clientEndDate?.let {
+  private fun setValidDays(clientConfig: ClientConfig?) =
+    clientConfig?.clientEndDate?.let {
       val daysToClientExpiry = ChronoUnit.DAYS.between(LocalDate.now(), clientConfig.clientEndDate)
       val daysToClientExpiryIncludingToday = daysToClientExpiry + 1
       clientConfig.validDays = if (daysToClientExpiry < 0) 0 else daysToClientExpiryIncludingToday
@@ -120,10 +138,9 @@ class ClientCredentialsService(
 }
 
 data class ClientComposite(
-  val clients: List<Client>,
   val latestClient: Client,
-  val clientConfig: ClientConfig,
-  val authorizationConsent: AuthorizationConsent,
+  val clientConfig: ClientConfig?,
+  val authorizationConsent: AuthorizationConsent?,
 )
 
 class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")

@@ -12,6 +12,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
@@ -381,28 +382,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `not found when client config not found`() {
-      webTestClient.put().uri("/clients/client-credentials/test-client-create-id/update")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .body(
-          BodyInserters.fromValue(
-            mapOf(
-              "scopes" to listOf("read", "write"),
-              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-              "databaseUserName" to "testy-mctest",
-              "jiraNumber" to "HAAR-9999",
-              "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
-            ),
-          ),
-        )
-        .exchange()
-        .expectStatus().isNotFound
-    }
-
-    @Test
-    fun `update client success`() {
+    fun `update complete client success`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
 
@@ -446,6 +426,65 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
       val client = clientRepository.findClientByClientId("test-test")
       assertThat(client!!.scopes).contains("read")
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(10))
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testy-mctest-2")
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-8888")
+
+      val clientConfig = clientConfigRepository.findById(client.clientId).get()
+      assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
+      assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
+      val authorizationConsent =
+        verifyAuthorities(client.id!!, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientCredentialsUpdate",
+        mapOf("username" to "AUTH_ADM", "clientId" to "test-test"),
+        null,
+      )
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
+    fun `update incomplete client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/clients/client-credentials/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-test",
+              "clientName" to "testing testing",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.put().uri("/clients/client-credentials/test-test/update")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("write"),
+              "authorities" to listOf("VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
+              "databaseUserName" to "testy-mctest-2",
+              "jiraNumber" to "HAAR-8888",
+              "validDays" to 3,
+              "accessTokenValidityMinutes" to 10,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val client = clientRepository.findClientByClientId("test-test")
+      assertThat(client!!.scopes).contains("write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(10))
       assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testy-mctest-2")
       assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-8888")
@@ -551,6 +590,39 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
       clientRepository.delete(client)
       clientConfigRepository.delete(clientConfig)
       authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
+    fun `view incomplete client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/clients/client-credentials/add")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-more-test",
+              "clientName" to "test more testing",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/clients/client-credentials/test-more-test/view")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-more-test")
+        .jsonPath("clientName").isEqualTo("test more testing")
+        .jsonPath("scopes[0]").isEqualTo("read")
+
+      val client = clientRepository.findClientByClientId("test-more-test")
+      assertNull(clientConfigRepository.findByIdOrNull(client!!.clientId))
+      assertNull(authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)))
+      clientRepository.delete(client)
     }
   }
 
