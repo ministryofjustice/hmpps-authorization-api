@@ -12,7 +12,6 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
     with(source) {
       return ClientCredentialsViewResponse(
         latestClient.clientId,
-        latestClient.clientName,
         latestClient.scopes,
         authorizationConsent?.authorities,
         clientConfig?.ips,

@@ -180,7 +180,6 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -203,7 +202,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo("testy")
-      assertThat(client.clientName).isEqualTo("test client")
+      assertThat(client.clientName).isEqualTo("testy")
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
@@ -240,7 +239,6 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "clientName" to "test client",
             ),
           ),
         )
@@ -254,7 +252,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo("testy")
-      assertThat(client.clientName).isEqualTo("test client")
+      assertThat(client.clientName).isEqualTo("testy")
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).containsOnly("read")
@@ -290,7 +288,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isBadRequest
         .expectBody().jsonPath("errors").value(
-          hasItems("clientId must not be blank", "clientName must not be blank"),
+          hasItems("clientId must not be blank"),
         )
     }
   }
@@ -552,7 +550,6 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "clientName" to "test more testing",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -572,7 +569,6 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody()
         .jsonPath("clientId").isEqualTo("test-more-test")
-        .jsonPath("clientName").isEqualTo("test more testing")
         .jsonPath("scopes[0]").isEqualTo("read")
         .jsonPath("scopes[1]").isEqualTo("write")
         .jsonPath("authorities[0]").isEqualTo("ROLE_CURIOUS_API")
@@ -603,7 +599,6 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "clientName" to "test more testing",
             ),
           ),
         )
@@ -616,7 +611,6 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody()
         .jsonPath("clientId").isEqualTo("test-more-test")
-        .jsonPath("clientName").isEqualTo("test more testing")
         .jsonPath("scopes[0]").isEqualTo("read")
 
       val client = clientRepository.findClientByClientId("test-more-test")
