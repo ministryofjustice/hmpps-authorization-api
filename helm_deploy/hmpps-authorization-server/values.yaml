@@ -1,6 +1,7 @@
 ---
 generic-service:
   nameOverride: hmpps-authorization-server
+  productId: DPS017
 
   replicaCount: 4
 
