@@ -49,14 +49,14 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   inner class ListAllClients {
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.get().uri("/clients/all")
+      webTestClient.get().uri("/base-clients")
         .exchange()
         .expectStatus().isForbidden
     }
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.get().uri("/clients/all")
+      webTestClient.get().uri("/base-clients")
         .headers(setAuthorisation(roles = listOf()))
         .exchange()
         .expectStatus().isForbidden
@@ -64,7 +64,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.get().uri("/clients/all")
+      webTestClient.get().uri("/base-clients")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .exchange()
         .expectStatus().isForbidden
@@ -72,7 +72,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `list clients success`() {
-      webTestClient.get().uri("/clients/all")
+      webTestClient.get().uri("/base-clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
@@ -101,7 +101,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `list clients filtered by roles, grantType and clientType`() {
-      webTestClient.get().uri("/clients/all?role=AUDIT&grantType=client_credentials&clientType=PERSONAL")
+      webTestClient.get().uri("/base-clients?role=AUDIT&grantType=client_credentials&clientType=PERSONAL")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
