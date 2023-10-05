@@ -29,7 +29,7 @@ class ClientsController(
   private val authenticationFacade: AuthenticationFacade,
 ) {
 
-  @GetMapping("clients/all")
+  @GetMapping("base-clients")
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun list(
     @RequestParam(defaultValue = "CLIENT") sort: SortBy,
