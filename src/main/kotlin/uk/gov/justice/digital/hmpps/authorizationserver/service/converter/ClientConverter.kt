@@ -5,7 +5,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType.CLIENT_CR
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod.CLIENT_SECRET_BASIC
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 
@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClient
 class ClientConverter(
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val clientIdService: ClientIdService,
-) : Converter<ClientCredentialsRegistrationRequest, Client> {
-  override fun convert(source: ClientCredentialsRegistrationRequest): Client {
+) : Converter<ClientRegistrationRequest, Client> {
+  override fun convert(source: ClientRegistrationRequest): Client {
     with(source) {
       return Client(
         id = java.util.UUID.randomUUID().toString(),

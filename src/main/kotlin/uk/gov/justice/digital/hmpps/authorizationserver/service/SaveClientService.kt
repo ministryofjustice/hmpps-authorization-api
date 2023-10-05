@@ -10,16 +10,16 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationRequest
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsRegistrationResponse
-import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientCredentialsUpdateRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationResponse
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Base64.getEncoder
 
 @Service
-class ClientCredentialsService(
+class SaveClientService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
@@ -31,7 +31,7 @@ class ClientCredentialsService(
 ) {
 
   @Transactional
-  fun addClientCredentials(clientDetails: ClientCredentialsRegistrationRequest): ClientCredentialsRegistrationResponse {
+  fun addClient(clientDetails: ClientRegistrationRequest): ClientRegistrationResponse {
     val clientList = clientIdService.findByBaseClientId(clientDetails.clientId!!)
     if (clientList.isNotEmpty()) {
       throw ClientAlreadyExistsException(clientDetails.clientId)
@@ -50,7 +50,7 @@ class ClientCredentialsService(
       clientConfigRepository.save(ClientConfig(client!!.clientId, ips, getClientEndDate(clientDetails.validDays)))
     }
 
-    return ClientCredentialsRegistrationResponse(
+    return ClientRegistrationResponse(
       client!!.clientId,
       externalClientSecret,
       getEncoder().encodeToString(client!!.clientId.toByteArray()),
@@ -59,7 +59,7 @@ class ClientCredentialsService(
   }
 
   @Transactional
-  fun editClientCredentials(clientId: String, clientDetails: ClientCredentialsUpdateRequest) {
+  fun editClient(clientId: String, clientDetails: ClientUpdateRequest) {
     val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
@@ -81,7 +81,7 @@ class ClientCredentialsService(
     return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client))
   }
 
-  private fun updateAuthorizationConsent(client: Client, clientDetails: ClientCredentialsUpdateRequest) {
+  private fun updateAuthorizationConsent(client: Client, clientDetails: ClientUpdateRequest) {
     val authorizationConsent = retrieveAuthorizationConsent(client)
     val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
       existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities)
@@ -91,7 +91,7 @@ class ClientCredentialsService(
     authorizationConsentRepository.save(authorizationConsentToPersist)
   }
 
-  private fun updateClientConfig(clientId: String, existingClientConfig: ClientConfig?, clientDetails: ClientCredentialsUpdateRequest) {
+  private fun updateClientConfig(clientId: String, existingClientConfig: ClientConfig?, clientDetails: ClientUpdateRequest) {
     with(clientDetails) {
       val clientConfigToPersist = existingClientConfig?.let { clientConfig ->
         clientConfig.ips = ips
