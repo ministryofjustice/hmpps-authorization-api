@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
+import org.springframework.core.convert.ConversionService
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
@@ -15,9 +16,13 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationResponse
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.Base64.getEncoder
 
 @Service
@@ -29,6 +34,8 @@ class ClientsService(
   private val clientDeploymentRepository: ClientDeploymentRepository,
   private val registeredClientRepository: JdbcRegisteredClientRepository,
   private val oAuthClientSecret: OAuthClientSecret,
+  private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
+  private val conversionService: ConversionService,
 ) {
   fun retrieveAllClients(sortBy: SortBy, filterBy: ClientFilter?): List<ClientDetail> {
     val baseClients = clientRepository.findAll().groupBy { clientIdService.toBase(it.clientId) }.toSortedMap()
@@ -69,6 +76,34 @@ class ClientsService(
           else -> it.baseClientId
         }
       },
+    )
+  }
+
+  @Transactional
+  fun addClient(clientDetails: ClientRegistrationRequest): ClientRegistrationResponse {
+    val clientList = clientIdService.findByBaseClientId(clientDetails.clientId!!)
+    if (clientList.isNotEmpty()) {
+      throw ClientAlreadyExistsException(clientDetails.clientId)
+    }
+
+    var client = conversionService.convert(clientDetails, Client::class.java)
+    val externalClientSecret = oAuthClientSecret.generate()
+    client!!.clientSecret = oAuthClientSecret.encode(externalClientSecret)
+
+    client = clientRepository.save(client)
+    clientDetails.authorities?.let { authorities ->
+      authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, withAuthoritiesPrefix(authorities)))
+    }
+
+    clientDetails.ips?.let { ips ->
+      clientConfigRepository.save(ClientConfig(client!!.clientId, ips, getClientEndDate(clientDetails.validDays)))
+    }
+
+    return ClientRegistrationResponse(
+      client!!.clientId,
+      externalClientSecret,
+      getEncoder().encodeToString(client!!.clientId.toByteArray()),
+      getEncoder().encodeToString(externalClientSecret.toByteArray()),
     )
   }
 
@@ -132,6 +167,84 @@ class ClientsService(
       getEncoder().encodeToString(externalClientSecret.toByteArray()),
     )
   }
+
+  @Transactional
+  fun editClient(clientId: String, clientDetails: ClientUpdateRequest) {
+    val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
+    val client = clientClientConfigPair.first
+    val clientConfig = clientClientConfigPair.second
+
+    with(clientDetails) {
+      client.scopes = scopes
+      client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber)
+      updateClientConfig(clientId, clientConfig, this)
+      updateAuthorizationConsent(client, clientDetails)
+    }
+  }
+
+  @Transactional(readOnly = true)
+  fun retrieveClientFullDetails(clientId: String): ClientComposite {
+    val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
+    val client = clientClientConfigPair.first
+    val clientConfig = clientClientConfigPair.second
+    setValidDays(clientConfig)
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client))
+  }
+
+  private fun updateAuthorizationConsent(client: Client, clientDetails: ClientUpdateRequest) {
+    val authorizationConsent = retrieveAuthorizationConsent(client)
+    val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
+      existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities)
+      return@let existingAuthorizationConsent
+    } ?: AuthorizationConsent(client.id!!, client.clientId, withAuthoritiesPrefix(clientDetails.authorities))
+
+    authorizationConsentRepository.save(authorizationConsentToPersist)
+  }
+
+  private fun updateClientConfig(clientId: String, existingClientConfig: ClientConfig?, clientDetails: ClientUpdateRequest) {
+    with(clientDetails) {
+      val clientConfigToPersist = existingClientConfig?.let { clientConfig ->
+        clientConfig.ips = ips
+        clientConfig.clientEndDate = getClientEndDate(validDays)
+        return@let clientConfig
+      } ?: ClientConfig(clientIdService.toBase(clientId), ips, getClientEndDate(validDays))
+
+      clientConfigRepository.save(clientConfigToPersist)
+    }
+  }
+
+  private fun withAuthoritiesPrefix(authorities: List<String>) =
+    authorities
+      .map { it.trim().uppercase() }
+      .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
+
+  private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig?> {
+    val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId))
+    return Pair(existingClient, existingClientConfig)
+  }
+
+  private fun retrieveAuthorizationConsent(client: Client) =
+    authorizationConsentRepository.findByIdOrNull(
+      AuthorizationConsentId(
+        client.id,
+        client.clientId,
+      ),
+    )
+
+  private fun setValidDays(clientConfig: ClientConfig?) =
+    clientConfig?.clientEndDate?.let {
+      val daysToClientExpiry = ChronoUnit.DAYS.between(LocalDate.now(), clientConfig.clientEndDate)
+      val daysToClientExpiryIncludingToday = daysToClientExpiry + 1
+      clientConfig.validDays = if (daysToClientExpiry < 0) 0 else daysToClientExpiryIncludingToday
+    }
+
+  private fun getClientEndDate(validDays: Long?): LocalDate? {
+    return validDays?.let {
+      val validDaysIncludeToday = it.minus(1)
+      LocalDate.now().plusDays(validDaysIncludeToday)
+    }
+  }
 }
 
 data class ClientDetail(
@@ -147,6 +260,8 @@ data class ClientDetail(
 
 class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")
 
+class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")
+
 enum class SortBy {
   CLIENT, TYPE, TEAM, LAST_ACCESSED, COUNT
 }
@@ -155,6 +270,12 @@ data class ClientFilter(
   val grantType: String? = null,
   val role: String? = null,
   val clientType: ClientType? = null,
+)
+
+data class ClientComposite(
+  val latestClient: Client,
+  val clientConfig: ClientConfig?,
+  val authorizationConsent: AuthorizationConsent?,
 )
 
 data class DuplicateRegistrationResponse(

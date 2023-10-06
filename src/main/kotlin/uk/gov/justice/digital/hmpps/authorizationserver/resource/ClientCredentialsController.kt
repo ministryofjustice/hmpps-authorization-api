@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
-import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.springframework.core.convert.ConversionService
@@ -11,40 +10,26 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
-import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsService
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientsService
 
 @Controller
 class ClientCredentialsController(
-  private val clientService: ClientCredentialsService,
+  private val clientsService: ClientsService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
 ) {
 
-  @PostMapping("clients/client-credentials/add")
-  @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun addClient(
-    @Valid @RequestBody
-    clientDetails: ClientCredentialsRegistrationRequest,
-  ): ResponseEntity<Any> {
-    val registrationResponse = clientService.addClientCredentials(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!)
-    telemetryClient.trackEvent("AuthorizationServerClientCredentialsDetailsAdd", telemetryMap)
-    return ResponseEntity.ok(registrationResponse)
-  }
-
   @PutMapping("clients/client-credentials/{clientId}/update")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun editClient(@PathVariable clientId: String, @RequestBody clientDetails: ClientCredentialsUpdateRequest) {
-    clientService.editClientCredentials(clientId, clientDetails)
+  fun editClient(@PathVariable clientId: String, @RequestBody clientDetails: ClientUpdateRequest) {
+    clientsService.editClient(clientId, clientDetails)
     val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientId)
     telemetryClient.trackEvent("AuthorizationServerClientCredentialsUpdate", telemetryMap)
   }
@@ -55,14 +40,14 @@ class ClientCredentialsController(
   fun viewClient(@PathVariable clientId: String): ResponseEntity<Any> {
     return ResponseEntity.ok(
       conversionService.convert(
-        clientService.retrieveClientFullDetails(clientId),
-        ClientCredentialsViewResponse::class.java,
+        clientsService.retrieveClientFullDetails(clientId),
+        ClientViewResponse::class.java,
       ),
     )
   }
 }
 
-data class ClientCredentialsViewResponse(
+data class ClientViewResponse(
   val clientId: String,
   val scopes: List<String>,
   val authorities: List<String>?,
@@ -73,7 +58,7 @@ data class ClientCredentialsViewResponse(
   val accessTokenValidityMinutes: Long?,
 )
 
-data class ClientCredentialsUpdateRequest(
+data class ClientUpdateRequest(
   val scopes: List<String>,
   val authorities: List<String>,
   val ips: List<String>,
@@ -83,7 +68,7 @@ data class ClientCredentialsUpdateRequest(
   val accessTokenValidityMinutes: Long?,
 )
 
-data class ClientCredentialsRegistrationRequest(
+data class ClientRegistrationRequest(
   @field:NotBlank(message = "clientId must not be blank")
   @field:Size(max = 100, message = "clientId max size is 100")
   val clientId: String?,
@@ -97,7 +82,7 @@ data class ClientCredentialsRegistrationRequest(
   val accessTokenValidityMinutes: Long?,
 )
 
-data class ClientCredentialsRegistrationResponse(
+data class ClientRegistrationResponse(
   val clientId: String,
   val clientSecret: String,
   val base64ClientId: String,

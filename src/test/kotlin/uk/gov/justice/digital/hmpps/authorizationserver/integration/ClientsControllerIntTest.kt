@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.CoreMatchers
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -15,6 +16,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.security.oauth2.core.AuthorizationGrantType
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
@@ -22,7 +25,10 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
+import java.time.Duration
+import java.time.LocalDate
 import java.util.Base64.getEncoder
 
 class ClientsControllerIntTest : IntegrationTestBase() {
@@ -44,6 +50,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
   @MockBean
   private lateinit var telemetryClient: TelemetryClient
+
+  @Autowired
+  lateinit var jdbcRegisteredClientRepository: JdbcRegisteredClientRepository
 
   @Nested
   inner class ListAllClients {
@@ -220,7 +229,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     private fun givenANewClientExistsWithClientId(clientId: String) {
-      webTestClient.post().uri("/clients/client-credentials/add")
+      webTestClient.post().uri("/base-clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
@@ -487,5 +496,257 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       clientRepository.delete(duplicatedClient)
     }
+  }
+
+  @Nested
+  inner class AddClient {
+
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.post().uri("/base-clients")
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "clientName" to "test client",
+              "scopes" to listOf("read"),
+              "authorities" to listOf("VIEW_PRISONER_DATA"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf()))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "clientName" to "test client",
+              "scopes" to listOf("read"),
+              "authorities" to listOf("VIEW_PRISONER_DATA"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "clientName" to "test client",
+              "scopes" to listOf("read"),
+              "authorities" to listOf("VIEW_PRISONER_DATA"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `bad request when client already exists`() {
+      assertNotNull(jdbcRegisteredClientRepository.findByClientId("test-client-id"))
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-client-id",
+              "clientName" to "test client",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody()
+        .json(
+          """
+              {
+              "userMessage":"Client with client id test-client-id cannot be created as already exists",
+              "developerMessage":"Client with client id test-client-id cannot be created as already exists"
+              }
+          """
+            .trimIndent(),
+        )
+    }
+
+    @Test
+    fun `bad request when client with same base client id already exists`() {
+      assertNotNull(jdbcRegisteredClientRepository.findByClientId("ip-allow-a-client-1"))
+      assertNull(jdbcRegisteredClientRepository.findByClientId("ip-allow-a-client"))
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "ip-allow-a-client",
+              "clientName" to "test client",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody()
+        .json(
+          """
+              {
+              "userMessage":"Client with client id ip-allow-a-client cannot be created as already exists",
+              "developerMessage":"Client with client id ip-allow-a-client cannot be created as already exists"
+              }
+          """
+            .trimIndent(),
+        )
+    }
+
+    @Test
+    fun `register client success`() {
+      assertNull(clientRepository.findClientByClientId("testy"))
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("testy")
+        .jsonPath("clientSecret").isEqualTo("external-client-secret")
+        .jsonPath("base64ClientId").isEqualTo(getEncoder().encodeToString("testy".toByteArray()))
+        .jsonPath("base64ClientSecret").isEqualTo(getEncoder().encodeToString("external-client-secret".toByteArray()))
+
+      val client = clientRepository.findClientByClientId("testy")
+
+      assertNotNull(client)
+      assertThat(client!!.clientId).isEqualTo("testy")
+      assertThat(client.clientName).isEqualTo("testy")
+      assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
+      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.scopes).contains("read", "write")
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testy-mctest")
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-9999")
+
+      val clientConfig = clientConfigRepository.findById(client.clientId).get()
+      assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
+      assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
+      val authorizationConsent =
+        verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerDetailsAdd",
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        null,
+      )
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
+    fun `register incomplete client`() {
+      assertNull(clientRepository.findClientByClientId("testy"))
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("testy")
+        .jsonPath("clientSecret").isEqualTo("external-client-secret")
+
+      val client = clientRepository.findClientByClientId("testy")
+
+      assertNotNull(client)
+      assertThat(client!!.clientId).isEqualTo("testy")
+      assertThat(client.clientName).isEqualTo("testy")
+      assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
+      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.scopes).containsOnly("read")
+      assertFalse(clientConfigRepository.findById(client.clientId).isPresent)
+      assertFalse(authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).isPresent)
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerDetailsAdd",
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        null,
+      )
+
+      clientRepository.delete(client)
+    }
+
+    @Test
+    fun `omit mandatory fields gives bad request response`() {
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody().jsonPath("errors").value(
+          CoreMatchers.hasItems("clientId must not be blank"),
+        )
+    }
+  }
+  private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String): AuthorizationConsent {
+    val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId)).get()
+    assertThat(authorizationConsent.authorities).containsOnly(*authorities)
+    return authorizationConsent
   }
 }
