@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
-import uk.gov.justice.digital.hmpps.authorizationserver.service.SaveClientService
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientsService
 
 @Controller
 class ClientCredentialsController(
-  private val saveClientService: SaveClientService,
+  private val clientsService: ClientsService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
@@ -29,7 +29,7 @@ class ClientCredentialsController(
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun editClient(@PathVariable clientId: String, @RequestBody clientDetails: ClientUpdateRequest) {
-    saveClientService.editClient(clientId, clientDetails)
+    clientsService.editClient(clientId, clientDetails)
     val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientId)
     telemetryClient.trackEvent("AuthorizationServerClientCredentialsUpdate", telemetryMap)
   }
@@ -40,7 +40,7 @@ class ClientCredentialsController(
   fun viewClient(@PathVariable clientId: String): ResponseEntity<Any> {
     return ResponseEntity.ok(
       conversionService.convert(
-        saveClientService.retrieveClientFullDetails(clientId),
+        clientsService.retrieveClientFullDetails(clientId),
         ClientViewResponse::class.java,
       ),
     )

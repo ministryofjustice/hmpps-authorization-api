@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDetail
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientFilter
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientsService
-import uk.gov.justice.digital.hmpps.authorizationserver.service.SaveClientService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.SortBy
 import java.time.Instant
 
@@ -30,7 +29,6 @@ class ClientsController(
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
-  private val saveClientService: SaveClientService,
 ) {
 
   @GetMapping("base-clients")
@@ -51,7 +49,7 @@ class ClientsController(
     @Valid @RequestBody
     clientDetails: ClientRegistrationRequest,
   ): ResponseEntity<Any> {
-    val registrationResponse = saveClientService.addClient(clientDetails)
+    val registrationResponse = clientsService.addClient(clientDetails)
     val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!)
     telemetryClient.trackEvent("AuthorizationServerDetailsAdd", telemetryMap)
     return ResponseEntity.ok(registrationResponse)
