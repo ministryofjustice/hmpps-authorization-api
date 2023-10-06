@@ -254,14 +254,14 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.get().uri("/clients/client-credentials/testy/view")
+      webTestClient.get().uri("/base-clients/testy")
         .exchange()
         .expectStatus().isForbidden
     }
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.get().uri("/clients/client-credentials/testy/view")
+      webTestClient.get().uri("/base-clients/testy")
         .headers(setAuthorisation(roles = listOf()))
         .exchange()
         .expectStatus().isForbidden
@@ -269,7 +269,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.get().uri("/clients/client-credentials/testy/view")
+      webTestClient.get().uri("/base-clients/testy")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .exchange()
         .expectStatus().isForbidden
@@ -277,7 +277,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `not found`() {
-      webTestClient.get().uri("/clients/client-credentials/not-found/view")
+      webTestClient.get().uri("/base-clients/not-found")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isNotFound
@@ -307,7 +307,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.get().uri("/clients/client-credentials/test-more-test/view")
+      webTestClient.get().uri("/base-clients/test-more-test")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
@@ -349,7 +349,7 @@ class ClientCredentialsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.get().uri("/clients/client-credentials/test-more-test/view")
+      webTestClient.get().uri("/base-clients/test-more-test")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk

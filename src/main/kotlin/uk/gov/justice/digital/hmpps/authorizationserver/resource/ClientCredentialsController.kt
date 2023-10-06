@@ -34,13 +34,13 @@ class ClientCredentialsController(
     telemetryClient.trackEvent("AuthorizationServerClientCredentialsUpdate", telemetryMap)
   }
 
-  @GetMapping("clients/client-credentials/{clientId}/view")
+  @GetMapping("base-clients/{baseClientId}")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun viewClient(@PathVariable clientId: String): ResponseEntity<Any> {
+  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> {
     return ResponseEntity.ok(
       conversionService.convert(
-        clientsService.retrieveClientFullDetails(clientId),
+        clientsService.retrieveClientFullDetails(baseClientId),
         ClientViewResponse::class.java,
       ),
     )
