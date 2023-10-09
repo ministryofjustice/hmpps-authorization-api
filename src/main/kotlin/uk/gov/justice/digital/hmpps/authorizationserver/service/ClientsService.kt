@@ -184,7 +184,7 @@ class ClientsService(
 
   @Transactional(readOnly = true)
   fun retrieveClientFullDetails(clientId: String): ClientComposite {
-    val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
+    val clientClientConfigPair = retrieveLatestClientWithClientConfig(clientId)
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
     setValidDays(clientConfig)
@@ -220,6 +220,12 @@ class ClientsService(
 
   private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig?> {
     val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+    val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId))
+    return Pair(existingClient, existingClientConfig)
+  }
+
+  private fun retrieveLatestClientWithClientConfig(clientId: String): Pair<Client, ClientConfig?> {
+    val existingClient = clientRepository.findFirstByClientIdStartingWithOrderByClientIdIssuedAtDesc(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
     val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId))
     return Pair(existingClient, existingClientConfig)
   }
