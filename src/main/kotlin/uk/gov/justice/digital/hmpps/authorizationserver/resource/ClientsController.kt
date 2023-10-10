@@ -58,12 +58,12 @@ class ClientsController(
     return ResponseEntity.ok(registrationResponse)
   }
 
-  @GetMapping("clients/duplicates/{clientId}")
+  @GetMapping("base-clients/{baseClientId}/clients")
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun clients(
-    @PathVariable clientId: String,
+    @PathVariable baseClientId: String,
   ): ResponseEntity<Any> {
-    return ResponseEntity.ok(conversionService.convert(clientsService.findClientWithCopies(clientId), ClientDuplicatesResponse::class.java))
+    return ResponseEntity.ok(conversionService.convert(clientsService.findClientWithCopies(baseClientId), ClientDuplicatesResponse::class.java))
   }
 
   @GetMapping("clients/exists/{clientId}")
