@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -81,11 +83,11 @@ class ClientsController(
     telemetryClient.trackEvent("AuthorizationServerClientDeleted", telemetryMap)
   }
 
-  @PostMapping("clients/{clientId}/duplicate")
+  @PostMapping("base-clients/{baseClientId}/clients")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun duplicate(@PathVariable clientId: String): ResponseEntity<Any> {
-    val duplicateRegistrationResponse = clientsService.duplicate(clientId)
+  fun duplicate(@PathVariable baseClientId: String): ResponseEntity<Any> {
+    val duplicateRegistrationResponse = clientsService.duplicate(baseClientId)
     val telemetryMap = mapOf(
       "username" to authenticationFacade.currentUsername!!,
       "clientId" to duplicateRegistrationResponse.clientId,
@@ -101,6 +103,18 @@ class ClientsController(
     clientsService.editClient(baseClientId, clientDetails)
     val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to baseClientId)
     telemetryClient.trackEvent("AuthorizationServerCredentialsUpdate", telemetryMap)
+  }
+
+  @GetMapping("base-clients/{baseClientId}")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> {
+    return ResponseEntity.ok(
+      conversionService.convert(
+        clientsService.retrieveClientFullDetails(baseClientId),
+        ClientViewResponse::class.java,
+      ),
+    )
   }
 }
 
@@ -122,6 +136,48 @@ data class ClientDuplicatesResponse(
 
 data class AllClientsResponse(
   val clients: List<ClientDetail>,
+)
+
+data class ClientViewResponse(
+  val clientId: String,
+  val scopes: List<String>,
+  val authorities: List<String>?,
+  val ips: List<String>?,
+  val jiraNumber: String?,
+  val databaseUserName: String?,
+  val validDays: Long?,
+  val accessTokenValidityMinutes: Long?,
+)
+
+data class ClientUpdateRequest(
+  val scopes: List<String>,
+  val authorities: List<String>,
+  val ips: List<String>,
+  val jiraNumber: String?,
+  val databaseUserName: String?,
+  val validDays: Long?,
+  val accessTokenValidityMinutes: Long?,
+)
+
+data class ClientRegistrationRequest(
+  @field:NotBlank(message = "clientId must not be blank")
+  @field:Size(max = 100, message = "clientId max size is 100")
+  val clientId: String?,
+
+  val scopes: List<String>?,
+  val authorities: List<String>?,
+  val ips: List<String>?,
+  val jiraNumber: String?,
+  val databaseUserName: String?,
+  val validDays: Long?,
+  val accessTokenValidityMinutes: Long?,
+)
+
+data class ClientRegistrationResponse(
+  val clientId: String,
+  val clientSecret: String,
+  val base64ClientId: String,
+  val base64ClientSecret: String,
 )
 
 enum class GrantType {
