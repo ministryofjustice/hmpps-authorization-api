@@ -326,14 +326,14 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   inner class ListCopies {
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.get().uri("/clients/duplicates/test-client-id")
+      webTestClient.get().uri("/base-clients/test-client-id/clients")
         .exchange()
         .expectStatus().isForbidden
     }
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.get().uri("/clients/duplicates/test-client-id")
+      webTestClient.get().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf()))
         .exchange()
         .expectStatus().isForbidden
@@ -341,7 +341,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.get().uri("/clients/duplicates/test-client-id")
+      webTestClient.get().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .exchange()
         .expectStatus().isForbidden
@@ -349,7 +349,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `unrecognised client id`() {
-      webTestClient.get().uri("clients/duplicates/test-test")
+      webTestClient.get().uri("/base-clients/test-test/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isNotFound
@@ -357,7 +357,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `lists multiple copies ordered by client id`() {
-      webTestClient.get().uri("/clients/duplicates/ip-allow-b-client-8")
+      webTestClient.get().uri("/base-clients/ip-allow-b-client-8/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
@@ -376,7 +376,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `returns single client when no other copies`() {
-      webTestClient.get().uri("/clients/duplicates/test-client-id")
+      webTestClient.get().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
