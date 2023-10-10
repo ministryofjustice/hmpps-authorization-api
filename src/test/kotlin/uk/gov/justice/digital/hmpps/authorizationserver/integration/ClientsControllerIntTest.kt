@@ -496,7 +496,6 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       clientRepository.delete(duplicatedClient)
     }
-
   }
 
   @Nested
