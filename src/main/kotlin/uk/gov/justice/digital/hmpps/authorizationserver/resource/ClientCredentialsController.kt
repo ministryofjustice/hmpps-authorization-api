@@ -10,11 +10,8 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
-import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientsService
 
 @Controller
@@ -24,15 +21,6 @@ class ClientCredentialsController(
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
 ) {
-
-  @PutMapping("clients/client-credentials/{clientId}/update")
-  @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun editClient(@PathVariable clientId: String, @RequestBody clientDetails: ClientUpdateRequest) {
-    clientsService.editClient(clientId, clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientId)
-    telemetryClient.trackEvent("AuthorizationServerClientCredentialsUpdate", telemetryMap)
-  }
 
   @GetMapping("base-clients/{baseClientId}")
   @ResponseStatus(HttpStatus.OK)

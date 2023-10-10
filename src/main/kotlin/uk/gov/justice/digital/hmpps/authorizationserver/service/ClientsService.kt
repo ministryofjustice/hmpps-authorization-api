@@ -174,12 +174,24 @@ class ClientsService(
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
 
-    with(clientDetails) {
+    client.forEach {
+      with(clientDetails) {
+        it.scopes = scopes
+        it.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
+          accessTokenValidityMinutes,
+          databaseUserName,
+          jiraNumber,
+        )
+        updateClientConfig(clientId, clientConfig, this)
+        updateAuthorizationConsent(it, clientDetails)
+      }
+    }
+  /*    with(clientDetails) {
       client.scopes = scopes
       client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber)
       updateClientConfig(clientId, clientConfig, this)
       updateAuthorizationConsent(client, clientDetails)
-    }
+    }*/
   }
 
   @Transactional(readOnly = true)
@@ -218,10 +230,10 @@ class ClientsService(
       .map { it.trim().uppercase() }
       .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
 
-  private fun retrieveClientWithClientConfig(clientId: String): Pair<Client, ClientConfig?> {
-    val existingClient = clientRepository.findClientByClientId(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+  private fun retrieveClientWithClientConfig(clientId: String): Pair<List<Client>, ClientConfig?> {
+    val existingClients = findClientWithCopies(clientId)
     val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId))
-    return Pair(existingClient, existingClientConfig)
+    return Pair(existingClients, existingClientConfig)
   }
 
   private fun retrieveLatestClientWithClientConfig(clientId: String): Pair<Client, ClientConfig?> {
