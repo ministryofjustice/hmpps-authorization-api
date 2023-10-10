@@ -94,7 +94,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[4].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
         .jsonPath("$.clients[4].count").isEqualTo(1)
         .jsonPath("$.clients[4].expired").isEmpty
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(5) }
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(6) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
@@ -197,7 +197,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       givenANewClientExistsWithClientId("test-test")
 
-      webTestClient.post().uri("/clients/test-test/duplicate")
+      webTestClient.post().uri("/base-clients/test-test/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
@@ -395,14 +395,14 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.post().uri("/clients/test-client-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
         .exchange()
         .expectStatus().isForbidden
     }
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.post().uri("/clients/test-client-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf()))
         .exchange()
         .expectStatus().isForbidden
@@ -410,7 +410,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.post().uri("/clients/test-client-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .exchange()
         .expectStatus().isForbidden
@@ -418,7 +418,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `not found when no clients exist for base client id`() {
-      webTestClient.post().uri("/clients/test-client-x-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-x-id/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isNotFound
@@ -435,12 +435,12 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       whenever(oAuthClientSecretGenerator.encode("external-client-secret-2")).thenReturn("encoded-client-secret-2")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret-3")).thenReturn("encoded-client-secret-3")
 
-      webTestClient.post().uri("/clients/test-client-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.post().uri("/clients/test-client-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
@@ -448,7 +448,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       val duplicatedClient = clientRepository.findClientByClientId("test-client-id-1")
       val duplicatedClient2 = clientRepository.findClientByClientId("test-client-id-2")
 
-      webTestClient.post().uri("/clients/test-client-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.CONFLICT)
@@ -462,7 +462,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
 
-      webTestClient.post().uri("/clients/test-client-id/duplicate")
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
@@ -482,7 +482,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
 
       val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(originalClient.id, originalClient.clientId))
-      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(duplicatedClient.id, duplicatedClient.clientId))
+      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(duplicatedClient.id, duplicatedClient.clientId))
 
       assertThat(duplicateCateAuthorizationConsent?.authorities).isEqualTo(authorizationConsent?.authorities)
 
@@ -493,6 +493,78 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         mapOf("username" to "AUTH_ADM", "clientId" to "test-client-id-1"),
         null,
       )
+
+      clientRepository.delete(duplicatedClient)
+    }
+
+    @Test
+    fun `verify duplicate, updated client`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients/test-duplicate-id/clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-duplicate-id-1")
+        .jsonPath("clientSecret").isEqualTo("external-client-secret")
+        .jsonPath("base64ClientId").isEqualTo(getEncoder().encodeToString("test-duplicate-id-1".toByteArray()))
+        .jsonPath("base64ClientSecret").isEqualTo(getEncoder().encodeToString("external-client-secret".toByteArray()))
+
+      val originalClient = clientRepository.findClientByClientId("test-duplicate-id")
+      val duplicatedClient = clientRepository.findClientByClientId("test-duplicate-id-1")
+      assertThat(duplicatedClient!!.clientName).isEqualTo(originalClient!!.clientName)
+      assertThat(duplicatedClient.scopes).isEqualTo(originalClient.scopes)
+      assertThat(duplicatedClient.authorizationGrantTypes).isEqualTo(originalClient.authorizationGrantTypes)
+      assertThat(duplicatedClient.clientAuthenticationMethods).isEqualTo(originalClient.clientAuthenticationMethods)
+      assertThat(duplicatedClient.clientSettings).isEqualTo(originalClient.clientSettings)
+      assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
+
+      val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(originalClient.id, originalClient.clientId))
+      val duplicateCateAuthorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(duplicatedClient.id, duplicatedClient.clientId))
+
+      assertThat(duplicateCateAuthorizationConsent?.authorities).isEqualTo(authorizationConsent?.authorities)
+
+      authorizationConsentRepository.delete(duplicateCateAuthorizationConsent)
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientDetailsDuplicated",
+        mapOf("username" to "AUTH_ADM", "clientId" to "test-duplicate-id-1"),
+        null,
+      )
+
+      webTestClient.put().uri("/base-clients/test-duplicate-id")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read"),
+              "authorities" to listOf("COMMUNITY"),
+              "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
+              "databaseUserName" to "testy-mctest-2",
+              "jiraNumber" to "HAAR-8888",
+              "validDays" to 3,
+              "accessTokenValidityMinutes" to 10,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/base-clients/test-duplicate-id")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-duplicate-id-1")
+        .jsonPath("scopes[0]").isEqualTo("read")
+        .jsonPath("authorities[0]").isEqualTo("ROLE_COMMUNITY")
+        .jsonPath("ips[0]").isEqualTo("82.135.209.29/32")
+        .jsonPath("ips[1]").isEqualTo("36.177.94.187/32")
+        .jsonPath("jiraNumber").isEqualTo("HAAR-8888")
+        .jsonPath("validDays").isEqualTo(3)
+        .jsonPath("accessTokenValidityMinutes").isEqualTo(10)
 
       clientRepository.delete(duplicatedClient)
     }
@@ -954,6 +1026,121 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         clientConfigRepository.delete(clientConfig)
         authorizationConsentRepository.delete(authorizationConsent)
       }
+    }
+  }
+
+  @Nested
+  inner class ViewClient {
+
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.get().uri("/base-clients/testy")
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.get().uri("/base-clients/testy")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.get().uri("/base-clients/testy")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `not found`() {
+      webTestClient.get().uri("/base-clients/not-found")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `view client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-more-test",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-more-mctest-1",
+              "jiraNumber" to "HAAR-7777",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/base-clients/test-more-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-more-test")
+        .jsonPath("scopes[0]").isEqualTo("read")
+        .jsonPath("scopes[1]").isEqualTo("write")
+        .jsonPath("authorities[0]").isEqualTo("ROLE_CURIOUS_API")
+        .jsonPath("authorities[1]").isEqualTo("ROLE_VIEW_PRISONER_DATA")
+        .jsonPath("authorities[2]").isEqualTo("ROLE_COMMUNITY")
+        .jsonPath("ips[0]").isEqualTo("81.134.202.29/32")
+        .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
+        .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
+        .jsonPath("validDays").isEqualTo(5)
+        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+
+      val client = clientRepository.findClientByClientId("test-more-test")
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).get()
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
+    fun `view incomplete client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-more-test",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/base-clients/test-more-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-more-test")
+        .jsonPath("scopes[0]").isEqualTo("read")
+
+      val client = clientRepository.findClientByClientId("test-more-test")
+      assertNull(clientConfigRepository.findByIdOrNull(client!!.clientId))
+      assertNull(authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)))
+      clientRepository.delete(client)
     }
   }
   private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String): AuthorizationConsent {
