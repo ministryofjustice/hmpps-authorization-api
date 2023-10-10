@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -91,6 +92,15 @@ class ClientsController(
     )
     telemetryClient.trackEvent("AuthorizationServerClientDetailsDuplicated", telemetryMap)
     return ResponseEntity.ok(duplicateRegistrationResponse)
+  }
+
+  @PutMapping("/base-clients/{baseClientId}")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun editClient(@PathVariable baseClientId: String, @RequestBody clientDetails: ClientUpdateRequest) {
+    clientsService.editClient(baseClientId, clientDetails)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to baseClientId)
+    telemetryClient.trackEvent("AuthorizationServerCredentialsUpdate", telemetryMap)
   }
 }
 
