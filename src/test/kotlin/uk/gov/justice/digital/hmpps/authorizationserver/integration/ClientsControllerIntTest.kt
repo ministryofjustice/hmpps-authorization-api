@@ -138,14 +138,14 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   inner class DeleteClient {
     @Test
     fun `access forbidden when no authority`() {
-      webTestClient.delete().uri("/clients/test-client-id/delete")
+      webTestClient.delete().uri("/base-clients/test-client-id/clients/test-client-id")
         .exchange()
         .expectStatus().isForbidden
     }
 
     @Test
     fun `access forbidden when no role`() {
-      webTestClient.delete().uri("/clients/test-client-id/delete")
+      webTestClient.delete().uri("/base-clients/test-client-id/clients/test-client-id")
         .headers(setAuthorisation(roles = listOf()))
         .exchange()
         .expectStatus().isForbidden
@@ -153,7 +153,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `access forbidden when wrong role`() {
-      webTestClient.delete().uri("/clients/test-client-id/delete")
+      webTestClient.delete().uri("/base-clients/test-client-id/clients/test-client-id")
         .headers(setAuthorisation(roles = listOf("WRONG")))
         .exchange()
         .expectStatus().isForbidden
@@ -161,7 +161,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `unrecognised client id`() {
-      webTestClient.delete().uri("/clients/test-test/delete")
+      webTestClient.delete().uri("/base-clients/test-test/clients/test-test")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isNotFound
@@ -173,7 +173,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
       givenANewClientExistsWithClientId("test-test")
 
-      webTestClient.delete().uri("/clients/test-test/delete")
+      webTestClient.delete().uri("/base-clients/test-test/clients/test-test")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
@@ -202,7 +202,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.delete().uri("/clients/test-test-1/delete")
+      webTestClient.delete().uri("/base-clients/test-test/clients/test-test-1")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
