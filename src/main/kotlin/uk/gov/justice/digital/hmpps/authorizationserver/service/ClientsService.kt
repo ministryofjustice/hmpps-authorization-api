@@ -171,10 +171,10 @@ class ClientsService(
   @Transactional
   fun editClient(clientId: String, clientDetails: ClientUpdateRequest) {
     val clientClientConfigPair = retrieveClientWithClientConfig(clientId)
-    val client = clientClientConfigPair.first
+    val clientList = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
 
-    client.forEach {
+    clientList.forEach {
       with(clientDetails) {
         it.scopes = scopes
         it.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
@@ -186,12 +186,6 @@ class ClientsService(
         updateAuthorizationConsent(it, clientDetails)
       }
     }
-  /*    with(clientDetails) {
-      client.scopes = scopes
-      client.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber)
-      updateClientConfig(clientId, clientConfig, this)
-      updateAuthorizationConsent(client, clientDetails)
-    }*/
   }
 
   @Transactional(readOnly = true)
