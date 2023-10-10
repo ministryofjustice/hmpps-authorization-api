@@ -73,7 +73,7 @@ class ClientsController(
     return ResponseEntity.ok(conversionService.convert(clientsService.findClientByClientId(clientId), ClientExistsResponse::class.java))
   }
 
-  @DeleteMapping("clients/{clientId}/delete")
+  @DeleteMapping("base-clients/{baseClientId}/clients/{clientId}")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun deleteClient(@PathVariable clientId: String) {
