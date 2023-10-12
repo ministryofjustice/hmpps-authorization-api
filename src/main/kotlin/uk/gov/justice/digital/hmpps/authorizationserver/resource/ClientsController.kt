@@ -147,6 +147,7 @@ data class ClientViewResponse(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValidityMinutes: Long?,
+  val clientDeploymentDetails: ClientDeploymentDetails?,
 )
 
 data class ClientUpdateRequest(
