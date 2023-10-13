@@ -992,6 +992,56 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `view client without deployment details`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-more-test",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-more-mctest-1",
+              "jiraNumber" to "HAAR-7777",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/base-clients/test-more-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-more-test")
+        .jsonPath("scopes[0]").isEqualTo("read")
+        .jsonPath("scopes[1]").isEqualTo("write")
+        .jsonPath("authorities[0]").isEqualTo("ROLE_CURIOUS_API")
+        .jsonPath("authorities[1]").isEqualTo("ROLE_VIEW_PRISONER_DATA")
+        .jsonPath("authorities[2]").isEqualTo("ROLE_COMMUNITY")
+        .jsonPath("ips[0]").isEqualTo("81.134.202.29/32")
+        .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
+        .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
+        .jsonPath("validDays").isEqualTo(5)
+        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("deployment").isEmpty
+
+      val client = clientRepository.findClientByClientId("test-more-test")
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).get()
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
     fun `view client success`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
@@ -1052,16 +1102,17 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
         .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
-        .jsonPath("clientDeploymentDetails.clientType").isEqualTo("PERSONAL")
-        .jsonPath("clientDeploymentDetails.team").isEqualTo("testing team")
-        .jsonPath("clientDeploymentDetails.teamContact").isEqualTo("testy lead")
-        .jsonPath("clientDeploymentDetails.teamSlack").isEqualTo("#testy")
-        .jsonPath("clientDeploymentDetails..hosting").isEqualTo("CLOUDPLATFORM")
-        .jsonPath("clientDeploymentDetails.namespace").isEqualTo("testy-testing-dev")
-        .jsonPath("clientDeploymentDetails.deployment").isEqualTo("hmpps-testing-dev")
-        .jsonPath("clientDeploymentDetails.secretName").isEqualTo("hmpps-testing")
-        .jsonPath("clientDeploymentDetails.clientIdKey").isEqualTo("SYSTEM_CLIENT_ID")
-        .jsonPath("clientDeploymentDetails.secretKey").isEqualTo("SYSTEM_CLIENT_SECRET")
+        .jsonPath("deployment.clientType").isEqualTo("PERSONAL")
+        .jsonPath("deployment.team").isEqualTo("testing team")
+        .jsonPath("deployment.teamContact").isEqualTo("testy lead")
+        .jsonPath("deployment.teamSlack").isEqualTo("#testy")
+        .jsonPath("deployment.hosting").isEqualTo("CLOUDPLATFORM")
+        .jsonPath("deployment.namespace").isEqualTo("testy-testing-dev")
+        .jsonPath("deployment.deployment").isEqualTo("hmpps-testing-dev")
+        .jsonPath("deployment.secretName").isEqualTo("hmpps-testing")
+        .jsonPath("deployment.clientIdKey").isEqualTo("SYSTEM_CLIENT_ID")
+        .jsonPath("deployment.secretKey").isEqualTo("SYSTEM_CLIENT_SECRET")
+        .jsonPath("deployment.deploymentInfo").isEmpty
 
       val client = clientRepository.findClientByClientId("test-more-test")
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()

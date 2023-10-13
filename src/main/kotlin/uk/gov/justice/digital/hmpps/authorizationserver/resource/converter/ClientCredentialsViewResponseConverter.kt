@@ -19,7 +19,7 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         latestClient.getDatabaseUserName(),
         clientConfig?.validDays,
         latestClient.tokenSettings.accessTokenTimeToLive.toMinutes(),
-        clientDeploymentDetails,
+        deployment,
       )
     }
   }

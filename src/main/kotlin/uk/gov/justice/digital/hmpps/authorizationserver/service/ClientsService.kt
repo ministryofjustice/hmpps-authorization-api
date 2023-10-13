@@ -194,18 +194,15 @@ class ClientsService(
     val clientClientConfigPair = retrieveLatestClientWithClientConfig(clientId)
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
-    val clientDeploymentDetails = getDeployment(clientId)
+    val deployment = getDeployment(clientId)
     setValidDays(clientConfig)
-    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), clientDeploymentDetails)
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment)
   }
-  private fun getDeployment(clientId: String): ClientDeploymentDetails {
+  private fun getDeployment(clientId: String): ClientDeploymentDetails? {
     val baseClientId = clientIdService.toBase(clientId)
     val clientDeployment =
-      clientDeploymentRepository.findById(baseClientId)
-    if (clientDeployment.isEmpty) {
-      throw ClientNotFoundException(ClientDeployment::class.simpleName, baseClientId)
-    }
-    return toClientDeploymentDetails(clientDeployment.get())
+      clientDeploymentRepository.findByIdOrNull(baseClientId)
+    return clientDeployment?.let { toClientDeploymentDetails(clientDeployment) }
   }
   private fun toClientDeploymentDetails(clientDeployment: ClientDeployment): ClientDeploymentDetails {
     with(clientDeployment) {
@@ -316,7 +313,7 @@ data class ClientComposite(
   val latestClient: Client,
   val clientConfig: ClientConfig?,
   val authorizationConsent: AuthorizationConsent?,
-  val clientDeploymentDetails: ClientDeploymentDetails?,
+  val deployment: ClientDeploymentDetails?,
 )
 
 data class DuplicateRegistrationResponse(
