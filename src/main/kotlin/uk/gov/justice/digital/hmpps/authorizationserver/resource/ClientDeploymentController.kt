@@ -2,10 +2,8 @@ package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -54,23 +52,6 @@ class ClientDeploymentController(
       "baseClientId" to clientIdService.toBase(clientId),
     )
     telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsUpdated", telemetryMap)
-  }
-
-  @GetMapping("clients/{clientId}/deployment")
-  @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun getDeployment(
-    @PathVariable
-    clientId: String,
-  ): ResponseEntity<Any> {
-    val clientDeployment = clientDeploymentService.getDeployment(clientId)
-    val telemetryMap = mapOf(
-      "username" to authenticationFacade.currentUsername!!,
-      "baseClientId" to clientIdService.toBase(clientId),
-    )
-    telemetryClient.trackEvent("GetAuthorizationServerClientDeploymentDetails", telemetryMap)
-
-    return ResponseEntity.ok(clientDeployment)
   }
 }
 

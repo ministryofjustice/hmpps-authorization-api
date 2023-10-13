@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDeploymentDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientUpdateRequest
@@ -150,7 +151,7 @@ class ClientsService(
     val duplicatedRegisteredClient = registeredClientBuilder
       .id(java.util.UUID.randomUUID().toString())
       .clientId(clientIdService.incrementClientId(client.clientId))
-      .clientIdIssuedAt(java.time.Instant.now())
+      .clientIdIssuedAt(Instant.now())
       .clientSecret(oAuthClientSecret.encode(externalClientSecret))
       .build()
 
@@ -193,8 +194,32 @@ class ClientsService(
     val clientClientConfigPair = retrieveLatestClientWithClientConfig(clientId)
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
+    val deployment = getDeployment(clientId)
     setValidDays(clientConfig)
-    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client))
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment)
+  }
+  private fun getDeployment(clientId: String): ClientDeploymentDetails? {
+    val baseClientId = clientIdService.toBase(clientId)
+    val clientDeployment =
+      clientDeploymentRepository.findByIdOrNull(baseClientId)
+    return clientDeployment?.let { toClientDeploymentDetails(clientDeployment) }
+  }
+  private fun toClientDeploymentDetails(clientDeployment: ClientDeployment): ClientDeploymentDetails {
+    with(clientDeployment) {
+      return ClientDeploymentDetails(
+        clientType = clientType?.name,
+        team = team,
+        teamContact = teamContact,
+        teamSlack = teamSlack,
+        hosting = hosting?.name,
+        namespace = namespace,
+        deployment = deployment,
+        secretName = secretName,
+        clientIdKey = clientIdKey,
+        secretKey = secretKey,
+        deploymentInfo = deploymentInfo,
+      )
+    }
   }
 
   private fun updateAuthorizationConsent(client: Client, clientDetails: ClientUpdateRequest) {
@@ -288,6 +313,7 @@ data class ClientComposite(
   val latestClient: Client,
   val clientConfig: ClientConfig?,
   val authorizationConsent: AuthorizationConsent?,
+  val deployment: ClientDeploymentDetails?,
 )
 
 data class DuplicateRegistrationResponse(

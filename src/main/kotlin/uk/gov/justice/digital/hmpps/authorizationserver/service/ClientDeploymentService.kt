@@ -35,34 +35,6 @@ class ClientDeploymentService(
     }
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
-
-  @Transactional
-  fun getDeployment(clientId: String): ClientDeploymentDetails {
-    val baseClientId = clientIdService.toBase(clientId)
-    val clientDeployment =
-      clientDeploymentRepository.findById(baseClientId)
-    if (clientDeployment.isEmpty) {
-      throw ClientNotFoundException(ClientDeployment::class.simpleName, baseClientId)
-    }
-    return toClientDeploymentDetails(clientDeployment.get())
-  }
-  private fun toClientDeploymentDetails(clientDeployment: ClientDeployment): ClientDeploymentDetails {
-    with(clientDeployment) {
-      return ClientDeploymentDetails(
-        clientType = clientType?.name,
-        team = team,
-        teamContact = teamContact,
-        teamSlack = teamSlack,
-        hosting = hosting?.name,
-        namespace = namespace,
-        deployment = deployment,
-        secretName = secretName,
-        clientIdKey = clientIdKey,
-        secretKey = secretKey,
-        deploymentInfo = deploymentInfo,
-      )
-    }
-  }
   private fun toClientDeploymentEntity(clientDeployment: ClientDeploymentDetails, baseClientId: String): ClientDeployment {
     with(clientDeployment) {
       return ClientDeployment(
