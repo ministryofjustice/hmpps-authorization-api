@@ -51,7 +51,8 @@ class ClientsService(
       val authorities: AuthorizationConsent? = authorizationConsents[client.first]
       val firstClient = client.second[0]
       val roles = authorities?.authoritiesWithoutPrefix?.sorted()?.joinToString("\n")
-      val lastAccessed = client.second[0].getLastAccessedDate()
+      val lastAccessed = client.second.map { it.latestClientCredentialsAuthorization }
+        .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull() ?: client.second.maxOf { it.clientIdIssuedAt }
       ClientDetail(
         baseClientId = client.first,
         clientType = deployment?.clientType,
@@ -104,7 +105,7 @@ class ClientsService(
     return ClientRegistrationResponse(
       client!!.clientId,
       externalClientSecret,
-      getEncoder().encodeToString(client!!.clientId.toByteArray()),
+      getEncoder().encodeToString(client.clientId.toByteArray()),
       getEncoder().encodeToString(externalClientSecret.toByteArray()),
     )
   }
