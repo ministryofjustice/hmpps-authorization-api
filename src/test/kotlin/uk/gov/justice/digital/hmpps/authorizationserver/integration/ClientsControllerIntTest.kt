@@ -1158,7 +1158,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class AddClientDeployment {
+  inner class AddUpdateClientDeployment {
     @Test
     fun `access forbidden when no authority`() {
       webTestClient.put().uri("base-clients/testy/deployment")
