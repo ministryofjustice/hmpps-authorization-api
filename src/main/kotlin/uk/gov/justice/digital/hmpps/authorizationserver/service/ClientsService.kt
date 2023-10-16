@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientDeployment
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
@@ -198,6 +199,16 @@ class ClientsService(
     setValidDays(clientConfig)
     return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment)
   }
+
+  @Transactional
+  fun upsert(clientId: String, clientDeployment: ClientDeploymentDetails) {
+    val baseClientId = clientIdService.toBase(clientId)
+    val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
+    if (clientsByBaseClientId.isEmpty()) {
+      throw ClientNotFoundException(Client::class.simpleName, clientId)
+    }
+    clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
+  }
   private fun getDeployment(clientId: String): ClientDeploymentDetails? {
     val baseClientId = clientIdService.toBase(clientId)
     val clientDeployment =
@@ -212,6 +223,25 @@ class ClientsService(
         teamContact = teamContact,
         teamSlack = teamSlack,
         hosting = hosting?.name,
+        namespace = namespace,
+        deployment = deployment,
+        secretName = secretName,
+        clientIdKey = clientIdKey,
+        secretKey = secretKey,
+        deploymentInfo = deploymentInfo,
+      )
+    }
+  }
+
+  private fun toClientDeploymentEntity(clientDeployment: ClientDeploymentDetails, baseClientId: String): ClientDeployment {
+    with(clientDeployment) {
+      return ClientDeployment(
+        baseClientId = baseClientId,
+        clientType = clientType?.let { ClientType.valueOf(clientType) },
+        team = team,
+        teamContact = teamContact,
+        teamSlack = teamSlack,
+        hosting = hosting?.let { Hosting.valueOf(hosting) },
         namespace = namespace,
         deployment = deployment,
         secretName = secretName,
