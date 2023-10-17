@@ -81,9 +81,8 @@ class ClientsService(
     )
   }
 
-  private fun getMaxLastAccessedDate(clientList : List<Client>) = clientList.map { it.latestClientCredentialsAuthorization }
+  private fun getMaxLastAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientCredentialsAuthorization }
     .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull()
-
 
   @Transactional
   fun addClient(clientDetails: ClientRegistrationRequest): ClientRegistrationResponse {
