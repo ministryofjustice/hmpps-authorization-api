@@ -55,14 +55,14 @@ data class Client(
 
   @OneToMany
   @JoinColumn(name = "registeredClientId")
-  val latestClientCredentialsAuthorization: MutableSet<Authorization>?,
+  val latestClientAuthorization: MutableSet<Authorization>?,
 ) {
 
   fun getDatabaseUserName(): String? {
     return tokenSettings.settings[DATABASE_USER_NAME_KEY] as String?
   }
   fun getLastAccessedDate(): Instant {
-    return this.latestClientCredentialsAuthorization?.maxOfOrNull { it.accessTokenIssuedAt } ?: clientIdIssuedAt
+    return this.latestClientAuthorization?.maxOfOrNull { it.accessTokenIssuedAt } ?: clientIdIssuedAt
   }
 
   fun getJiraNumber(): String? {

@@ -51,7 +51,7 @@ class ClientsService(
       val authorities: AuthorizationConsent? = authorizationConsents[client.first]
       val firstClient = client.second[0]
       val roles = authorities?.authoritiesWithoutPrefix?.sorted()?.joinToString("\n")
-      val lastAccessed = getMaxLastAccessedDate(client.second) ?: client.second.maxOf { it.clientIdIssuedAt }
+      val lastAccessed = getMostRecentAccessedDate(client.second) ?: client.second.maxOf { it.clientIdIssuedAt }
       ClientDetail(
         baseClientId = client.first,
         clientType = deployment?.clientType,
@@ -81,7 +81,7 @@ class ClientsService(
     )
   }
 
-  private fun getMaxLastAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientCredentialsAuthorization }
+  private fun getMostRecentAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientAuthorization }
     .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull()
 
   @Transactional
