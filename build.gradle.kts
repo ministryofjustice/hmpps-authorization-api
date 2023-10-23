@@ -21,6 +21,10 @@ dependencies {
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.10.0")
   implementation("io.opentelemetry:opentelemetry-api:1.31.0")
+  implementation("javax.xml.bind:jaxb-api:2.3.1")
+  implementation("com.sun.xml.bind:jaxb-impl:4.0.3")
+  implementation("com.sun.xml.bind:jaxb-core:4.0.3")
+  implementation("io.jsonwebtoken:jjwt:0.9.1")
 
   runtimeOnly("com.h2database:h2:2.2.224")
   runtimeOnly("org.postgresql:postgresql:42.6.0")

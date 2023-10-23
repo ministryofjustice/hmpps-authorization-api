@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.core.convert.converter.Converter
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.authentication.AuthenticationEventPublisher
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher
+import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -40,7 +40,14 @@ import org.springframework.security.oauth2.server.authorization.oidc.authenticat
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
+import org.springframework.security.web.context.SecurityContextHolderFilter
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
@@ -58,23 +65,33 @@ import java.security.interfaces.RSAPublicKey
 @EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
 @Configuration(proxyBeanMethods = false)
 class AuthorizationServerConfig(
+
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
+  private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
 ) {
 
   @Bean
-  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @Order(1)
   fun authorizationServerSecurityFilterChain(
     http: HttpSecurity,
     registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
     registeredClientDataService: RegisteredClientDataService,
     loggingAuthenticationFailureHandler: LoggingAuthenticationFailureHandler,
   ): SecurityFilterChain {
-    val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer()
+    OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
+    http.exceptionHandling {
+      it.defaultAuthenticationEntryPointFor(
+        LoginUrlAuthenticationEntryPoint("http://auth.com:9090/auth/sign-in"),
+        antMatcher("/oauth2/authorize"),
+      )
+    }
+
+    val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
     http.apply(authorizationServerConfigurer)
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
       tokenEndpointConfigurer.authenticationProviders {
@@ -101,8 +118,56 @@ class AuthorizationServerConfig(
       }
     }
 
-    http.cors { it.disable() }.csrf { it.disable() }
+    http.addFilterBefore(jwtCookieAuthenticationFilter, SecurityContextHolderFilter::class.java)
+    // .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
     return http.build()
+  }
+
+  @Bean
+  @Order(2)
+  fun defaultSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    // TODO re-instate this - copied from manage-users-api
+    // http {
+    //   headers { frameOptions { sameOrigin = true } }
+    //   sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
+    //   csrf { disable() }
+    //   authorizeHttpRequests {
+    //     listOf(
+    //       "/webjars/**",
+    //       "/favicon.ico",
+    //       "/csrf",
+    //       "/health/**",
+    //       "/info"
+    //     ).forEach { authorize(it, permitAll) }
+    //     authorize(anyRequest, authenticated)
+    //   }
+    //   oauth2ResourceServer { jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() } }
+    // }
+    //
+    // return http.build()
+
+    http.headers { it.frameOptions { frameOptionsCustomizer -> frameOptionsCustomizer.sameOrigin() } }
+    http.cors { it.disable() }.csrf { it.disable() }
+      .authorizeHttpRequests { auth ->
+        auth.requestMatchers(
+          antMatcher("/base-clients/**"),
+        ).permitAll()
+      }
+      .formLogin(Customizer.withDefaults())
+    return http.build()
+  }
+
+  @Bean
+  fun corsConfigurationSource(): CorsConfigurationSource {
+    val source = UrlBasedCorsConfigurationSource()
+    val corsConfig = CorsConfiguration().applyPermitDefaultValues().apply {
+      allowedOrigins = listOf("yourAllowedOrigin.com", "127.0.0.1")
+      allowCredentials = true
+      allowedHeaders = listOf("Origin", "Content-Type", "Accept", "responseType", "Authorization")
+      allowedMethods = listOf("GET", "POST", "PUT")
+    }
+    source.registerCorsConfiguration("/**", corsConfig)
+    return source
   }
 
   @Bean
