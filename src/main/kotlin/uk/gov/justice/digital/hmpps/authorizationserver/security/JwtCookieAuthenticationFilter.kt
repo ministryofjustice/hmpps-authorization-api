@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
 
@@ -34,10 +33,6 @@ class JwtCookieAuthenticationFilter(
         .ifPresent {
           val sc = SecurityContextHolder.getContext()
           sc.authentication = it
-
-          // TODO do we need to use session state for this?
-          val session = request.getSession(true)
-          session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, sc)
         }
     } catch (e: JwtException) {
       log.info("Unable to read authentication from JWT", e)

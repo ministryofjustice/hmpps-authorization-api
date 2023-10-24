@@ -18,6 +18,7 @@ import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -41,7 +42,7 @@ import org.springframework.security.oauth2.server.authorization.oidc.authenticat
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
-import org.springframework.security.web.context.SecurityContextHolderFilter
+import org.springframework.security.web.authentication.logout.LogoutFilter
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
@@ -118,8 +119,8 @@ class AuthorizationServerConfig(
       }
     }
 
-    http.addFilterBefore(jwtCookieAuthenticationFilter, SecurityContextHolderFilter::class.java)
-    // .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+    http.addFilterAfter(jwtCookieAuthenticationFilter, LogoutFilter::class.java)
+      .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
     return http.build()
   }
 
