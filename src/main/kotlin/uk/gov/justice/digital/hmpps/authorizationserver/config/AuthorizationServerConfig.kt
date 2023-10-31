@@ -41,14 +41,15 @@ import org.springframework.security.oauth2.server.authorization.oidc.authenticat
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.security.AuthorizeLoginUrlAuthenticationEntryPoint
 import uk.gov.justice.digital.hmpps.authorizationserver.security.JwtCookieAuthenticationFilter
+import uk.gov.justice.digital.hmpps.authorizationserver.security.SavedRequestCookieHelper
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
@@ -74,6 +75,7 @@ class AuthorizationServerConfig(
   private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
+  private val savedRequestCookieHelper: SavedRequestCookieHelper,
 ) {
 
   @Bean
@@ -85,9 +87,10 @@ class AuthorizationServerConfig(
     loggingAuthenticationFailureHandler: LoggingAuthenticationFailureHandler,
   ): SecurityFilterChain {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
+
     http.exceptionHandling {
       it.defaultAuthenticationEntryPointFor(
-        LoginUrlAuthenticationEntryPoint("http://auth.com:9090/auth/sign-in"),
+        AuthorizeLoginUrlAuthenticationEntryPoint("http://auth.com:9090/auth/sign-in", savedRequestCookieHelper),
         antMatcher("/oauth2/authorize"),
       )
     }
