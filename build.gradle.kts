@@ -16,6 +16,7 @@ dependencies {
 
   implementation("org.flywaydb:flyway-core:9.22.3")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
   implementation("org.hibernate:hibernate-core:6.3.1.Final")
 
   implementation("commons-codec:commons-codec")
