@@ -103,9 +103,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "ip-allow-a-client",
               "ip-allow-b-client",
               "ip-allow-c-client",
+              "test-auth-code-client",
               "test-client-create-id",
               "test-client-id",
               "test-complete-details-id",
+              "test-duplicate-id",
             ),
           )
         }
