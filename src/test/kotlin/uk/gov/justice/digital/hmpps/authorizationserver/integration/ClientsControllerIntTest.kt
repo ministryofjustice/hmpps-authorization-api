@@ -96,7 +96,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[4].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
         .jsonPath("$.clients[4].count").isEqualTo(1)
         .jsonPath("$.clients[4].expired").isEmpty
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(8) }
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(7) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
