@@ -89,21 +89,20 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        // .jsonPath("$.clients[5].baseClientId").isEqualTo("test-client-id")
-        // .jsonPath("$.clients[5].clientType").isEqualTo("PERSONAL")
-        // .jsonPath("$.clients[5].teamName").isEqualTo("HAAR")
-        // .jsonPath("$.clients[5].grantType").isEqualTo("client_credentials")
-        // .jsonPath("$.clients[5].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
-        // .jsonPath("$.clients[5].count").isEqualTo(1)
-        // .jsonPath("$.clients[5].expired").isEmpty
-        // .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(8) }
+        .jsonPath("$.clients[4].baseClientId").isEqualTo("test-client-id")
+        .jsonPath("$.clients[4].clientType").isEqualTo("PERSONAL")
+        .jsonPath("$.clients[4].teamName").isEqualTo("HAAR")
+        .jsonPath("$.clients[4].grantType").isEqualTo("client_credentials")
+        .jsonPath("$.clients[4].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
+        .jsonPath("$.clients[4].count").isEqualTo(1)
+        .jsonPath("$.clients[4].expired").isEmpty
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(8) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
-              "ip-allow-a-clientx",
+              "ip-allow-a-client",
               "ip-allow-b-client",
               "ip-allow-c-client",
-              "test-auth-code-client",
               "test-client-create-id",
               "test-client-id",
               "test-complete-details-id",
