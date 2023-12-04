@@ -39,6 +39,8 @@ class ClientsService(
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val conversionService: ConversionService,
 ) {
+
+  @Transactional(readOnly = true)
   fun retrieveAllClients(sortBy: SortBy, filterBy: ClientFilter?): List<ClientDetail> {
     val baseClients = clientRepository.findAll().groupBy { clientIdService.toBase(it.clientId) }.toSortedMap()
     val configs = clientConfigRepository.findAll().associateBy { it.baseClientId }
@@ -80,9 +82,6 @@ class ClientsService(
       },
     )
   }
-
-  private fun getMostRecentAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientAuthorization }
-    .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull()
 
   @Transactional
   fun addClient(clientDetails: ClientRegistrationRequest): ClientRegistrationResponse {
@@ -128,6 +127,7 @@ class ClientsService(
     clientRepository.deleteByClientId(clientId)
   }
 
+  @Transactional(readOnly = true)
   fun findClientWithCopies(clientId: String): List<Client> {
     val clients = clientIdService.findByBaseClientId(clientId)
     if (clients.isEmpty()) {
@@ -136,6 +136,7 @@ class ClientsService(
     return clients
   }
 
+  @Transactional(readOnly = true)
   fun findClientByClientId(clientId: String) =
     clientRepository.findClientByClientId(clientId)
       ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
@@ -212,12 +213,17 @@ class ClientsService(
     }
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
+
+  private fun getMostRecentAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientAuthorization }
+    .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull()
+
   private fun getDeployment(clientId: String): ClientDeploymentDetails? {
     val baseClientId = clientIdService.toBase(clientId)
     val clientDeployment =
       clientDeploymentRepository.findByIdOrNull(baseClientId)
     return clientDeployment?.let { toClientDeploymentDetails(clientDeployment) }
   }
+
   private fun toClientDeploymentDetails(clientDeployment: ClientDeployment): ClientDeploymentDetails {
     with(clientDeployment) {
       return ClientDeploymentDetails(
