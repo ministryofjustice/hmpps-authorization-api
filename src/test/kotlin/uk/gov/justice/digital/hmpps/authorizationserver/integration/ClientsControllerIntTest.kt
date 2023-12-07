@@ -106,6 +106,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "test-client-create-id",
               "test-client-id",
               "test-complete-details-id",
+              "test-duplicate-id",
             ),
           )
         }
