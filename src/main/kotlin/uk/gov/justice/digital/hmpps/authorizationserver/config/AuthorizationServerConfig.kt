@@ -14,10 +14,10 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.authentication.AuthenticationEventPublisher
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher
-import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
@@ -90,7 +90,7 @@ class AuthorizationServerConfig(
 
     http.exceptionHandling {
       it.defaultAuthenticationEntryPointFor(
-        AuthorizeLoginUrlAuthenticationEntryPoint("http://auth.com:9090/auth/sign-in", savedRequestCookieHelper),
+        AuthorizeLoginUrlAuthenticationEntryPoint("http://localhost:9090/auth/sign-in", savedRequestCookieHelper),
         antMatcher("/oauth2/authorize"),
       )
     }
@@ -130,35 +130,38 @@ class AuthorizationServerConfig(
   @Bean
   @Order(2)
   fun defaultSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
-    // TODO re-instate this - copied from manage-users-api
-    // http {
-    //   headers { frameOptions { sameOrigin = true } }
-    //   sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
-    //   csrf { disable() }
-    //   authorizeHttpRequests {
-    //     listOf(
-    //       "/webjars/**",
-    //       "/favicon.ico",
-    //       "/csrf",
-    //       "/health/**",
-    //       "/info"
-    //     ).forEach { authorize(it, permitAll) }
-    //     authorize(anyRequest, authenticated)
-    //   }
-    //   oauth2ResourceServer { jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() } }
-    // }
-    //
-    // return http.build()
-
-    http.headers { it.frameOptions { frameOptionsCustomizer -> frameOptionsCustomizer.sameOrigin() } }
-    http.cors { it.disable() }.csrf { it.disable() }
-      .authorizeHttpRequests { auth ->
-        auth.requestMatchers(
-          antMatcher("/base-clients/**"),
-        ).permitAll()
+    http {
+      headers { frameOptions { sameOrigin = true } }
+      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
+      // Can't have CSRF protection as requires session
+      csrf { disable() }
+      authorizeHttpRequests {
+        listOf(
+          "/webjars/**",
+          "/favicon.ico",
+          "/csrf",
+          "/health/**",
+          "/info",
+          "/v3/api-docs/**",
+          "/swagger-ui/**",
+          "/swagger-ui.html",
+        ).forEach { authorize(it, permitAll) }
+        authorize(anyRequest, authenticated)
       }
-      .formLogin(Customizer.withDefaults())
+      oauth2ResourceServer { jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() } }
+    }
     return http.build()
+
+    // http.headers { it.frameOptions { frameOptionsCustomizer -> frameOptionsCustomizer.sameOrigin() } }
+    // http.cors { it.disable() }.csrf { it.disable() }
+    //   .authorizeHttpRequests { auth ->
+    //     auth.requestMatchers(
+    //       antMatcher("/base-clients/**"),
+    //       antMatcher("/clients/exists/**"),
+    //     ).permitAll()
+    //   }
+    //   .formLogin(Customizer.withDefaults())
+    // return http.build()
   }
 
   @Bean
