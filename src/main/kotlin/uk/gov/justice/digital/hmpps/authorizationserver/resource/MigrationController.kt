@@ -4,7 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
-import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -14,16 +13,15 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
-import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.MigrationClientService
+import java.time.Instant
+import java.time.LocalDate
 
 @Controller
 class MigrationController(
   private val migrationClientService: MigrationClientService,
-  private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
-  private val clientIdService: ClientIdService,
 ) {
 
   @PostMapping("migrate-client")
@@ -51,6 +49,9 @@ class MigrationClientRequest(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValidityMinutes: Long?,
+  val clientIdIssuedAt: Instant,
+  val clientEndDate: LocalDate?,
+  var lastAccessed: Instant?,
   val clientSecret: String,
   val clientDeploymentDetails: ClientDeploymentDetails?,
-) // : ClientRegistrationRequest(clientId,scopes,authorities,ips,jiraNumber,databaseUserName,validDays,accessTokenValidityMinutes)
+)

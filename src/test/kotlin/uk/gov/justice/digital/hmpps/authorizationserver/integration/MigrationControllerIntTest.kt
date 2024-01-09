@@ -64,6 +64,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
         )
@@ -84,6 +85,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
         )
@@ -104,6 +106,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
         )
@@ -126,6 +129,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
         )
@@ -159,6 +163,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
         )
@@ -194,6 +199,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "validDays" to 5,
               "accessTokenValidityMinutes" to 20,
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
               "clientDeploymentDetails" to mapOf(
                 "clientType" to "PERSONAL",
                 "team" to "testing team",
@@ -217,7 +223,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo("testz")
       assertThat(client.clientName).isEqualTo("testz")
-      assertThat(client.clientSecret).isEqualTo("clientSecret")
+      assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
@@ -265,6 +271,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testp",
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
         )
@@ -276,7 +283,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo("testp")
       assertThat(client.clientName).isEqualTo("testp")
-      assertThat(client.clientSecret).isEqualTo("clientSecret")
+      assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).containsOnly("read")
       assertFalse(clientConfigRepository.findById(client.clientId).isPresent)
@@ -306,6 +313,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "validDays" to 5,
               "accessTokenValidityMinutes" to 20,
               "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
         )

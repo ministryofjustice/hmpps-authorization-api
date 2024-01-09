@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.core.convert.ConversionService
-import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -9,10 +8,8 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.MigrationClientRequest
-import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.LocalDate
 
 @Service
@@ -21,10 +18,6 @@ class MigrationClientService(
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val clientIdService: ClientIdService,
-  private val clientDeploymentRepository: ClientDeploymentRepository,
-  private val registeredClientRepository: JdbcRegisteredClientRepository,
-  private val oAuthClientSecret: OAuthClientSecret,
-  private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val conversionService: ConversionService,
   private val clientsService: ClientsService,
 ) {
@@ -35,11 +28,9 @@ class MigrationClientService(
     if (clientList.isNotEmpty()) {
       throw ClientAlreadyExistsException(migrationClientRequest.clientId)
     }
-
     var client = conversionService.convert(migrationClientRequest, Client::class.java)
-    client!!.clientSecret = migrationClientRequest.clientSecret
 
-    client = clientRepository.save(client)
+    client = client?.let { clientRepository.save(it) }
     migrationClientRequest.authorities?.let { authorities ->
       authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, (withAuthoritiesPrefix(authorities))))
     }

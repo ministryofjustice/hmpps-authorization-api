@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.MigrationClientRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
+import java.time.ZoneOffset
 
 @Component
 class MigrationClientConverter(
@@ -19,8 +20,8 @@ class MigrationClientConverter(
       return Client(
         id = java.util.UUID.randomUUID().toString(),
         clientId = clientId!!,
-        clientIdIssuedAt = java.time.Instant.now(),
-        clientSecretExpiresAt = null,
+        clientIdIssuedAt = lastAccessed ?: clientIdIssuedAt,
+        clientSecretExpiresAt = clientEndDate?.atStartOfDay()?.toInstant(ZoneOffset.UTC),
         clientName = clientIdService.toBase(clientId),
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
         authorizationGrantTypes = CLIENT_CREDENTIALS.value,
@@ -31,6 +32,7 @@ class MigrationClientConverter(
           .requireAuthorizationConsent(false).build(),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber),
         latestClientAuthorization = mutableSetOf(),
+        clientSecret = if (clientSecret.startsWith("{bcrypt}")) { clientSecret } else "{bcrypt}$clientSecret",
       )
     }
   }
