@@ -12,10 +12,12 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientDeployment
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDeploymentDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientUpdateRequest
@@ -37,6 +39,8 @@ class ClientsService(
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val conversionService: ConversionService,
 ) {
+
+  @Transactional(readOnly = true)
   fun retrieveAllClients(sortBy: SortBy, filterBy: ClientFilter?): List<ClientDetail> {
     val baseClients = clientRepository.findAll().groupBy { clientIdService.toBase(it.clientId) }.toSortedMap()
     val configs = clientConfigRepository.findAll().associateBy { it.baseClientId }
@@ -49,7 +53,7 @@ class ClientsService(
       val authorities: AuthorizationConsent? = authorizationConsents[client.first]
       val firstClient = client.second[0]
       val roles = authorities?.authoritiesWithoutPrefix?.sorted()?.joinToString("\n")
-      val lastAccessed = client.second[0].getLastAccessedDate()
+      val lastAccessed = getMostRecentAccessedDate(client.second) ?: client.second.maxOf { it.clientIdIssuedAt }
       ClientDetail(
         baseClientId = client.first,
         clientType = deployment?.clientType,
@@ -102,7 +106,7 @@ class ClientsService(
     return ClientRegistrationResponse(
       client!!.clientId,
       externalClientSecret,
-      getEncoder().encodeToString(client!!.clientId.toByteArray()),
+      getEncoder().encodeToString(client.clientId.toByteArray()),
       getEncoder().encodeToString(externalClientSecret.toByteArray()),
     )
   }
@@ -123,6 +127,7 @@ class ClientsService(
     clientRepository.deleteByClientId(clientId)
   }
 
+  @Transactional(readOnly = true)
   fun findClientWithCopies(clientId: String): List<Client> {
     val clients = clientIdService.findByBaseClientId(clientId)
     if (clients.isEmpty()) {
@@ -131,6 +136,7 @@ class ClientsService(
     return clients
   }
 
+  @Transactional(readOnly = true)
   fun findClientByClientId(clientId: String) =
     clientRepository.findClientByClientId(clientId)
       ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
@@ -150,7 +156,7 @@ class ClientsService(
     val duplicatedRegisteredClient = registeredClientBuilder
       .id(java.util.UUID.randomUUID().toString())
       .clientId(clientIdService.incrementClientId(client.clientId))
-      .clientIdIssuedAt(java.time.Instant.now())
+      .clientIdIssuedAt(Instant.now())
       .clientSecret(oAuthClientSecret.encode(externalClientSecret))
       .build()
 
@@ -193,8 +199,66 @@ class ClientsService(
     val clientClientConfigPair = retrieveLatestClientWithClientConfig(clientId)
     val client = clientClientConfigPair.first
     val clientConfig = clientClientConfigPair.second
+    val deployment = getDeployment(clientId)
     setValidDays(clientConfig)
-    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client))
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment)
+  }
+
+  @Transactional
+  fun upsert(clientId: String, clientDeployment: ClientDeploymentDetails) {
+    val baseClientId = clientIdService.toBase(clientId)
+    val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
+    if (clientsByBaseClientId.isEmpty()) {
+      throw ClientNotFoundException(Client::class.simpleName, clientId)
+    }
+    clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
+  }
+
+  private fun getMostRecentAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientAuthorization }
+    .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull()
+
+  private fun getDeployment(clientId: String): ClientDeploymentDetails? {
+    val baseClientId = clientIdService.toBase(clientId)
+    val clientDeployment =
+      clientDeploymentRepository.findByIdOrNull(baseClientId)
+    return clientDeployment?.let { toClientDeploymentDetails(clientDeployment) }
+  }
+
+  private fun toClientDeploymentDetails(clientDeployment: ClientDeployment): ClientDeploymentDetails {
+    with(clientDeployment) {
+      return ClientDeploymentDetails(
+        clientType = clientType?.name,
+        team = team,
+        teamContact = teamContact,
+        teamSlack = teamSlack,
+        hosting = hosting?.name,
+        namespace = namespace,
+        deployment = deployment,
+        secretName = secretName,
+        clientIdKey = clientIdKey,
+        secretKey = secretKey,
+        deploymentInfo = deploymentInfo,
+      )
+    }
+  }
+
+  private fun toClientDeploymentEntity(clientDeployment: ClientDeploymentDetails, baseClientId: String): ClientDeployment {
+    with(clientDeployment) {
+      return ClientDeployment(
+        baseClientId = baseClientId,
+        clientType = clientType?.let { ClientType.valueOf(clientType) },
+        team = team,
+        teamContact = teamContact,
+        teamSlack = teamSlack,
+        hosting = hosting?.let { Hosting.valueOf(hosting) },
+        namespace = namespace,
+        deployment = deployment,
+        secretName = secretName,
+        clientIdKey = clientIdKey,
+        secretKey = secretKey,
+        deploymentInfo = deploymentInfo,
+      )
+    }
   }
 
   private fun updateAuthorizationConsent(client: Client, clientDetails: ClientUpdateRequest) {
@@ -288,6 +352,7 @@ data class ClientComposite(
   val latestClient: Client,
   val clientConfig: ClientConfig?,
   val authorizationConsent: AuthorizationConsent?,
+  val deployment: ClientDeploymentDetails?,
 )
 
 data class DuplicateRegistrationResponse(

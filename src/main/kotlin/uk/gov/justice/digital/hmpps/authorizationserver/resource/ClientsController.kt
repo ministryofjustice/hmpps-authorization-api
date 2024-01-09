@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDetail
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientFilter
+import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientsService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.SortBy
 import java.time.Instant
@@ -32,6 +33,7 @@ class ClientsController(
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
+  private val clientIdService: ClientIdService,
 ) {
 
   @GetMapping("base-clients")
@@ -116,6 +118,22 @@ class ClientsController(
       ),
     )
   }
+
+  @PutMapping("base-clients/{baseClientID}/deployment")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun upsertDeployment(
+    @PathVariable
+    baseClientID: String,
+    @RequestBody clientDeployment: ClientDeploymentDetails,
+  ) {
+    clientsService.upsert(baseClientID, clientDeployment)
+    val telemetryMap = mapOf(
+      "username" to authenticationFacade.currentUsername!!,
+      "baseClientId" to clientIdService.toBase(baseClientID),
+    )
+    telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsUpsert", telemetryMap)
+  }
 }
 
 data class ClientExistsResponse(
@@ -147,6 +165,7 @@ data class ClientViewResponse(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValidityMinutes: Long?,
+  val deployment: ClientDeploymentDetails?,
 )
 
 data class ClientUpdateRequest(
@@ -157,6 +176,20 @@ data class ClientUpdateRequest(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValidityMinutes: Long?,
+)
+
+data class ClientDeploymentDetails(
+  val clientType: String?,
+  val team: String?,
+  val teamContact: String?,
+  val teamSlack: String?,
+  val hosting: String?,
+  val namespace: String?,
+  val deployment: String?,
+  val secretName: String?,
+  val clientIdKey: String?,
+  val secretKey: String?,
+  val deploymentInfo: String?,
 )
 
 data class ClientRegistrationRequest(

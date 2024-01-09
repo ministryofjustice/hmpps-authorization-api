@@ -21,6 +21,8 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
@@ -94,7 +96,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[4].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
         .jsonPath("$.clients[4].count").isEqualTo(1)
         .jsonPath("$.clients[4].expired").isEmpty
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(6) }
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(7) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
@@ -103,6 +105,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "ip-allow-c-client",
               "test-client-create-id",
               "test-client-id",
+              "test-complete-details-id",
+              "test-duplicate-id",
             ),
           )
         }
@@ -249,7 +253,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      webTestClient.post().uri("/clients/$clientId/deployment")
+      webTestClient.put().uri("/base-clients/$clientId/deployment")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .body(
           BodyInserters.fromValue(
@@ -992,7 +996,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `view client success`() {
+    fun `view client without deployment details`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
 
@@ -1031,6 +1035,88 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
         .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("deployment").isEmpty
+
+      val client = clientRepository.findClientByClientId("test-more-test")
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).get()
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
+    fun `view client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-more-test",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-more-mctest-1",
+              "jiraNumber" to "HAAR-7777",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.put().uri("/base-clients/test-more-test/deployment")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/base-clients/test-more-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-more-test")
+        .jsonPath("scopes[0]").isEqualTo("read")
+        .jsonPath("scopes[1]").isEqualTo("write")
+        .jsonPath("authorities[0]").isEqualTo("ROLE_CURIOUS_API")
+        .jsonPath("authorities[1]").isEqualTo("ROLE_VIEW_PRISONER_DATA")
+        .jsonPath("authorities[2]").isEqualTo("ROLE_COMMUNITY")
+        .jsonPath("ips[0]").isEqualTo("81.134.202.29/32")
+        .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
+        .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
+        .jsonPath("validDays").isEqualTo(5)
+        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("deployment.clientType").isEqualTo("PERSONAL")
+        .jsonPath("deployment.team").isEqualTo("testing team")
+        .jsonPath("deployment.teamContact").isEqualTo("testy lead")
+        .jsonPath("deployment.teamSlack").isEqualTo("#testy")
+        .jsonPath("deployment.hosting").isEqualTo("CLOUDPLATFORM")
+        .jsonPath("deployment.namespace").isEqualTo("testy-testing-dev")
+        .jsonPath("deployment.deployment").isEqualTo("hmpps-testing-dev")
+        .jsonPath("deployment.secretName").isEqualTo("hmpps-testing")
+        .jsonPath("deployment.clientIdKey").isEqualTo("SYSTEM_CLIENT_ID")
+        .jsonPath("deployment.secretKey").isEqualTo("SYSTEM_CLIENT_SECRET")
+        .jsonPath("deployment.deploymentInfo").isEmpty
 
       val client = clientRepository.findClientByClientId("test-more-test")
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
@@ -1069,6 +1155,196 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertNull(clientConfigRepository.findByIdOrNull(client!!.clientId))
       assertNull(authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)))
       clientRepository.delete(client)
+    }
+  }
+
+  @Nested
+  inner class AddUpdateClientDeployment {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("base-clients/testy/deployment")
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("base-clients/testy/deployment")
+        .headers(setAuthorisation(roles = listOf()))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.put().uri("base-clients/testy/deployment")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `client not found to upsert deployment information`() {
+      webTestClient.put().uri("base-clients/testy/deployment")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `add client deployment success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.put().uri("base-clients/test-complete-details-id/deployment")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientType" to "PERSONAL",
+              "team" to "testing team",
+              "teamContact" to "testy lead",
+              "teamSlack" to "#testy",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev",
+              "deployment" to "hmpps-testing-dev",
+              "secretName" to "hmpps-testing",
+              "clientIdKey" to "SYSTEM_CLIENT_ID",
+              "secretKey" to "SYSTEM_CLIENT_SECRET",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val clientDeployment = clientDeploymentRepository.findById("test-complete-details-id").get()
+      assertThat(clientDeployment.baseClientId).isEqualTo("test-complete-details-id")
+      assertThat(clientDeployment.clientType).isEqualTo(ClientType.PERSONAL)
+      assertThat(clientDeployment.team).isEqualTo("testing team")
+      assertThat(clientDeployment.teamContact).isEqualTo("testy lead")
+      assertThat(clientDeployment.teamSlack).isEqualTo("#testy")
+      assertThat(clientDeployment.hosting).isEqualTo(Hosting.CLOUDPLATFORM)
+      assertThat(clientDeployment.namespace).isEqualTo("testy-testing-dev")
+      assertThat(clientDeployment.deployment).isEqualTo("hmpps-testing-dev")
+      assertThat(clientDeployment.secretName).isEqualTo("hmpps-testing")
+      assertThat(clientDeployment.clientIdKey).isEqualTo("SYSTEM_CLIENT_ID")
+      assertThat(clientDeployment.secretKey).isEqualTo("SYSTEM_CLIENT_SECRET")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientDeploymentDetailsUpsert",
+        mapOf("username" to "AUTH_ADM", "baseClientId" to "test-complete-details-id"),
+        null,
+      )
+    }
+
+    @Test
+    fun `Update client deployment success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.put().uri("base-clients/test-complete-details-id/deployment")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientType" to "PERSONAL",
+              "team" to "testing team deployment update",
+              "teamContact" to "testy lead update",
+              "teamSlack" to "#testy_update",
+              "hosting" to "CLOUDPLATFORM",
+              "namespace" to "testy-testing-dev-update",
+              "deployment" to "hmpps-testing-dev-update",
+              "secretName" to "hmpps-testing-update",
+              "clientIdKey" to "SYSTEM_CLIENT_ID-update",
+              "secretKey" to "SYSTEM_CLIENT_SECRET-update",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val clientDeployment = clientDeploymentRepository.findById("test-complete-details-id").get()
+      assertThat(clientDeployment.baseClientId).isEqualTo("test-complete-details-id")
+      assertThat(clientDeployment.clientType).isEqualTo(ClientType.PERSONAL)
+      assertThat(clientDeployment.team).isEqualTo("testing team deployment update")
+      assertThat(clientDeployment.teamContact).isEqualTo("testy lead update")
+      assertThat(clientDeployment.teamSlack).isEqualTo("#testy_update")
+      assertThat(clientDeployment.hosting).isEqualTo(Hosting.CLOUDPLATFORM)
+      assertThat(clientDeployment.namespace).isEqualTo("testy-testing-dev-update")
+      assertThat(clientDeployment.deployment).isEqualTo("hmpps-testing-dev-update")
+      assertThat(clientDeployment.secretName).isEqualTo("hmpps-testing-update")
+      assertThat(clientDeployment.clientIdKey).isEqualTo("SYSTEM_CLIENT_ID-update")
+      assertThat(clientDeployment.secretKey).isEqualTo("SYSTEM_CLIENT_SECRET-update")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerClientDeploymentDetailsUpsert",
+        mapOf("username" to "AUTH_ADM", "baseClientId" to "test-complete-details-id"),
+        null,
+      )
     }
   }
   private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String): AuthorizationConsent {

@@ -29,9 +29,10 @@ class DefaultSecurityConfig {
   //       //   antMatcher("/ping"),
   //       //   // antMatcher("/error"),
   //       //   antMatcher("/.well-known/jwks.json"),
+  //            antMatcher("/jwt-public-key"),
   //       //   antMatcher("/issuer/.well-known/**"),
   //       //   antMatcher("/favicon.ico"),
-  //       // ).authenticated()
+  //       // ).permitAll().anyRequest().authenticated()
   //     }
   //     .formLogin(Customizer.withDefaults())
   //   return http.build()
