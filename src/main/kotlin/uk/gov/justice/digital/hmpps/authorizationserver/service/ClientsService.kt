@@ -206,11 +206,15 @@ class ClientsService(
 
   @Transactional
   fun upsert(clientId: String, clientDeployment: ClientDeploymentDetails) {
-    val baseClientId = clientIdService.toBase(clientId)
     val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
     if (clientsByBaseClientId.isEmpty()) {
       throw ClientNotFoundException(Client::class.simpleName, clientId)
     }
+    saveClientDeploymentDetails(clientId, clientDeployment)
+  }
+
+  fun saveClientDeploymentDetails(clientId: String, clientDeployment: ClientDeploymentDetails) {
+    val baseClientId = clientIdService.toBase(clientId)
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
 
