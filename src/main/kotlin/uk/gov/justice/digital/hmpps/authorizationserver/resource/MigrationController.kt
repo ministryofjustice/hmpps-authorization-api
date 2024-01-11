@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.authorizationserver.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Size
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -39,8 +37,6 @@ class MigrationController(
 }
 
 class MigrationClientRequest(
-  @field:NotBlank(message = "clientId must not be blank")
-  @field:Size(max = 100, message = "clientId max size is 100")
   val clientId: String?,
   val scopes: List<String>?,
   val authorities: List<String>?,

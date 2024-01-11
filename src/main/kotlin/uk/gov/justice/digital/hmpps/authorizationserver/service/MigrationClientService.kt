@@ -30,7 +30,7 @@ class MigrationClientService(
     }
     var client = conversionService.convert(migrationClientRequest, Client::class.java)
 
-    client = client?.let { clientRepository.save(it) }
+    client = client.let { clientRepository.save(it) }
     migrationClientRequest.authorities?.let { authorities ->
       authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, (withAuthoritiesPrefix(authorities))))
     }
