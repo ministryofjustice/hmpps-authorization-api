@@ -53,5 +53,6 @@ class MigrationClientRequest(
   val clientEndDate: LocalDate?,
   var lastAccessed: Instant?,
   val clientSecret: String,
+  val grantType: String,
   val clientDeploymentDetails: ClientDeploymentDetails?,
 )

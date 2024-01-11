@@ -60,6 +60,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -85,6 +86,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
+              "grantType" to "client_credentials",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
@@ -102,6 +104,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -129,6 +132,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
+              "grantType" to "client_credentials",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
@@ -159,6 +163,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "ip-allow-a-client",
               "clientName" to "test client",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -191,6 +196,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testz",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "ROLE_COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -271,6 +277,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testp",
               "clientSecret" to "clientSecret",
+              "grantType" to "client_credentials",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
@@ -314,6 +321,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "accessTokenValidityMinutes" to 20,
               "clientSecret" to "clientSecret",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
+              "grantType" to "client_credentials",
             ),
           ),
         )
