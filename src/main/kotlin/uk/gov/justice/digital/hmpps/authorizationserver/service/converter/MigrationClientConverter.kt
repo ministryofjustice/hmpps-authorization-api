@@ -18,7 +18,7 @@ class MigrationClientConverter(
     with(source) {
       return Client(
         id = java.util.UUID.randomUUID().toString(),
-        clientId = clientId!!,
+        clientId = clientId,
         clientIdIssuedAt = lastAccessed ?: clientIdIssuedAt,
         clientSecretExpiresAt = clientEndDate?.atStartOfDay()?.toInstant(ZoneOffset.UTC),
         clientName = clientIdService.toBase(clientId),

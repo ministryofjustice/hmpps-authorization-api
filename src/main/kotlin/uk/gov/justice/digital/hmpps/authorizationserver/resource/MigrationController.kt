@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.authorizationserver.resource
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
@@ -28,16 +27,15 @@ class MigrationController(
   fun addClient(
     @Valid @RequestBody
     clientDetails: MigrationClientRequest,
-  ): ResponseEntity<Any> {
-    val registrationResponse = migrationClientService.addClient(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!)
+  ) {
+    migrationClientService.addClient(clientDetails)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId)
     telemetryClient.trackEvent("AuthorizationServerDetailsMigrate", telemetryMap)
-    return ResponseEntity.ok(registrationResponse)
   }
 }
 
 class MigrationClientRequest(
-  val clientId: String?,
+  val clientId: String,
   val scopes: List<String>?,
   val authorities: List<String>?,
   val ips: List<String>?,
