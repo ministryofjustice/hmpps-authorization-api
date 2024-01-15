@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.core.convert.ConversionService
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.crypto.keygen.Base64StringKeyGenerator
+import org.springframework.security.crypto.keygen.StringKeyGenerator
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.stereotype.Service
@@ -25,7 +27,9 @@ import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import java.util.*
 import java.util.Base64.getEncoder
+import kotlin.collections.ArrayList
 
 @Service
 class ClientsService(
@@ -82,6 +86,10 @@ class ClientsService(
       },
     )
   }
+  private val clientSecretGenerator: StringKeyGenerator = Base64StringKeyGenerator(
+    Base64.getUrlEncoder().withoutPadding(),
+    48,
+  )
 
   @Transactional
   fun addClient(clientDetails: ClientRegistrationRequest): ClientRegistrationResponse {
@@ -217,6 +225,9 @@ class ClientsService(
     val baseClientId = clientIdService.toBase(clientId)
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
+
+  fun listAllClientIds(): List<String> =
+    clientRepository.findAll().map { it.clientId }.toList()
 
   private fun getMostRecentAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientAuthorization }
     .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull()
