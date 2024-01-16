@@ -134,12 +134,6 @@ class ClientsController(
     )
     telemetryClient.trackEvent("AuthorizationServerClientDeploymentDetailsUpsert", telemetryMap)
   }
-
-  @GetMapping("all-clients")
-  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun listAllClientIds(): ResponseEntity<Any> {
-    return ResponseEntity.ok(clientsService.listAllClientIds())
-  }
 }
 
 data class ClientExistsResponse(

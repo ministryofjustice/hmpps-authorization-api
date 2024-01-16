@@ -1159,56 +1159,6 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class ListAllClientIds {
-    @Test
-    fun `access forbidden when no authority`() {
-      webTestClient.get().uri("/all-clients")
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `access forbidden when no role`() {
-      webTestClient.get().uri("/all-clients")
-        .headers(setAuthorisation(roles = listOf()))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `access forbidden when wrong role`() {
-      webTestClient.get().uri("/all-clients")
-        .headers(setAuthorisation(roles = listOf("WRONG")))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `list client Ids success`() {
-      webTestClient.get().uri("/all-clients")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .exchange()
-        .expectStatus().isOk
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(8) }
-        .jsonPath("$.[*]").value<List<String>> {
-          assertThat(it).containsAll(
-            listOf(
-              "ip-allow-b-client",
-              "ip-allow-c-client",
-              "ip-allow-b-client-8",
-              "test-client-create-id",
-              "test-client-id",
-              "test-complete-details-id",
-              "test-duplicate-id",
-            ),
-          )
-        }
-    }
-  }
-
-  @Nested
   inner class AddUpdateClientDeployment {
     @Test
     fun `access forbidden when no authority`() {

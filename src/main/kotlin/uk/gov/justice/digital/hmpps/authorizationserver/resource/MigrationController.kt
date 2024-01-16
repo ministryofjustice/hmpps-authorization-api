@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.authorizationserver.resource
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -31,6 +33,12 @@ class MigrationController(
     migrationClientService.addClient(clientDetails)
     val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId)
     telemetryClient.trackEvent("AuthorizationServerDetailsMigrate", telemetryMap)
+  }
+
+  @GetMapping("all-clients")
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun listAllClientIds(): ResponseEntity<Any> {
+    return ResponseEntity.ok(migrationClientService.listAllClientIds())
   }
 }
 
