@@ -41,6 +41,9 @@ class MigrationClientService(
     migrationClientRequest.clientDeploymentDetails?.let { clientsService.saveClientDeploymentDetails(migrationClientRequest.clientId, it) }
   }
 
+  fun listAllClientIds(): List<String> =
+    clientRepository.findAll().map { it.clientId }.toList()
+
   private fun withAuthoritiesPrefix(authorities: List<String>) =
     authorities
       .map { it.trim().uppercase() }
