@@ -148,8 +148,7 @@ class AuthorizationServerConfig(
   }
 
   @Bean
-  fun authenticationEventPublisher
-  (applicationEventPublisher: ApplicationEventPublisher?): AuthenticationEventPublisher {
+  fun authenticationEventPublisher(applicationEventPublisher: ApplicationEventPublisher?): AuthenticationEventPublisher {
     // Note: DefaultAuthenticationEventPublisher provides a mapping between a number of exception types and corresponding events.
     // We could set up subscriptions (very simple using @EventListener annotation) to any of these as necessary,
     // plus add additional mappings, as below.

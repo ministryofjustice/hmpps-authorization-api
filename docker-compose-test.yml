@@ -2,7 +2,7 @@ version: '3.1'
 services:
 
   authorization-server-db:
-    image: postgres:14.3
+    image: postgres:16
     networks:
       - hmpps
     container_name: authorization-server-db
