@@ -26,6 +26,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Base64.getEncoder
+import kotlin.collections.ArrayList
 
 @Service
 class ClientsService(
@@ -206,11 +207,15 @@ class ClientsService(
 
   @Transactional
   fun upsert(clientId: String, clientDeployment: ClientDeploymentDetails) {
-    val baseClientId = clientIdService.toBase(clientId)
     val clientsByBaseClientId = clientIdService.findByBaseClientId(clientId)
     if (clientsByBaseClientId.isEmpty()) {
       throw ClientNotFoundException(Client::class.simpleName, clientId)
     }
+    saveClientDeploymentDetails(clientId, clientDeployment)
+  }
+
+  fun saveClientDeploymentDetails(clientId: String, clientDeployment: ClientDeploymentDetails) {
+    val baseClientId = clientIdService.toBase(clientId)
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
 
