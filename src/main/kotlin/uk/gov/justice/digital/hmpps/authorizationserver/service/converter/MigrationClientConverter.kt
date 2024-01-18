@@ -29,9 +29,17 @@ class MigrationClientConverter(
         org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
-        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber),
+        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
+          accessTokenValidityMinutes,
+          databaseUserName,
+          jiraNumber,
+        ),
         latestClientAuthorization = mutableSetOf(),
-        clientSecret = if (clientSecret.startsWith("{bcrypt}")) { clientSecret } else "{bcrypt}$clientSecret",
+        clientSecret = if (clientSecret.startsWith("{bcrypt}")) {
+          clientSecret
+        } else {
+          "{bcrypt}$clientSecret"
+        },
       )
     }
   }

@@ -344,7 +344,11 @@ class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeEx
 class ClientAlreadyExistsException(clientId: String) : RuntimeException("Client with client id $clientId cannot be created as already exists")
 
 enum class SortBy {
-  CLIENT, TYPE, TEAM, LAST_ACCESSED, COUNT
+  CLIENT,
+  TYPE,
+  TEAM,
+  LAST_ACCESSED,
+  COUNT,
 }
 
 data class ClientFilter(

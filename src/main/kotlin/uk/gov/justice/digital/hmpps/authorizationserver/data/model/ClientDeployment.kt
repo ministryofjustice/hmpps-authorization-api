@@ -45,9 +45,11 @@ data class ClientDeployment(
 )
 
 enum class Hosting(val description: String) {
-  CLOUDPLATFORM("Cloud Platform"), OTHER("Other")
+  CLOUDPLATFORM("Cloud Platform"),
+  OTHER("Other"),
 }
 
 enum class ClientType(val description: String) {
-  PERSONAL("Personal token"), SERVICE("Service token")
+  PERSONAL("Personal token"),
+  SERVICE("Service token"),
 }
