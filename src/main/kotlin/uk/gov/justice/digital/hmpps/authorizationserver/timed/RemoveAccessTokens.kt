@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationRepository
-import java.time.LocalDateTime
 
 @Component
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
