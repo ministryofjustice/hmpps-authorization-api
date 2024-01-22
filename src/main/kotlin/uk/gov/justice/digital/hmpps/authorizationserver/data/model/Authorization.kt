@@ -15,6 +15,7 @@ data class Authorization(
 
   private val registeredClientId: String,
 
+  @Column(name = "principal_name")
   private val principalName: String,
 
   private val authorizationGrantType: String,
@@ -22,6 +23,6 @@ data class Authorization(
   @Column(name = "access_token_issued_at")
   var accessTokenIssuedAt: Instant,
 
-  @Column(name = "access_token_expires_at")
-  var accessTokenExpiresAt: LocalDateTime,
+  @Column(name = "authorization_code_issued_at")
+  var authorizationCodeIssuedAt: Instant,
 )

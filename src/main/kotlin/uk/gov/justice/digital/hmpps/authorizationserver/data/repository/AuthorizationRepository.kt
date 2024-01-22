@@ -2,8 +2,16 @@ package uk.gov.justice.digital.hmpps.authorizationserver.data.repository
 
 import org.springframework.data.repository.CrudRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Authorization
-import java.time.LocalDateTime
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 
 interface AuthorizationRepository : CrudRepository<Authorization, String> {
-  fun deleteByAccessTokenExpiresAtBefore(createDate: LocalDateTime)
+
+  @Modifying
+  @Query("delete from Authorization where accessTokenIssuedAt not in(select max(accessTokenIssuedAt) from Authorization group by principalName)")
+  fun deleteAllButLatestClientCredentialsAccessToken()
+
+  @Modifying
+  @Query("delete from Authorization where authorizationCodeIssuedAt not in(select max(authorizationCodeIssuedAt) from Authorization group by principalName)")
+  fun deleteAllButLatestAuthorizationCodeAccessToken()
 }

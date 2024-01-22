@@ -12,14 +12,26 @@ import java.time.LocalDateTime
 @Component
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
 
-  @Scheduled(cron = "\${application.authentication.access-token.cron}", zone = "Europe/London")
-  fun removeExpiredAuthCodes() {
+  @Scheduled(cron = "\${application.authentication.cc-token.cron}", zone = "Europe/London")
+  fun removeClientCredentialsAccessToken() {
     try {
       service.removeAccessTokens()
-      log.trace("Authorization server access-tokens Removed")
+      log.trace("Authorization server client credentials access-tokens removed")
 
-      telemetryClient.trackEvent("AuthorizationServerAccessTokensRemoved", null, null)
-      println("")
+      telemetryClient.trackEvent("AuthorizationServerCCAccessTokensRemoved", null, null)
+    } catch (e: Exception) {
+      // have to catch the exception here otherwise scheduling will stop
+      log.error("Caught exception {} during access token removal", e.javaClass.simpleName, e)
+    }
+  }
+
+  @Scheduled(cron = "\${application.authentication.ac-token.cron}", zone = "Europe/London")
+  fun removeClientAuthorizationCodeAccessToken() {
+    try {
+      service.removeAuthCodeAccessTokens()
+      log.trace("Authorization server authorization-code access-tokens removed")
+
+      telemetryClient.trackEvent("AuthorizationServerACAccessTokensRemoved", null, null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
       log.error("Caught exception {} during access token removal", e.javaClass.simpleName, e)
@@ -35,7 +47,11 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
 class RemoveAccessTokensService(private val repository: AuthorizationRepository) {
   @Transactional
   fun removeAccessTokens() {
-    val oneDayAgo = LocalDateTime.now().minusDays(1)
-    repository.deleteByAccessTokenExpiresAtBefore(oneDayAgo)
+    repository.deleteAllButLatestClientCredentialsAccessToken()
+  }
+
+  @Transactional
+  fun removeAuthCodeAccessTokens() {
+    repository.deleteAllButLatestAuthorizationCodeAccessToken()
   }
 }
