@@ -5,6 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.Instant
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "oauth2_authorization")
@@ -20,4 +21,7 @@ data class Authorization(
 
   @Column(name = "access_token_issued_at")
   var accessTokenIssuedAt: Instant,
+
+  @Column(name = "access_token_expires_at")
+  var accessTokenExpiresAt: LocalDateTime,
 )
