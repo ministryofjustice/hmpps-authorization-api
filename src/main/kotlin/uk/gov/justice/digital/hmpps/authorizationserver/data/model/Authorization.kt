@@ -14,10 +14,14 @@ data class Authorization(
 
   private val registeredClientId: String,
 
+  @Column(name = "principal_name")
   private val principalName: String,
 
   private val authorizationGrantType: String,
 
   @Column(name = "access_token_issued_at")
   var accessTokenIssuedAt: Instant,
+
+  @Column(name = "authorization_code_issued_at")
+  var authorizationCodeIssuedAt: Instant?,
 )

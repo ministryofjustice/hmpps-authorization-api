@@ -74,3 +74,10 @@ management:
     info:
       cache:
         time-to-live: 2000ms
+
+application:
+  authentication:
+    cc-token:
+      cron: 0 00 20 * * *
+    ac-token:
+      cron: 0 00 21 * * *
