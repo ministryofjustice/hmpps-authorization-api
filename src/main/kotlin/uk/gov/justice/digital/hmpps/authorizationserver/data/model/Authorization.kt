@@ -23,5 +23,5 @@ data class Authorization(
   var accessTokenIssuedAt: Instant,
 
   @Column(name = "authorization_code_issued_at")
-  var authorizationCodeIssuedAt: Instant,
+  var authorizationCodeIssuedAt: Instant?,
 )
