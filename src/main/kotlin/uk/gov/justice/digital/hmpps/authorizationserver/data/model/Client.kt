@@ -21,7 +21,7 @@ import java.time.Instant
 data class Client(
 
   @Id
-  val id: String?,
+  val id: String,
   var clientId: String,
 
   val clientIdIssuedAt: Instant,
