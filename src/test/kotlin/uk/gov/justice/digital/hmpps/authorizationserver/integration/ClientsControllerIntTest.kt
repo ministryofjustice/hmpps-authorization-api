@@ -996,6 +996,24 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `should fail with not found`() {
+      webTestClient.get().uri("/base-clients/test-client")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `should find client id`() {
+      webTestClient.get().uri("/base-clients/test-client-id")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-client-id")
+    }
+
+    @Test
     fun `view client without deployment details`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")

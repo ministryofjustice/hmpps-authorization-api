@@ -300,7 +300,7 @@ class ClientsService(
   }
 
   private fun retrieveLatestClientWithClientConfig(clientId: String): Pair<Client, ClientConfig?> {
-    val existingClient = clientRepository.findFirstByClientIdStartingWithOrderByClientIdIssuedAtDesc(clientId) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
+    val existingClient = clientIdService.findByBaseClientId(clientId).getOrNull(0) ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
     val existingClientConfig = clientConfigRepository.findByIdOrNull(clientIdService.toBase(clientId))
     return Pair(existingClient, existingClientConfig)
   }
