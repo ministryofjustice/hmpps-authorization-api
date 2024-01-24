@@ -18,12 +18,6 @@ class ClientIdService(private val clientRepository: ClientRepository) {
       .filter { it.clientId == searchClientId || it.clientId.substringAfter(searchClientId).matches(clientIdSuffixRegex) }
   }
 
-  fun findLatestClientId(clientId: String): List<Client> {
-    val searchClientId = toBase(clientId)
-    return clientRepository.findByClientIdStartingWithOrderByClientIdIssuedAtDesc(searchClientId)
-      .filter { it.clientId == searchClientId || it.clientId.substringAfter(searchClientId).matches(clientIdSuffixRegex) }
-  }
-
   fun incrementClientId(clientId: String): String {
     val clients = findByBaseClientId(clientId)
     val baseClientId = toBase(clientId)
