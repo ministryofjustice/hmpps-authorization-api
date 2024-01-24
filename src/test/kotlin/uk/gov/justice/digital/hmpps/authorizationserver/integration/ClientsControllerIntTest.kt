@@ -1004,13 +1004,30 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should find client id`() {
+    fun `should find latest duplicate client id`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      assertNull(clientRepository.findClientByClientId("test-client-id-1"))
+      webTestClient.post().uri("/base-clients/test-client-id/clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("test-client-id-1")
+
+      // Get the latest client id (test-client-id-1)
       webTestClient.get().uri("/base-clients/test-client-id")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
         .expectStatus().isOk
         .expectBody()
-        .jsonPath("clientId").isEqualTo("test-client-id")
+        .jsonPath("clientId").isEqualTo("test-client-id-1")
+
+      webTestClient.delete().uri("/base-clients/test-client-id/clients/test-client-id-1")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
     }
 
     @Test
