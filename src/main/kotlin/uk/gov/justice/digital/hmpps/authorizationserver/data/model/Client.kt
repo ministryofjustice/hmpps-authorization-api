@@ -9,6 +9,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.apache.commons.lang3.StringUtils
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.DATABASE_USER_NAME_KEY
@@ -56,6 +57,12 @@ data class Client(
   @OneToMany
   @JoinColumn(name = "registeredClientId")
   val latestClientAuthorization: MutableSet<Authorization>?,
+
+  var jwtFields: String?,
+
+  var mfaRememberMe: Boolean,
+
+  var mfa: MfaAccess?,
 ) {
 
   fun getDatabaseUserName(): String? {
@@ -67,6 +74,13 @@ data class Client(
 
   fun getJiraNumber(): String? {
     return tokenSettings.settings[JIRA_NUMBER_KEY] as String?
+  }
+
+  fun getRegisteredRedirectUriWithNewlines(): Set<String>? {
+    return redirectUris?.replace("""\s+""".toRegex(), ",")
+      ?.split(',')
+      ?.mapNotNull { StringUtils.trimToNull(it) }
+      ?.toSet()
   }
 }
 
@@ -103,4 +117,11 @@ class StringListConverter : AttributeConverter<List<String>, String?> {
 
   override fun convertToEntityAttribute(string: String?): List<String> =
     string?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
+}
+
+@Suppress("ktlint:standard:enum-entry-name-case")
+enum class MfaAccess {
+  none,
+  untrusted,
+  all,
 }

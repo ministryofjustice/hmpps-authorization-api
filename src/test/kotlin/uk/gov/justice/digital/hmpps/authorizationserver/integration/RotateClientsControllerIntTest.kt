@@ -145,6 +145,7 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
+              "grantType" to "client_credentials",
               "clientName" to "testing testing",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -339,6 +340,7 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -420,6 +422,7 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
+              "grantType" to "client_credentials",
             ),
           ),
         )
