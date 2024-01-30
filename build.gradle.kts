@@ -20,6 +20,12 @@ dependencies {
   implementation("org.hibernate:hibernate-core:6.4.1.Final")
 
   implementation("commons-codec:commons-codec")
+  implementation("org.apache.commons:commons-text:1.10.0")
+  implementation("io.opentelemetry:opentelemetry-api:1.31.0")
+  implementation("javax.xml.bind:jaxb-api:2.3.1")
+  implementation("com.sun.xml.bind:jaxb-impl:4.0.3")
+  implementation("com.sun.xml.bind:jaxb-core:4.0.3")
+  implementation("io.jsonwebtoken:jjwt:0.9.1")
   implementation("org.apache.commons:commons-text:1.11.0")
   implementation("io.opentelemetry:opentelemetry-api")
 

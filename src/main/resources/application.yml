@@ -46,7 +46,7 @@ spring:
 server:
   base-url: ${BASE_URL}
   servlet:
-    context-path: /
+    context-path: /auth
   forward-headers-strategy: native
   tomcat:
     remoteip:
