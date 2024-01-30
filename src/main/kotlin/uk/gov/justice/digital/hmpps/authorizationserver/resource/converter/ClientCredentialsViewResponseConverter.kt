@@ -20,6 +20,10 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         clientConfig?.validDays,
         latestClient.tokenSettings.accessTokenTimeToLive.toMinutes(),
         deployment,
+        latestClient.jwtFields,
+        latestClient.mfaRememberMe,
+        latestClient.mfa,
+        latestClient.getRegisteredRedirectUriWithNewlines(),
       )
     }
   }
