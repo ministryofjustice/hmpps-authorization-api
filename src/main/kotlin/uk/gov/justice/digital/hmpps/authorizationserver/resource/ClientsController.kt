@@ -222,7 +222,6 @@ data class ClientRegistrationResponse(
   val base64ClientSecret: String,
 )
 
-// @Suppress("ktlint:standard:enum-entry-name-case")
 enum class GrantType(description: String) {
   CLIENT_CREDENTIALS("client_credentials"),
   AUTHORIZATION_CODE("authorization_code"),

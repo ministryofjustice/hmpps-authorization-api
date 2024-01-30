@@ -119,7 +119,6 @@ class StringListConverter : AttributeConverter<List<String>, String?> {
     string?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
 }
 
-// @Suppress("ktlint:standard:enum-entry-name-case")
 enum class MfaAccess {
   NONE,
   UNTRUSTED,
