@@ -32,7 +32,7 @@ class MigrationController(
     clientDetails: MigrationClientRequest,
   ) {
     migrationClientService.addClient(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId, "grantType" to clientDetails.grantType.name)
     telemetryClient.trackEvent("AuthorizationServerDetailsMigrate", telemetryMap)
   }
 

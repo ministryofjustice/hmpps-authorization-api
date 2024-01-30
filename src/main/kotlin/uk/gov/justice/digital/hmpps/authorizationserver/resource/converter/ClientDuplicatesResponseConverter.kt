@@ -18,6 +18,6 @@ class ClientDuplicatesResponseConverter : Converter<List<Client>, ClientDuplicat
       )
     }
 
-    return ClientDuplicatesResponse(clientDateSummaries, GrantType.valueOf(source[0].authorizationGrantTypes))
+    return ClientDuplicatesResponse(clientDateSummaries, GrantType.valueOf(source[0].authorizationGrantTypes.uppercase()))
   }
 }

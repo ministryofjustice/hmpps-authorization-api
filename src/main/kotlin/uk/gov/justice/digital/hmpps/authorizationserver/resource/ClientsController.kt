@@ -56,7 +56,7 @@ class ClientsController(
     clientDetails: ClientRegistrationRequest,
   ): ResponseEntity<Any> {
     val registrationResponse = clientsService.addClient(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!, "grantType" to clientDetails.grantType.name)
     telemetryClient.trackEvent("AuthorizationServerDetailsAdd", telemetryMap)
     return ResponseEntity.ok(registrationResponse)
   }
@@ -222,8 +222,8 @@ data class ClientRegistrationResponse(
   val base64ClientSecret: String,
 )
 
-@Suppress("ktlint:standard:enum-entry-name-case")
-enum class GrantType {
-  client_credentials,
-  authorization_code,
+// @Suppress("ktlint:standard:enum-entry-name-case")
+enum class GrantType(description: String) {
+  CLIENT_CREDENTIALS("client_credentials"),
+  AUTHORIZATION_CODE("authorization_code"),
 }

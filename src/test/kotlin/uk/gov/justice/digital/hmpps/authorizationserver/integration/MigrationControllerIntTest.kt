@@ -61,7 +61,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -87,7 +87,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
@@ -105,7 +105,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testy",
               "clientName" to "test client",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -133,7 +133,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "clientSecret" to "clientSecret",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
@@ -164,7 +164,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "ip-allow-a-client",
               "clientName" to "test client",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -197,7 +197,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testz",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "ROLE_COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -258,7 +258,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsMigrate",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testz"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testz", "grantType" to "CLIENT_CREDENTIALS"),
         null,
       )
 
@@ -278,7 +278,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
-              "grantType" to "authorization_code",
+              "grantType" to "AUTHORIZATION_CODE",
               "scopes" to listOf("read", "write"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testz-mctest",
@@ -289,7 +289,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
               "jwtFields" to "-name",
               "mfaRememberMe" to true,
-              "mfa" to "all",
+              "mfa" to "ALL",
               "redirectUris" to "http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback",
               "clientDeploymentDetails" to mapOf(
                 "clientType" to "PERSONAL",
@@ -322,7 +322,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-9999")
       assertThat(client.jwtFields).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue
-      assertThat(client.mfa).isEqualTo(MfaAccess.all)
+      assertThat(client.mfa).isEqualTo(MfaAccess.ALL)
       assertThat(client.redirectUris).isEqualTo("http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
@@ -344,7 +344,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsMigrate",
-        mapOf("username" to "AUTH_ADM", "clientId" to clientId),
+        mapOf("username" to "AUTH_ADM", "clientId" to clientId, "grantType" to "AUTHORIZATION_CODE"),
         null,
       )
 
@@ -363,7 +363,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testp",
               "clientSecret" to "clientSecret",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
@@ -384,7 +384,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsMigrate",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testp"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testp", "grantType" to "CLIENT_CREDENTIALS"),
         null,
       )
 

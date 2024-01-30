@@ -240,7 +240,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "testing testing",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -514,7 +514,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -534,7 +534,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -554,7 +554,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -576,7 +576,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-client-id",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -609,7 +609,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "ip-allow-a-client",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -643,7 +643,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -682,7 +682,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "CLIENT_CREDENTIALS"),
         null,
       )
 
@@ -692,7 +692,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `register authrization code client success`() {
+    fun `register authorization code client success`() {
       val clientId = "test-auth-code-client-id"
       assertNull(clientRepository.findClientByClientId(clientId))
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
@@ -704,7 +704,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
-              "grantType" to "authorization_code",
+              "grantType" to "AUTHORIZATION_CODE",
               "scopes" to listOf("read", "write"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testy-mctest",
@@ -714,7 +714,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "accessTokenValidityMinutes" to 20,
               "jwtFields" to "-name",
               "mfaRememberMe" to true,
-              "mfa" to "all",
+              "mfa" to MfaAccess.ALL,
             ),
           ),
         )
@@ -739,7 +739,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-9999")
       assertThat(client.jwtFields).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue
-      assertThat(client.mfa).isEqualTo(MfaAccess.all)
+      assertThat(client.mfa).isEqualTo(MfaAccess.ALL)
       assertThat(client.redirectUris).isEqualTo("http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
@@ -748,7 +748,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to clientId),
+        mapOf("username" to "AUTH_ADM", "clientId" to clientId, "grantType" to "AUTHORIZATION_CODE"),
         null,
       )
 
@@ -768,7 +768,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
             ),
           ),
         )
@@ -791,7 +791,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "CLIENT_CREDENTIALS"),
         null,
       )
 
@@ -806,7 +806,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "scopes" to listOf("read", "write"),
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testy-mctest",
@@ -920,7 +920,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
             BodyInserters.fromValue(
               mapOf(
                 "clientId" to "test-test",
-                "grantType" to "client_credentials",
+                "grantType" to "CLIENT_CREDENTIALS",
                 "clientName" to "testing testing",
                 "scopes" to listOf("read", "write"),
                 "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -987,7 +987,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
             BodyInserters.fromValue(
               mapOf(
                 "clientId" to "test-test",
-                "grantType" to "client_credentials",
+                "grantType" to "CLIENT_CREDENTIALS",
                 "clientName" to "testing testing",
               ),
             ),
@@ -1118,7 +1118,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -1169,7 +1169,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -1260,8 +1260,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "accessTokenValidityMinutes" to 20,
               "jwtFields" to "-name",
               "mfaRememberMe" to true,
-              "mfa" to "all",
-              "grantType" to "authorization_code",
+              "mfa" to "ALL",
+              "grantType" to "AUTHORIZATION_CODE",
               "redirectUris" to "http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback",
             ),
           ),
@@ -1284,7 +1284,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
         .jsonPath("jwtFields").isEqualTo("-name")
         .jsonPath("mfaRememberMe").isEqualTo(true)
-        .jsonPath("mfa").isEqualTo("all")
+        .jsonPath("mfa").isEqualTo("ALL")
         .jsonPath("redirectUris[0]").isEqualTo("http://127.0.0.1:8089/authorized")
         .jsonPath("redirectUris[1]").isEqualTo("https://oauth.pstmn.io/v1/callback")
 
@@ -1306,7 +1306,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "grantType" to "client_credentials",
+              "grantType" to "CLIENT_CREDENTIALS",
             ),
           ),
         )
