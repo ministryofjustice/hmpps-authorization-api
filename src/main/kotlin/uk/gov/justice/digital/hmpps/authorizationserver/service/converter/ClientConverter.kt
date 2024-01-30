@@ -22,7 +22,7 @@ class ClientConverter(
         clientSecretExpiresAt = null,
         clientName = clientIdService.toBase(clientId),
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
-        authorizationGrantTypes = grantType.name.lowercase(),
+        authorizationGrantTypes = grantType.description,
         scopes = scopes ?: listOf("read"),
         clientSettings =
         org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()

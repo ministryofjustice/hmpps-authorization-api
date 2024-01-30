@@ -222,7 +222,7 @@ data class ClientRegistrationResponse(
   val base64ClientSecret: String,
 )
 
-enum class GrantType(description: String) {
+enum class GrantType(val description: String) {
   CLIENT_CREDENTIALS("client_credentials"),
   AUTHORIZATION_CODE("authorization_code"),
 }
