@@ -12,8 +12,6 @@ import jakarta.persistence.Table
 import org.apache.commons.lang3.StringUtils
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
-import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.DATABASE_USER_NAME_KEY
-import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation.Companion.JIRA_NUMBER_KEY
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthJson
 import java.time.Instant
 
@@ -37,7 +35,7 @@ data class Client(
   val authorizationGrantTypes: String,
 
   @Column(length = 1000)
-  val redirectUris: String? = null,
+  var redirectUris: String? = null,
 
   @Column(length = 1000)
   val postLogoutRedirectUris: String? = null,
@@ -63,17 +61,14 @@ data class Client(
   var mfaRememberMe: Boolean,
 
   var mfa: MfaAccess?,
+
+  var databaseUsername: String?,
+
+  var jiraNum: String?,
 ) {
 
-  fun getDatabaseUserName(): String? {
-    return tokenSettings.settings[DATABASE_USER_NAME_KEY] as String?
-  }
   fun getLastAccessedDate(): Instant {
     return this.latestClientAuthorization?.maxOfOrNull { it.accessTokenIssuedAt } ?: clientIdIssuedAt
-  }
-
-  fun getJiraNumber(): String? {
-    return tokenSettings.settings[JIRA_NUMBER_KEY] as String?
   }
 
   fun getRegisteredRedirectUriWithNewlines(): Set<String>? {

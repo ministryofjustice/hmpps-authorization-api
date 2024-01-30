@@ -15,18 +15,10 @@ class RegisteredClientAdditionalInformation {
     const val CLAIMS_JIRA_NUMBER = "jira_number"
   }
 
-  fun buildTokenSettings(accessTokenValidityMinutes: Long?, databaseUserName: String?, jiraNumber: String?): TokenSettings {
+  fun buildTokenSettings(accessTokenValidityMinutes: Long?): TokenSettings {
     val tokenSettingsBuilder = TokenSettings.builder().idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
     accessTokenValidityMinutes?.let {
       tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofMinutes(it))
-    }
-
-    databaseUserName?.let {
-      tokenSettingsBuilder.settings { it[DATABASE_USER_NAME_KEY] = databaseUserName }
-    }
-
-    jiraNumber?.let {
-      tokenSettingsBuilder.settings { it[JIRA_NUMBER_KEY] = jiraNumber }
     }
 
     return tokenSettingsBuilder.build()

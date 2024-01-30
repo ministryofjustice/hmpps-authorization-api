@@ -31,9 +31,9 @@ class MigrationClientConverter(
           .requireAuthorizationConsent(false).build(),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
           accessTokenValidityMinutes,
-          databaseUserName,
-          jiraNumber,
         ),
+        databaseUsername = databaseUserName,
+        jiraNum = jiraNumber,
         latestClientAuthorization = mutableSetOf(),
         clientSecret = if (clientSecret.startsWith("{bcrypt}")) {
           clientSecret

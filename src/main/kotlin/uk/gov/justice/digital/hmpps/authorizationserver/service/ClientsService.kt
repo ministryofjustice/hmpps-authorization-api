@@ -186,9 +186,13 @@ class ClientsService(
         it.scopes = scopes
         it.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
           accessTokenValidityMinutes,
-          databaseUserName,
-          jiraNumber,
         )
+        it.jiraNum = jiraNumber
+        it.databaseUsername = databaseUserName
+        it.redirectUris = redirectUris
+        it.jwtFields = jwtFields
+        it.mfaRememberMe = mfaRememberMe
+        it.mfa = mfa
         updateClientConfig(clientId, clientConfig, this)
         updateAuthorizationConsent(it, clientDetails)
       }
