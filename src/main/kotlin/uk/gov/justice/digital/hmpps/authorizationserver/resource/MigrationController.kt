@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.MfaAccess
 import uk.gov.justice.digital.hmpps.authorizationserver.service.MigrationClientService
 import java.time.Instant
 import java.time.LocalDate
@@ -31,7 +32,7 @@ class MigrationController(
     clientDetails: MigrationClientRequest,
   ) {
     migrationClientService.addClient(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId, "grantType" to clientDetails.grantType.name)
     telemetryClient.trackEvent("AuthorizationServerDetailsMigrate", telemetryMap)
   }
 
@@ -55,6 +56,10 @@ class MigrationClientRequest(
   val clientEndDate: LocalDate?,
   var lastAccessed: Instant?,
   val clientSecret: String,
-  val grantType: String,
+  val grantType: GrantType,
   val clientDeploymentDetails: ClientDeploymentDetails?,
+  val jwtFields: String?,
+  val mfaRememberMe: Boolean,
+  val mfa: MfaAccess?,
+  val redirectUris: String?,
 )

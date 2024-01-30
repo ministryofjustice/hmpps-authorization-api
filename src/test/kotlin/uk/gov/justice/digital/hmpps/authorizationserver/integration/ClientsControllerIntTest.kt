@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Authorization
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Hosting
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.MfaAccess
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
@@ -239,6 +240,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "testing testing",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -512,6 +514,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -531,6 +534,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -550,6 +554,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -571,6 +576,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-client-id",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -603,6 +609,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "ip-allow-a-client",
+              "grantType" to "CLIENT_CREDENTIALS",
               "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -636,6 +643,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -674,13 +682,78 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "CLIENT_CREDENTIALS"),
         null,
       )
 
       clientRepository.delete(client)
       clientConfigRepository.delete(clientConfig)
       authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
+    fun `register authorization code client success`() {
+      val clientId = "test-auth-code-client-id"
+      assertNull(clientRepository.findClientByClientId(clientId))
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to clientId,
+              "grantType" to "AUTHORIZATION_CODE",
+              "scopes" to listOf("read", "write"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "redirectUris" to "http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+              "jwtFields" to "-name",
+              "mfaRememberMe" to true,
+              "mfa" to MfaAccess.ALL,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo(clientId)
+        .jsonPath("clientSecret").isEqualTo("external-client-secret")
+        .jsonPath("base64ClientId").isEqualTo(getEncoder().encodeToString(clientId.toByteArray()))
+        .jsonPath("base64ClientSecret").isEqualTo(getEncoder().encodeToString("external-client-secret".toByteArray()))
+
+      val client = clientRepository.findClientByClientId(clientId)
+
+      assertNotNull(client)
+      assertThat(client!!.clientId).isEqualTo(clientId)
+      assertThat(client.clientName).isEqualTo(clientId)
+      assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
+      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.AUTHORIZATION_CODE.value)
+      assertThat(client.scopes).contains("read", "write")
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testy-mctest")
+      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-9999")
+      assertThat(client.jwtFields).isEqualTo("-name")
+      assertThat(client.mfaRememberMe).isTrue
+      assertThat(client.mfa).isEqualTo(MfaAccess.ALL)
+      assertThat(client.redirectUris).isEqualTo("http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback")
+
+      val clientConfig = clientConfigRepository.findById(client.clientId).get()
+      assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
+      assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationServerDetailsAdd",
+        mapOf("username" to "AUTH_ADM", "clientId" to clientId, "grantType" to "AUTHORIZATION_CODE"),
+        null,
+      )
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
     }
 
     @Test
@@ -695,6 +768,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
+              "grantType" to "CLIENT_CREDENTIALS",
             ),
           ),
         )
@@ -717,7 +791,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testy"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "CLIENT_CREDENTIALS"),
         null,
       )
 
@@ -732,6 +806,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "scopes" to listOf("read", "write"),
+              "grantType" to "CLIENT_CREDENTIALS",
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testy-mctest",
@@ -845,6 +920,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
             BodyInserters.fromValue(
               mapOf(
                 "clientId" to "test-test",
+                "grantType" to "CLIENT_CREDENTIALS",
                 "clientName" to "testing testing",
                 "scopes" to listOf("read", "write"),
                 "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -911,6 +987,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
             BodyInserters.fromValue(
               mapOf(
                 "clientId" to "test-test",
+                "grantType" to "CLIENT_CREDENTIALS",
                 "clientName" to "testing testing",
               ),
             ),
@@ -1041,6 +1118,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -1091,6 +1169,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
+              "grantType" to "CLIENT_CREDENTIALS",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -1162,6 +1241,61 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `view authorization code client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      val clientId = "test-auth-code"
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to clientId,
+              "scopes" to listOf("read", "write"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-more-mctest-1",
+              "jiraNumber" to "HAAR-7777",
+              "validDays" to 5,
+              "accessTokenValidityMinutes" to 20,
+              "jwtFields" to "-name",
+              "mfaRememberMe" to true,
+              "mfa" to "ALL",
+              "grantType" to "AUTHORIZATION_CODE",
+              "redirectUris" to "http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.get().uri("/base-clients/$clientId")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo(clientId)
+        .jsonPath("scopes[0]").isEqualTo("read")
+        .jsonPath("scopes[1]").isEqualTo("write")
+        .jsonPath("ips[0]").isEqualTo("81.134.202.29/32")
+        .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
+        .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
+        .jsonPath("validDays").isEqualTo(5)
+        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("jwtFields").isEqualTo("-name")
+        .jsonPath("mfaRememberMe").isEqualTo(true)
+        .jsonPath("mfa").isEqualTo("ALL")
+        .jsonPath("redirectUris[0]").isEqualTo("http://127.0.0.1:8089/authorized")
+        .jsonPath("redirectUris[1]").isEqualTo("https://oauth.pstmn.io/v1/callback")
+
+      val client = clientRepository.findClientByClientId(clientId)
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+    }
+
+    @Test
     fun `view incomplete client success`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
@@ -1172,6 +1306,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
+              "grantType" to "CLIENT_CREDENTIALS",
             ),
           ),
         )

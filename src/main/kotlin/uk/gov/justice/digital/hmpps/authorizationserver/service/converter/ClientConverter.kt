@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service.converter
 
 import org.springframework.core.convert.converter.Converter
-import org.springframework.security.oauth2.core.AuthorizationGrantType.CLIENT_CREDENTIALS
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod.CLIENT_SECRET_BASIC
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
@@ -23,7 +22,7 @@ class ClientConverter(
         clientSecretExpiresAt = null,
         clientName = clientIdService.toBase(clientId),
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
-        authorizationGrantTypes = CLIENT_CREDENTIALS.value,
+        authorizationGrantTypes = grantType.description,
         scopes = scopes ?: listOf("read"),
         clientSettings =
         org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
@@ -31,6 +30,10 @@ class ClientConverter(
           .requireAuthorizationConsent(false).build(),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes, databaseUserName, jiraNumber),
         latestClientAuthorization = mutableSetOf(),
+        jwtFields = jwtFields,
+        mfa = mfa,
+        mfaRememberMe = mfaRememberMe,
+        redirectUris = redirectUris,
       )
     }
   }

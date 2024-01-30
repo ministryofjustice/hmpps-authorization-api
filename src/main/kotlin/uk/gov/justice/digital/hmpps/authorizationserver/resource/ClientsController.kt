@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
+import uk.gov.justice.digital.hmpps.authorizationserver.data.model.MfaAccess
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientDetail
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientFilter
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
@@ -55,7 +56,7 @@ class ClientsController(
     clientDetails: ClientRegistrationRequest,
   ): ResponseEntity<Any> {
     val registrationResponse = clientsService.addClient(clientDetails)
-    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!)
+    val telemetryMap = mapOf("username" to authenticationFacade.currentUsername!!, "clientId" to clientDetails.clientId!!, "grantType" to clientDetails.grantType.name)
     telemetryClient.trackEvent("AuthorizationServerDetailsAdd", telemetryMap)
     return ResponseEntity.ok(registrationResponse)
   }
@@ -166,6 +167,10 @@ data class ClientViewResponse(
   val validDays: Long?,
   val accessTokenValidityMinutes: Long?,
   val deployment: ClientDeploymentDetails?,
+  val jwtFields: String?,
+  val mfaRememberMe: Boolean,
+  val mfa: MfaAccess?,
+  val redirectUris: Set<String>?,
 )
 
 data class ClientUpdateRequest(
@@ -196,7 +201,7 @@ data class ClientRegistrationRequest(
   @field:NotBlank(message = "clientId must not be blank")
   @field:Size(max = 100, message = "clientId max size is 100")
   val clientId: String?,
-
+  val grantType: GrantType,
   val scopes: List<String>?,
   val authorities: List<String>?,
   val ips: List<String>?,
@@ -204,6 +209,10 @@ data class ClientRegistrationRequest(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValidityMinutes: Long?,
+  val redirectUris: String?,
+  val jwtFields: String?,
+  val mfaRememberMe: Boolean,
+  val mfa: MfaAccess?,
 )
 
 data class ClientRegistrationResponse(
@@ -213,7 +222,7 @@ data class ClientRegistrationResponse(
   val base64ClientSecret: String,
 )
 
-enum class GrantType {
-  CLIENT_CREDENTIALS,
-  AUTHORIZATION_CODE,
+enum class GrantType(val description: String) {
+  CLIENT_CREDENTIALS("client_credentials"),
+  AUTHORIZATION_CODE("authorization_code"),
 }
