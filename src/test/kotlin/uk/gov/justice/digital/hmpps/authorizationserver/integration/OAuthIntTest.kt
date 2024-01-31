@@ -16,6 +16,9 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED
+import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.reactive.function.BodyInserters.fromFormData
 import uk.gov.justice.digital.hmpps.authorizationserver.service.AuthSource
 import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
 import java.time.Duration
