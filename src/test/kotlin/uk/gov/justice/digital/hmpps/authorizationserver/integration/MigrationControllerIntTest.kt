@@ -233,7 +233,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
-      assertThat(client.jiraNum).isEqualTo("HAAR-9999")
+      assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testz-mctest")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
@@ -317,7 +317,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.AUTHORIZATION_CODE.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
-      assertThat(client.jiraNum).isEqualTo("HAAR-9999")
+      assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testz-mctest")
       assertThat(client.jwtFields).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue

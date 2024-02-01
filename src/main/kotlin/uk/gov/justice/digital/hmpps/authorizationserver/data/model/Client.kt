@@ -64,7 +64,7 @@ data class Client(
 
   var databaseUsername: String?,
 
-  var jiraNum: String?,
+  var jira: String?,
 ) {
 
   fun getLastAccessedDate(): Instant {

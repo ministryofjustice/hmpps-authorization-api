@@ -33,7 +33,7 @@ class MigrationClientConverter(
           accessTokenValidityMinutes,
         ),
         databaseUsername = databaseUserName,
-        jiraNum = jiraNumber,
+        jira = jiraNumber,
         latestClientAuthorization = mutableSetOf(),
         clientSecret = if (clientSecret.startsWith("{bcrypt}")) {
           clientSecret

@@ -187,7 +187,7 @@ class ClientsService(
         it.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
           accessTokenValidityMinutes,
         )
-        it.jiraNum = jiraNumber
+        it.jira = jiraNumber
         it.databaseUsername = databaseUserName
         it.redirectUris = redirectUris
         it.jwtFields = jwtFields

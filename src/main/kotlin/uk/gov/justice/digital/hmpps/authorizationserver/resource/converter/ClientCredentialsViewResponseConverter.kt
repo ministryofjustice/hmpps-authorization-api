@@ -15,7 +15,7 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         latestClient.scopes,
         authorizationConsent?.authorities,
         clientConfig?.ips,
-        latestClient.jiraNum,
+        latestClient.jira,
         latestClient.databaseUsername,
         clientConfig?.validDays,
         latestClient.tokenSettings.accessTokenTimeToLive.toMinutes(),

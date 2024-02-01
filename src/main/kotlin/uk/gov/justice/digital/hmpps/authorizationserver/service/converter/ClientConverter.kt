@@ -35,7 +35,7 @@ class ClientConverter(
         mfaRememberMe = mfaRememberMe,
         redirectUris = redirectUris,
         databaseUsername = databaseUserName,
-        jiraNum = jiraNumber,
+        jira = jiraNumber,
       )
     }
   }

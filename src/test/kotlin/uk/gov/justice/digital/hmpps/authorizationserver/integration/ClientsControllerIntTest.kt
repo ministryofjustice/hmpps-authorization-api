@@ -485,7 +485,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(duplicatedClient.clientAuthenticationMethods).isEqualTo(originalClient.clientAuthenticationMethods)
       assertThat(duplicatedClient.clientSettings).isEqualTo(originalClient.clientSettings)
       assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
-      assertThat(duplicatedClient.jiraNum).isEqualTo(originalClient.jiraNum)
+      assertThat(duplicatedClient.jira).isEqualTo(originalClient.jira)
       assertThat(duplicatedClient.databaseUsername).isEqualTo(originalClient.databaseUsername)
 
       val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(originalClient.id, originalClient.clientId))
@@ -673,7 +673,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
       assertThat(client.databaseUsername).contains("testy-mctest")
-      assertThat(client.jiraNum).isEqualTo("HAAR-9999")
+      assertThat(client.jira).isEqualTo("HAAR-9999")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
@@ -736,7 +736,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.AUTHORIZATION_CODE.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
-      assertThat(client.jiraNum).isEqualTo("HAAR-9999")
+      assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testy-mctest")
       assertThat(client.jwtFields).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue
@@ -957,7 +957,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         val client = clientRepository.findClientByClientId("test-test")
         assertThat(client!!.scopes).contains("read")
         assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(10))
-        assertThat(client.jiraNum).isEqualTo("HAAR-8888")
+        assertThat(client.jira).isEqualTo("HAAR-8888")
         assertThat(client.databaseUsername).isEqualTo("testy-mctest-2")
 
         val clientConfig = clientConfigRepository.findById(client.clientId).get()
@@ -1017,7 +1017,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         val client = clientRepository.findClientByClientId("test-test")
         assertThat(client!!.scopes).contains("write")
         assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(10))
-        assertThat(client.jiraNum).isEqualTo("HAAR-8888")
+        assertThat(client.jira).isEqualTo("HAAR-8888")
         assertThat(client.databaseUsername).isEqualTo("testy-mctest-2")
 
         val clientConfig = clientConfigRepository.findById(client.clientId).get()
