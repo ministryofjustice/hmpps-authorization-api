@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
-import org.springframework.core.convert.converter.Converter
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.authentication.AuthenticationEventPublisher
 import org.springframework.security.authentication.AuthenticationProvider
@@ -31,13 +30,9 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
-import org.springframework.security.oauth2.server.authorization.oidc.OidcClientRegistration
-import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationProvider
-import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcClientRegistrationAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
@@ -46,8 +41,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
 import uk.gov.justice.digital.hmpps.authorizationserver.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.OAuth2AuthenticationFailureEvent
-import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegisteredClientConverterDecorator
-import uk.gov.justice.digital.hmpps.authorizationserver.service.OidcRegistrationAdditionalDataHandler
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientDataService
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.IpAddressHelper
@@ -84,22 +77,6 @@ class AuthorizationServerConfig(
     }
 
     http.oauth2ResourceServer { resourceServer -> resourceServer.jwt { jwtCustomizer -> jwtCustomizer.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
-
-    authorizationServerConfigurer.oidc { oidcCustomizer ->
-
-      oidcCustomizer.clientRegistrationEndpoint { clientRegistrationEndpoint ->
-        clientRegistrationEndpoint.authenticationProviders { authenticationProviders ->
-          authenticationProviders.filterIsInstance<OidcClientRegistrationAuthenticationProvider>()[0].let {
-            val registeredClientConverter = it.getRegisteredClientConverter()
-            it.setRegisteredClientConverter(OidcRegisteredClientConverterDecorator(registeredClientConverter))
-          }
-
-          authenticationProviders.replaceAll { authenticationProvider ->
-            withAdditionalDataHandler(authenticationProvider, registeredClientAdditionalInformation, registeredClientDataService)
-          }
-        }
-      }
-    }
 
     http.cors { it.disable() }.csrf { it.disable() }
     return http.build()
@@ -188,28 +165,5 @@ class AuthorizationServerConfig(
     }
 
     return authenticationProvider
-  }
-
-  private fun withAdditionalDataHandler(
-    authenticationProvider: AuthenticationProvider,
-    registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
-    registeredClientDataService: RegisteredClientDataService,
-  ): AuthenticationProvider {
-    if (authenticationProvider.supports(OidcClientRegistrationAuthenticationToken::class.java)) {
-      return OidcRegistrationAdditionalDataHandler(authenticationProvider, registeredClientAdditionalInformation, registeredClientDataService)
-    }
-
-    return authenticationProvider
-  }
-
-  private fun OidcClientRegistrationAuthenticationProvider.getRegisteredClientConverter(): Converter<OidcClientRegistration, RegisteredClient> {
-    val converter =
-      OidcClientRegistrationAuthenticationProvider::class.java.getDeclaredField("registeredClientConverter").let {
-        it.isAccessible = true
-        return@let it.get(this)
-      }
-
-    @Suppress("UNCHECKED_CAST")
-    return converter as Converter<OidcClientRegistration, RegisteredClient>
   }
 }
