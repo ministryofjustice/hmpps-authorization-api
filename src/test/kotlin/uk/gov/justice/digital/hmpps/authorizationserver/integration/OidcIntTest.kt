@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.integration
 
-import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Nested
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 import java.util.Base64
 
 class OidcIntTest : IntegrationTestBase() {
@@ -60,7 +58,6 @@ class OidcIntTest : IntegrationTestBase() {
 
       val registeredClient = clientRepository.findClientByClientId("authorization_code_register_test")
       assertNotNull(registeredClient)
-      assertThat(registeredClient!!.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-1999")
     }
   }
 }

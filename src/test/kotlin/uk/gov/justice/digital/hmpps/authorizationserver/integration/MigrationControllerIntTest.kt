@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationserver.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
@@ -234,8 +233,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
-      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testz-mctest")
-      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-9999")
+      assertThat(client.jira).isEqualTo("HAAR-9999")
+      assertThat(client.databaseUsername).isEqualTo("testz-mctest")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
@@ -318,8 +317,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.AUTHORIZATION_CODE.value)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
-      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.DATABASE_USER_NAME_KEY]).isEqualTo("testz-mctest")
-      assertThat(client.tokenSettings.settings[RegisteredClientAdditionalInformation.JIRA_NUMBER_KEY]).isEqualTo("HAAR-9999")
+      assertThat(client.jira).isEqualTo("HAAR-9999")
+      assertThat(client.databaseUsername).isEqualTo("testz-mctest")
       assertThat(client.jwtFields).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue
       assertThat(client.mfa).isEqualTo(MfaAccess.ALL)
