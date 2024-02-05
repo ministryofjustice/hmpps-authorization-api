@@ -64,6 +64,20 @@ workflows:
             - validate
             - build_docker
             - helm_lint
+      - hmpps/deploy_env:
+          name: deploy_stage
+          env: "stage"
+          context:
+            - hmpps-common-vars
+            - hmpps-authorization-server-stage
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - validate
+            - build_docker
+            - helm_lint
 #      - request-preprod-approval:
 #          type: approval
 #          requires:
