@@ -181,6 +181,10 @@ data class ClientUpdateRequest(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValidityMinutes: Long?,
+  val jwtFields: String?,
+  val mfaRememberMe: Boolean,
+  val mfa: MfaAccess?,
+  val redirectUris: String?,
 )
 
 data class ClientDeploymentDetails(
