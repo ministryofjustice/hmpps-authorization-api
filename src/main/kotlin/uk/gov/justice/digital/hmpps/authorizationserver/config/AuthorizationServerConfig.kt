@@ -89,8 +89,6 @@ class AuthorizationServerConfig(
       }
     }
 
-    http.oauth2ResourceServer { resourceServer -> resourceServer.jwt { jwtCustomizer -> jwtCustomizer.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
-
     http
       .addFilterAfter(jwtCookieAuthenticationFilter, LogoutFilter::class.java)
       .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }

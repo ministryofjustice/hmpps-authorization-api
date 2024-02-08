@@ -4,8 +4,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.web.invoke
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -16,21 +17,30 @@ class DefaultSecurityConfig {
 
   @Bean
   fun defaultSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
-    http.headers { it.frameOptions { frameOptionsCustomizer -> frameOptionsCustomizer.disable() } }
-    http.cors { it.disable() }.csrf { it.disable() }
-      .authorizeHttpRequests { auth ->
-        auth.requestMatchers(
-          antMatcher("/h2-console/**"),
-          antMatcher("/health/**"),
-          antMatcher("/info"),
-          antMatcher("/ping"),
-          antMatcher("/error"),
-          antMatcher("/.well-known/jwks.json"),
-          antMatcher("/jwt-public-key"),
-          antMatcher("/issuer/.well-known/**"),
-          antMatcher("/favicon.ico"),
-        ).permitAll().anyRequest().authenticated()
+    http {
+      headers { frameOptions { sameOrigin = true } }
+      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
+      // Can't have CSRF protection as requires session
+      csrf { disable() }
+      authorizeHttpRequests {
+        listOf(
+          "/h2-console/**",
+          "/webjars/**",
+          "/favicon.ico",
+          "/csrf",
+          "/health/**",
+          "/info",
+          "/ping",
+          "/error",
+          "/.well-known/jwks.json",
+          "/jwt-public-key",
+          "/issuer/.well-known/**",
+
+        ).forEach { authorize(it, permitAll) }
+        authorize(anyRequest, authenticated)
       }
+      oauth2ResourceServer { jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() } }
+    }
     return http.build()
   }
 

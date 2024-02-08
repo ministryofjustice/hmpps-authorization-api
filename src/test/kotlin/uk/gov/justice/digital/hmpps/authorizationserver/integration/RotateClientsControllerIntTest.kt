@@ -47,10 +47,10 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
   @Nested
   inner class DeleteClient {
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.delete().uri("/rotate/base-clients/test-client-id/clients/test-client-id")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -191,10 +191,10 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
   inner class DuplicateClient {
 
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.post().uri("/rotate/base-clients/test-client-id/clients")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -299,10 +299,10 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
   inner class ViewClient {
 
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.get().uri("/rotate/base-clients/testy")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
