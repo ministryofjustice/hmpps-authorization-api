@@ -4,6 +4,9 @@ import com.microsoft.applicationinsights.TelemetryClient
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.CoreMatchers.startsWith
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -191,60 +194,87 @@ class OAuthIntTest : IntegrationTestBase() {
   @Nested
   inner class AuthorizationCode {
 
+    private val validRedirectUri = "http://127.0.0.1:8089/login/oauth2/code/oidc-client"
+    private val invalidRedirectUri = "http://127.0.0.1:8089/login/oauth2/code/oidc-client-x"
+    private val validClientId = "test-auth-code-client"
+    private val invalidClientId = "test-auth-code-client-x"
+    private val state = "1234"
+
     @Test
     fun `unauthenticated user`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=test-auth-code-client&state=1234&redirect_uri=http://127.0.0.1:8089/login/oauth2/code/oidc-client")
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .exchange()
         .expectStatus().isUnauthorized
     }
 
     @Test
-    fun `invalid request - client id`() {
+    fun `invalid client id`() {
+      webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$invalidClientId&state=$state&redirect_uri=$validRedirectUri")
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isBadRequest
     }
 
     @Test
-    fun `invalid request - redirect url`() {
+    fun `invalid redirect url`() {
+      webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$invalidRedirectUri")
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isBadRequest
     }
 
     @Test
-    fun `invalid request - response type`() {
-    }
-
-    @Test
-    fun `invalid request - state`() {
+    fun `missing response type`() {
+      webTestClient
+        .get().uri("/oauth2/authorize?client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isBadRequest
     }
 
     @Test
     fun `success redirects with code`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=test-auth-code-client&state=1234&redirect_uri=http://127.0.0.1:8089/login/oauth2/code/oidc-client")
-        .cookie("jwtSession", createAuthenticationJwt())
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .exists("Location")
-
-      /*
-      ACTUAL RESPONSE EXAMPLE
-
-      < 302 FOUND Found
-      < X-Content-Type-Options: [nosniff]
-      < X-XSS-Protection: [0]
-      < Cache-Control: [no-cache, no-store, max-age=0, must-revalidate]
-      < Pragma: [no-cache]
-      < Expires: [0]
-      < X-Frame-Options: [DENY]
-      < Location: [http://127.0.0.1:8089/login/oauth2/code/oidc-client?code=jSnFrrkyAHR537emb1ecK8mo00mKhszKuBGaRi8z11QGbhI7t1-9hEVLYKuTGL4HwWbpjct3vD-Vx_-_v4XjDQKFRGFfRY6k7uB3ZXKww7W2cgMiTk5qdM1hSevJJiXI&state=1234]
-      < Content-Length: [0]
-      < Date: [Thu, 08 Feb 2024 18:35:39 GMT]
-
-       */
+        .value("Location", allOf(startsWith(validRedirectUri), containsString("state=$state"), containsString("code=")))
     }
 
-    private fun createAuthenticationJwt(): String {
-      val username = "username"
-      val authoritiesAsString = "ROLE_TESTING,ROLE_MORE_TESTING"
+    @Test
+    fun `code convert to token`() {
+      var header: String? = null
+      webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectHeader()
+        .value("Location") { h: String -> header = h }
+
+      val authorisationCode =
+        header!!.substringAfter("?").split("&").first { it.startsWith("code=") }.substringAfter("code=")
+
+      val tokenResponse = webTestClient
+        .post().uri("/oauth2/token?grant_type=authorization_code&code=$authorisationCode&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(tokenResponse!!))
+      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
+      assertThat(token.get("sub")).isEqualTo("username")
+      assertThat(token.get("aud")).isEqualTo(validClientId)
+    }
+
+    private fun createAuthenticationJwt(username: String, vararg roles: String): String {
+      val authoritiesAsString = roles.asList().joinToString(",")
 
       return Jwts.builder()
         .setId("1234")
