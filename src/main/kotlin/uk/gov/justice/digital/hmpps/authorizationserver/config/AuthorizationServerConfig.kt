@@ -74,14 +74,6 @@ class AuthorizationServerConfig(
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
     val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
 
-    // TODO /oauth2/authorize responds with 401 when access denied without this - but probably need to log this happening
-    // http.exceptionHandling {
-    //   it.accessDeniedHandler(
-    //     RequestMatcherDelegatingAccessDeniedHandler(
-    //       linkedMapOf(antMatcher("/oauth2/authorize") to AccessDeniedHandlerImpl()),
-    //       AccessDeniedHandlerImpl()) ) // TODO simplify?
-    // }
-
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
