@@ -23,7 +23,7 @@ dependencies {
   implementation("org.apache.commons:commons-text:1.11.0")
   implementation("io.opentelemetry:opentelemetry-api")
 
-  implementation("io.jsonwebtoken:jjwt:0.9.1")
+  implementation("io.jsonwebtoken:jjwt:0.12.5")
   implementation("javax.xml.bind:jaxb-api:2.3.1")
   implementation("com.sun.xml.bind:jaxb-impl:4.0.3")
   implementation("com.sun.xml.bind:jaxb-core:4.0.3")
