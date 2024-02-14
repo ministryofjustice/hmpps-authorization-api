@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.authorizationserver.security
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureException
+import io.jsonwebtoken.security.SignatureException
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
@@ -43,10 +43,13 @@ class JwtAuthenticationHelper(
 
   private fun parseSignedJwt(jwt: String): Claims =
     try {
-      Jwts.parser().setSigningKey(keyPair.public).parseClaimsJws(jwt)
+      Jwts.parser().verifyWith(keyPair.public).build().parseSignedClaims(jwt).payload
     } catch (ex: SignatureException) {
-      keyPairAuxiliary ?. let { Jwts.parser().setSigningKey(it.public).parseClaimsJws(jwt) } ?: throw ex
-    }.body
+      if (keyPairAuxiliary == null) {
+        throw ex
+      }
+      Jwts.parser().verifyWith(keyPairAuxiliary.public).build().parseSignedClaims(jwt).payload
+    }
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
