@@ -59,10 +59,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   @Nested
   inner class ListAllClients {
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.get().uri("/base-clients")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -89,20 +89,21 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.clients[4].baseClientId").isEqualTo("test-client-id")
-        .jsonPath("$.clients[4].clientType").isEqualTo("PERSONAL")
-        .jsonPath("$.clients[4].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[4].grantType").isEqualTo("client_credentials")
-        .jsonPath("$.clients[4].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
-        .jsonPath("$.clients[4].count").isEqualTo(1)
-        .jsonPath("$.clients[4].expired").isEmpty
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(7) }
+        .jsonPath("$.clients[5].baseClientId").isEqualTo("test-client-id")
+        .jsonPath("$.clients[5].clientType").isEqualTo("PERSONAL")
+        .jsonPath("$.clients[5].teamName").isEqualTo("HAAR")
+        .jsonPath("$.clients[5].grantType").isEqualTo("client_credentials")
+        .jsonPath("$.clients[5].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
+        .jsonPath("$.clients[5].count").isEqualTo(1)
+        .jsonPath("$.clients[5].expired").isEmpty
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(8) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
               "ip-allow-a-client",
               "ip-allow-b-client",
               "ip-allow-c-client",
+              "test-auth-code-client",
               "test-client-create-id",
               "test-client-id",
               "test-complete-details-id",
@@ -141,10 +142,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   @Nested
   inner class DeleteClient {
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.delete().uri("/base-clients/test-client-id/clients/test-client-id")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -284,10 +285,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   @Nested
   inner class ClientExists {
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.get().uri("/clients/exists/test-client-id")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -330,10 +331,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   @Nested
   inner class ListCopies {
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.get().uri("/base-clients/test-client-id/clients")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -399,10 +400,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   inner class DuplicateClient {
 
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.post().uri("/base-clients/test-client-id/clients")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -509,7 +510,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   inner class AddClient {
 
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.post().uri("/base-clients")
         .body(
           BodyInserters.fromValue(
@@ -524,7 +525,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           ),
         )
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -828,7 +829,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     inner class EditClient {
 
       @Test
-      fun `access forbidden when no authority`() {
+      fun `access unauthorized when no authority`() {
         webTestClient.put().uri("/base-clients/testy")
           .body(
             BodyInserters.fromValue(
@@ -844,7 +845,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
             ),
           )
           .exchange()
-          .expectStatus().isForbidden
+          .expectStatus().isUnauthorized
       }
 
       @Test
@@ -1043,10 +1044,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   inner class ViewClient {
 
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.get().uri("/base-clients/testy")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -1332,7 +1333,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   @Nested
   inner class AddUpdateClientDeployment {
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.put().uri("base-clients/testy/deployment")
         .body(
           BodyInserters.fromValue(
@@ -1351,7 +1352,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           ),
         )
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
