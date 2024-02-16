@@ -17,6 +17,7 @@ import org.springframework.security.authentication.DefaultAuthenticationEventPub
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -35,7 +36,9 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.logout.LogoutFilter
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationserver.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
@@ -57,6 +60,7 @@ class AuthorizationServerConfig(
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
+  private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
 ) {
 
   @Bean
@@ -67,8 +71,9 @@ class AuthorizationServerConfig(
     registeredClientDataService: RegisteredClientDataService,
     loggingAuthenticationFailureHandler: LoggingAuthenticationFailureHandler,
   ): SecurityFilterChain {
-    val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer()
-    http.apply(authorizationServerConfigurer)
+    OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
+    val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
+
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
@@ -76,9 +81,11 @@ class AuthorizationServerConfig(
       }
     }
 
-    http.oauth2ResourceServer { resourceServer -> resourceServer.jwt { jwtCustomizer -> jwtCustomizer.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
+    http
+      .addFilterAfter(jwtCookieAuthenticationFilter, LogoutFilter::class.java)
+      .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+      .cors { it.disable() }.csrf { it.disable() }
 
-    http.cors { it.disable() }.csrf { it.disable() }
     return http.build()
   }
 

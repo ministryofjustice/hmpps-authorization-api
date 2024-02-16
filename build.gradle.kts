@@ -23,6 +23,11 @@ dependencies {
   implementation("org.apache.commons:commons-text:1.11.0")
   implementation("io.opentelemetry:opentelemetry-api")
 
+  implementation("io.jsonwebtoken:jjwt:0.12.5")
+  implementation("javax.xml.bind:jaxb-api:2.3.1")
+  implementation("com.sun.xml.bind:jaxb-impl:4.0.3")
+  implementation("com.sun.xml.bind:jaxb-core:4.0.3")
+
   runtimeOnly("com.h2database:h2:2.2.224")
   runtimeOnly("org.postgresql:postgresql:42.7.1")
   developmentOnly("org.springframework.boot:spring-boot-devtools")

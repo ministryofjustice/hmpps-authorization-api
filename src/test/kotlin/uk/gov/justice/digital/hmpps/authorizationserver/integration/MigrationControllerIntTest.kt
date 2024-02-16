@@ -53,7 +53,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
   inner class MigrateClient {
 
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.post().uri("/migrate-client")
         .body(
           BodyInserters.fromValue(
@@ -70,7 +70,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
           ),
         )
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -394,10 +394,10 @@ class MigrationControllerIntTest : IntegrationTestBase() {
   @Nested
   inner class ListAllClientIds {
     @Test
-    fun `access forbidden when no authority`() {
+    fun `access unauthorized when no authority`() {
       webTestClient.get().uri("/all-clients")
         .exchange()
-        .expectStatus().isForbidden
+        .expectStatus().isUnauthorized
     }
 
     @Test
@@ -424,17 +424,19 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(8) }
+        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(9) }
         .jsonPath("$.[*]").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
-              "ip-allow-b-client",
-              "ip-allow-c-client",
-              "ip-allow-b-client-8",
-              "test-client-create-id",
               "test-client-id",
-              "test-complete-details-id",
+              "test-client-create-id",
+              "ip-allow-a-client-1",
+              "ip-allow-b-client",
+              "ip-allow-b-client-8",
               "test-duplicate-id",
+              "test-complete-details-id",
+              "ip-allow-c-client",
+              "test-auth-code-client",
             ),
           )
         }
