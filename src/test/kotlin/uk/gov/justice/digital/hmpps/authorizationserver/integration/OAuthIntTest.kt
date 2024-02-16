@@ -24,10 +24,6 @@ import uk.gov.justice.digital.hmpps.authorizationserver.service.JWKKeyAccessor
 import java.time.Duration
 import java.util.Base64
 import java.util.Date
-import org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED
-import org.springframework.util.LinkedMultiValueMap
-import org.springframework.web.reactive.function.BodyInserters.fromFormData
-import java.util.*
 
 class OAuthIntTest : IntegrationTestBase() {
 
