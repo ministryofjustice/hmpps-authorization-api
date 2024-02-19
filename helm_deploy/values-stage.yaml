@@ -6,6 +6,7 @@ generic-service:
 
   ingress:
     host: authorization-api-stage.hmpps.service.justice.gov.uk
+    tlsSecretName: hmpps-authorization-api-cert
 
   env:
     SPRING_PROFILES_ACTIVE: "logstash, stage"
