@@ -92,7 +92,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[5].baseClientId").isEqualTo("test-client-id")
         .jsonPath("$.clients[5].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[5].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[5].grantType").isEqualTo("client_credentials")
+        .jsonPath("$.clients[5].grantType").isEqualTo("CLIENT_CREDENTIALS")
         .jsonPath("$.clients[5].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
         .jsonPath("$.clients[5].count").isEqualTo(1)
         .jsonPath("$.clients[5].expired").isEmpty
@@ -124,7 +124,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[0].baseClientId").isEqualTo("test-client-id")
         .jsonPath("$.clients[0].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[0].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[0].grantType").isEqualTo("client_credentials")
+        .jsonPath("$.clients[0].grantType").isEqualTo("CLIENT_CREDENTIALS")
         .jsonPath("$.clients[0].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
         .jsonPath("$.clients[0].count").isEqualTo(1)
         .jsonPath("$.clients[0].expired").isEmpty
