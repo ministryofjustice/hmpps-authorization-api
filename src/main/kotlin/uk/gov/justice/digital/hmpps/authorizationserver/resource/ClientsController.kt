@@ -171,6 +171,7 @@ data class ClientViewResponse(
   val mfaRememberMe: Boolean,
   val mfa: MfaAccess?,
   val redirectUris: Set<String>?,
+  val grantType: String,
 )
 
 data class ClientUpdateRequest(

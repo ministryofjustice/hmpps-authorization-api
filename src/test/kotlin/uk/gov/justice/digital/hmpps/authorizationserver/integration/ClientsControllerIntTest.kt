@@ -1150,6 +1150,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
         .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("grantType").isEqualTo("CLIENT_CREDENTIALS")
         .jsonPath("deployment").isEmpty
 
       val client = clientRepository.findClientByClientId("test-more-test")
@@ -1232,6 +1233,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("deployment.secretName").isEqualTo("hmpps-testing")
         .jsonPath("deployment.clientIdKey").isEqualTo("SYSTEM_CLIENT_ID")
         .jsonPath("deployment.secretKey").isEqualTo("SYSTEM_CLIENT_SECRET")
+        .jsonPath("grantType").isEqualTo("CLIENT_CREDENTIALS")
         .jsonPath("deployment.deploymentInfo").isEmpty
 
       val client = clientRepository.findClientByClientId("test-more-test")
@@ -1287,6 +1289,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("jwtFields").isEqualTo("-name")
         .jsonPath("mfaRememberMe").isEqualTo(true)
         .jsonPath("mfa").isEqualTo("ALL")
+        .jsonPath("grantType").isEqualTo("AUTHORIZATION_CODE")
         .jsonPath("redirectUris[0]").isEqualTo("http://127.0.0.1:8089/authorized")
         .jsonPath("redirectUris[1]").isEqualTo("https://oauth.pstmn.io/v1/callback")
 
