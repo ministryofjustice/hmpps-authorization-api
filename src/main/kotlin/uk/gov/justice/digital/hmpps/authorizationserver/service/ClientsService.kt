@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDeploymen
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientRegistrationResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientUpdateRequest
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Instant
 import java.time.LocalDate
@@ -59,7 +60,7 @@ class ClientsService(
         baseClientId = client.first,
         clientType = deployment?.clientType,
         teamName = deployment?.team,
-        grantType = firstClient.authorizationGrantTypes,
+        grantType = GrantType.valueOf(firstClient.authorizationGrantTypes.uppercase()),
         roles = roles,
         count = client.second.size,
         expired = if (config?.clientEndDate?.isBefore(LocalDate.now()) == true)"EXPIRED" else null,
@@ -68,7 +69,7 @@ class ClientsService(
     }.filter { cs ->
       filterBy?.let { filter ->
         (filter.clientType == null || filter.clientType == cs.clientType) &&
-          (filter.grantType.isNullOrBlank() || cs.grantType.contains(filter.grantType)) &&
+          (filter.grantType.isNullOrBlank() || cs.grantType.description.contains(filter.grantType)) &&
           (filter.role.isNullOrBlank() || cs.roles?.contains(filter.role.uppercase()) ?: false)
       } ?: true
     }.sortedWith(
@@ -340,7 +341,7 @@ data class ClientDetail(
   val baseClientId: String,
   val clientType: ClientType?,
   val teamName: String?,
-  val grantType: String,
+  val grantType: GrantType,
   val roles: String?,
   val count: Int,
   val expired: String?,
