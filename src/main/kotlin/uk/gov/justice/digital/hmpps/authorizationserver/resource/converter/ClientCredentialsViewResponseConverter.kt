@@ -24,6 +24,7 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         latestClient.mfaRememberMe,
         latestClient.mfa,
         latestClient.getRegisteredRedirectUriWithNewlines(),
+        latestClient.authorizationGrantTypes.uppercase(),
       )
     }
   }

@@ -11,7 +11,6 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
-import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -230,7 +229,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client!!.clientId).isEqualTo("testz")
       assertThat(client.clientName).isEqualTo("testz")
       assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
-      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.authorizationGrantTypes).isEqualTo("client_credentials")
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
       assertThat(client.jira).isEqualTo("HAAR-9999")
@@ -314,7 +313,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client!!.clientId).isEqualTo(clientId)
       assertThat(client.clientName).isEqualTo(clientId)
       assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
-      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.AUTHORIZATION_CODE.value)
+      assertThat(client.authorizationGrantTypes).isEqualTo("authorization_code")
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
       assertThat(client.jira).isEqualTo("HAAR-9999")
@@ -376,7 +375,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client!!.clientId).isEqualTo("testp")
       assertThat(client.clientName).isEqualTo("testp")
       assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
-      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.authorizationGrantTypes).isEqualTo("client_credentials")
       assertThat(client.scopes).containsOnly("read")
       assertFalse(clientConfigRepository.findById(client.clientId).isPresent)
       assertFalse(authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).isPresent)
