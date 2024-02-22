@@ -16,7 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -28,6 +27,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationserver.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
@@ -92,7 +92,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[5].baseClientId").isEqualTo("test-client-id")
         .jsonPath("$.clients[5].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[5].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[5].grantType").isEqualTo("CLIENT_CREDENTIALS")
+        .jsonPath("$.clients[5].grantType").isEqualTo("client_credentials")
         .jsonPath("$.clients[5].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
         .jsonPath("$.clients[5].count").isEqualTo(1)
         .jsonPath("$.clients[5].expired").isEmpty
@@ -124,7 +124,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[0].baseClientId").isEqualTo("test-client-id")
         .jsonPath("$.clients[0].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[0].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[0].grantType").isEqualTo("CLIENT_CREDENTIALS")
+        .jsonPath("$.clients[0].grantType").isEqualTo("client_credentials")
         .jsonPath("$.clients[0].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
         .jsonPath("$.clients[0].count").isEqualTo(1)
         .jsonPath("$.clients[0].expired").isEmpty
@@ -240,7 +240,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "clientName" to "testing testing",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -516,7 +516,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -536,7 +536,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -556,7 +556,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "clientName" to "test client",
               "scopes" to listOf("read"),
               "authorities" to listOf("VIEW_PRISONER_DATA"),
@@ -578,7 +578,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-client-id",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -611,7 +611,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "ip-allow-a-client",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "clientName" to "test client",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -645,7 +645,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -670,7 +670,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client!!.clientId).isEqualTo("testy")
       assertThat(client.clientName).isEqualTo("testy")
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
-      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.authorizationGrantTypes).isEqualTo(GrantType.client_credentials.name)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
       assertThat(client.databaseUsername).contains("testy-mctest")
@@ -684,7 +684,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "CLIENT_CREDENTIALS"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "client_credentials"),
         null,
       )
 
@@ -706,7 +706,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
-              "grantType" to "AUTHORIZATION_CODE",
+              "grantType" to "authorization_code",
               "scopes" to listOf("read", "write"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testy-mctest",
@@ -734,7 +734,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client!!.clientId).isEqualTo(clientId)
       assertThat(client.clientName).isEqualTo(clientId)
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
-      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.AUTHORIZATION_CODE.value)
+      assertThat(client.authorizationGrantTypes).isEqualTo(GrantType.authorization_code.name)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
       assertThat(client.jira).isEqualTo("HAAR-9999")
@@ -750,7 +750,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to clientId, "grantType" to "AUTHORIZATION_CODE"),
+        mapOf("username" to "AUTH_ADM", "clientId" to clientId, "grantType" to "authorization_code"),
         null,
       )
 
@@ -770,7 +770,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testy",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
             ),
           ),
         )
@@ -786,14 +786,14 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client!!.clientId).isEqualTo("testy")
       assertThat(client.clientName).isEqualTo("testy")
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
-      assertThat(client.authorizationGrantTypes).isEqualTo(AuthorizationGrantType.CLIENT_CREDENTIALS.value)
+      assertThat(client.authorizationGrantTypes).isEqualTo(GrantType.client_credentials.name)
       assertThat(client.scopes).containsOnly("read")
       assertFalse(clientConfigRepository.findById(client.clientId).isPresent)
       assertFalse(authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).isPresent)
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsAdd",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "CLIENT_CREDENTIALS"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testy", "grantType" to "client_credentials"),
         null,
       )
 
@@ -808,7 +808,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "scopes" to listOf("read", "write"),
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testy-mctest",
@@ -922,7 +922,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
             BodyInserters.fromValue(
               mapOf(
                 "clientId" to "test-test",
-                "grantType" to "CLIENT_CREDENTIALS",
+                "grantType" to "client_credentials",
                 "clientName" to "testing testing",
                 "scopes" to listOf("read", "write"),
                 "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
@@ -989,7 +989,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
             BodyInserters.fromValue(
               mapOf(
                 "clientId" to "test-test",
-                "grantType" to "CLIENT_CREDENTIALS",
+                "grantType" to "client_credentials",
                 "clientName" to "testing testing",
               ),
             ),
@@ -1120,7 +1120,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -1150,7 +1150,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
         .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
-        .jsonPath("grantType").isEqualTo("CLIENT_CREDENTIALS")
+        .jsonPath("grantType").isEqualTo("client_credentials")
         .jsonPath("deployment").isEmpty
 
       val client = clientRepository.findClientByClientId("test-more-test")
@@ -1172,7 +1172,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -1233,7 +1233,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("deployment.secretName").isEqualTo("hmpps-testing")
         .jsonPath("deployment.clientIdKey").isEqualTo("SYSTEM_CLIENT_ID")
         .jsonPath("deployment.secretKey").isEqualTo("SYSTEM_CLIENT_SECRET")
-        .jsonPath("grantType").isEqualTo("CLIENT_CREDENTIALS")
+        .jsonPath("grantType").isEqualTo("client_credentials")
         .jsonPath("deployment.deploymentInfo").isEmpty
 
       val client = clientRepository.findClientByClientId("test-more-test")
@@ -1265,7 +1265,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "jwtFields" to "-name",
               "mfaRememberMe" to true,
               "mfa" to "ALL",
-              "grantType" to "AUTHORIZATION_CODE",
+              "grantType" to "authorization_code",
               "redirectUris" to "http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback",
             ),
           ),
@@ -1289,7 +1289,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("jwtFields").isEqualTo("-name")
         .jsonPath("mfaRememberMe").isEqualTo(true)
         .jsonPath("mfa").isEqualTo("ALL")
-        .jsonPath("grantType").isEqualTo("AUTHORIZATION_CODE")
+        .jsonPath("grantType").isEqualTo("authorization_code")
         .jsonPath("redirectUris[0]").isEqualTo("http://127.0.0.1:8089/authorized")
         .jsonPath("redirectUris[1]").isEqualTo("https://oauth.pstmn.io/v1/callback")
 
@@ -1311,7 +1311,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "test-more-test",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
             ),
           ),
         )
