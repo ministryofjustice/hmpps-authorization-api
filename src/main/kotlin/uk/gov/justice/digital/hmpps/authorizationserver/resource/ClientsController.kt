@@ -42,10 +42,10 @@ class ClientsController(
   fun list(
     @RequestParam(defaultValue = "CLIENT") sort: SortBy,
     @RequestParam role: String? = null,
-    @RequestParam grantType: String? = null,
+    @RequestParam grantType: GrantType? = null,
     @RequestParam clientType: ClientType? = null,
   ): ResponseEntity<Any> {
-    return ResponseEntity.ok(AllClientsResponse(clientsService.retrieveAllClients(sort, ClientFilter(grantType = grantType, role = role, clientType = clientType))))
+    return ResponseEntity.ok(AllClientsResponse(clientsService.retrieveAllClients(sort, ClientFilter(grantType = grantType?.name, role = role, clientType = clientType))))
   }
 
   @PostMapping("base-clients")
@@ -171,7 +171,7 @@ data class ClientViewResponse(
   val mfaRememberMe: Boolean,
   val mfa: MfaAccess?,
   val redirectUris: Set<String>?,
-  val grantType: String,
+  val grantType: GrantType,
 )
 
 data class ClientUpdateRequest(
@@ -227,7 +227,8 @@ data class ClientRegistrationResponse(
   val base64ClientSecret: String,
 )
 
-enum class GrantType(val description: String) {
-  CLIENT_CREDENTIALS("client_credentials"),
-  AUTHORIZATION_CODE("authorization_code"),
+@Suppress("ktlint:standard:enum-entry-name-case")
+enum class GrantType {
+  client_credentials,
+  authorization_code,
 }

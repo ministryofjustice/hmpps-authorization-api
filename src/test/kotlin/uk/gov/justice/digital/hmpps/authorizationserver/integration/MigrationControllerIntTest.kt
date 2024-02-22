@@ -195,7 +195,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to "testz",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "scopes" to listOf("read", "write"),
               "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "ROLE_COMMUNITY"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
@@ -256,7 +256,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsMigrate",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testz", "grantType" to "CLIENT_CREDENTIALS"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testz", "grantType" to "client_credentials"),
         null,
       )
 
@@ -276,7 +276,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
           BodyInserters.fromValue(
             mapOf(
               "clientId" to clientId,
-              "grantType" to "AUTHORIZATION_CODE",
+              "grantType" to "authorization_code",
               "scopes" to listOf("read", "write"),
               "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
               "databaseUserName" to "testz-mctest",
@@ -342,7 +342,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsMigrate",
-        mapOf("username" to "AUTH_ADM", "clientId" to clientId, "grantType" to "AUTHORIZATION_CODE"),
+        mapOf("username" to "AUTH_ADM", "clientId" to clientId, "grantType" to "authorization_code"),
         null,
       )
 
@@ -361,7 +361,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
             mapOf(
               "clientId" to "testp",
               "clientSecret" to "clientSecret",
-              "grantType" to "CLIENT_CREDENTIALS",
+              "grantType" to "client_credentials",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
             ),
           ),
@@ -382,7 +382,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         "AuthorizationServerDetailsMigrate",
-        mapOf("username" to "AUTH_ADM", "clientId" to "testp", "grantType" to "CLIENT_CREDENTIALS"),
+        mapOf("username" to "AUTH_ADM", "clientId" to "testp", "grantType" to "client_credentials"),
         null,
       )
 

@@ -60,7 +60,7 @@ class ClientsService(
         baseClientId = client.first,
         clientType = deployment?.clientType,
         teamName = deployment?.team,
-        grantType = GrantType.valueOf(firstClient.authorizationGrantTypes.uppercase()),
+        grantType = GrantType.valueOf(firstClient.authorizationGrantTypes),
         roles = roles,
         count = client.second.size,
         expired = if (config?.clientEndDate?.isBefore(LocalDate.now()) == true)"EXPIRED" else null,
@@ -69,7 +69,7 @@ class ClientsService(
     }.filter { cs ->
       filterBy?.let { filter ->
         (filter.clientType == null || filter.clientType == cs.clientType) &&
-          (filter.grantType.isNullOrBlank() || cs.grantType.description.contains(filter.grantType)) &&
+          (filter.grantType.isNullOrBlank() || cs.grantType.name.contains(filter.grantType)) &&
           (filter.role.isNullOrBlank() || cs.roles?.contains(filter.role.uppercase()) ?: false)
       } ?: true
     }.sortedWith(
