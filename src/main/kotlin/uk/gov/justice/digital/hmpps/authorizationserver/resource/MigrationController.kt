@@ -51,7 +51,7 @@ class MigrationClientRequest(
   val jiraNumber: String?,
   val databaseUserName: String?,
   val validDays: Long?,
-  val accessTokenValidityMinutes: Long?,
+  val accessTokenValiditySeconds: Long?,
   val clientIdIssuedAt: Instant,
   val clientEndDate: LocalDate?,
   var lastAccessed: Instant?,

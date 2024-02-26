@@ -30,7 +30,7 @@ class MigrationClientConverter(
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
-          accessTokenValidityMinutes,
+          accessTokenValiditySeconds,
         ),
         databaseUsername = databaseUserName,
         jira = jiraNumber,

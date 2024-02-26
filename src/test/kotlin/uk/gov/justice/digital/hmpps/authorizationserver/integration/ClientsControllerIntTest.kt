@@ -324,7 +324,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
         .jsonPath("$.clientId").isEqualTo("test-client-id")
-        .jsonPath("$.accessTokenValidityMinutes").isEqualTo(5)
+        .jsonPath("$.accessTokenValiditySeconds").isEqualTo(300)
     }
   }
 
@@ -652,7 +652,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
             ),
           ),
         )
@@ -672,7 +672,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
       assertThat(client.authorizationGrantTypes).isEqualTo(GrantType.client_credentials.name)
       assertThat(client.scopes).contains("read", "write")
-      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
       assertThat(client.databaseUsername).contains("testy-mctest")
       assertThat(client.jira).isEqualTo("HAAR-9999")
 
@@ -713,7 +713,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "jiraNumber" to "HAAR-9999",
               "redirectUris" to "http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
               "jwtFields" to "-name",
               "mfaRememberMe" to true,
               "mfa" to MfaAccess.ALL,
@@ -736,7 +736,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.clientSecret).isEqualTo("encoded-client-secret")
       assertThat(client.authorizationGrantTypes).isEqualTo(GrantType.authorization_code.name)
       assertThat(client.scopes).contains("read", "write")
-      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
       assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testy-mctest")
       assertThat(client.jwtFields).isEqualTo("-name")
@@ -814,7 +815,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
             ),
           ),
         )
@@ -840,7 +841,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "databaseUserName" to "testy-mctest",
                 "jiraNumber" to "HAAR-9999",
                 "validDays" to 5,
-                "accessTokenValidityMinutes" to 20,
+                "accessTokenValiditySeconds" to 20,
               ),
             ),
           )
@@ -861,7 +862,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "databaseUserName" to "testy-mctest",
                 "jiraNumber" to "HAAR-9999",
                 "validDays" to 5,
-                "accessTokenValidityMinutes" to 20,
+                "accessTokenValiditySeconds" to 20,
               ),
             ),
           )
@@ -882,7 +883,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "databaseUserName" to "testy-mctest",
                 "jiraNumber" to "HAAR-9999",
                 "validDays" to 5,
-                "accessTokenValidityMinutes" to 20,
+                "accessTokenValiditySeconds" to 20,
               ),
             ),
           )
@@ -903,7 +904,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "databaseUserName" to "testy-mctest",
                 "jiraNumber" to "HAAR-9999",
                 "validDays" to 5,
-                "accessTokenValidityMinutes" to 20,
+                "accessTokenValiditySeconds" to 20,
               ),
             ),
           )
@@ -930,7 +931,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "databaseUserName" to "testy-mctest-1",
                 "jiraNumber" to "HAAR-9999",
                 "validDays" to 5,
-                "accessTokenValidityMinutes" to 20,
+                "accessTokenValiditySeconds" to 20,
               ),
             ),
           )
@@ -948,7 +949,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "databaseUserName" to "testy-mctest-2",
                 "jiraNumber" to "HAAR-8888",
                 "validDays" to 3,
-                "accessTokenValidityMinutes" to 10,
+                "accessTokenValiditySeconds" to 10,
               ),
             ),
           )
@@ -957,7 +958,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
         val client = clientRepository.findClientByClientId("test-test")
         assertThat(client!!.scopes).contains("read")
-        assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(10))
+        assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
         assertThat(client.jira).isEqualTo("HAAR-8888")
         assertThat(client.databaseUsername).isEqualTo("testy-mctest-2")
 
@@ -1008,7 +1009,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "databaseUserName" to "testy-mctest-2",
                 "jiraNumber" to "HAAR-8888",
                 "validDays" to 3,
-                "accessTokenValidityMinutes" to 10,
+                "accessTokenValiditySeconds" to 10,
               ),
             ),
           )
@@ -1017,7 +1018,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
         val client = clientRepository.findClientByClientId("test-test")
         assertThat(client!!.scopes).contains("write")
-        assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(10))
+        assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
         assertThat(client.jira).isEqualTo("HAAR-8888")
         assertThat(client.databaseUsername).isEqualTo("testy-mctest-2")
 
@@ -1127,7 +1128,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-more-mctest-1",
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
             ),
           ),
         )
@@ -1149,7 +1150,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
-        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("grantType").isEqualTo("client_credentials")
         .jsonPath("deployment").isEmpty
 
@@ -1179,7 +1180,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-more-mctest-1",
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
             ),
           ),
         )
@@ -1222,7 +1223,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
-        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("deployment.clientType").isEqualTo("PERSONAL")
         .jsonPath("deployment.team").isEqualTo("testing team")
         .jsonPath("deployment.teamContact").isEqualTo("testy lead")
@@ -1261,7 +1262,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-more-mctest-1",
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
               "jwtFields" to "-name",
               "mfaRememberMe" to true,
               "mfa" to "ALL",
@@ -1285,7 +1286,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
-        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("jwtFields").isEqualTo("-name")
         .jsonPath("mfaRememberMe").isEqualTo(true)
         .jsonPath("mfa").isEqualTo("ALL")

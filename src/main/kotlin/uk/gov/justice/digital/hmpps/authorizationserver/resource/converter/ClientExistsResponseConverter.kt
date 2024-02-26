@@ -11,7 +11,7 @@ class ClientExistsResponseConverter : Converter<Client, ClientExistsResponse> {
     with(source) {
       return ClientExistsResponse(
         clientId,
-        tokenSettings.accessTokenTimeToLive.toMinutes(),
+        tokenSettings.accessTokenTimeToLive.toSeconds(),
       )
     }
   }

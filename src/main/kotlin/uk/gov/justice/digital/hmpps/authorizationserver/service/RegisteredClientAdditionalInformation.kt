@@ -15,10 +15,10 @@ class RegisteredClientAdditionalInformation {
     const val CLAIMS_JIRA_NUMBER = "jira_number"
   }
 
-  fun buildTokenSettings(accessTokenValidityMinutes: Long?): TokenSettings {
+  fun buildTokenSettings(accessTokenValiditySeconds: Long?): TokenSettings {
     val tokenSettingsBuilder = TokenSettings.builder().idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
-    accessTokenValidityMinutes?.let {
-      tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofMinutes(it))
+    accessTokenValiditySeconds?.let {
+      tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofSeconds(it))
     }
 
     return tokenSettingsBuilder.build()

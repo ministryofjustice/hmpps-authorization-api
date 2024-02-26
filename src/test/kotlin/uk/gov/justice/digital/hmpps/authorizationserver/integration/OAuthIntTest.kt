@@ -288,7 +288,7 @@ class OAuthIntTest : IntegrationTestBase() {
             "passed_mfa" to true,
           ),
         )
-        .setExpiration(Date(System.currentTimeMillis() + Duration.ofMinutes(5).toMillis()))
+        .setExpiration(Date(System.currentTimeMillis() + Duration.ofSeconds(5).toMillis()))
         .signWith(SignatureAlgorithm.RS256, jwkKeyAccessor.getPrimaryKeyPair().private)
         .compact()
     }

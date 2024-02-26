@@ -186,7 +186,7 @@ class ClientsService(
       with(clientDetails) {
         it.scopes = scopes
         it.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
-          accessTokenValidityMinutes,
+          accessTokenValiditySeconds,
         )
         it.jira = jiraNumber
         it.databaseUsername = databaseUserName
