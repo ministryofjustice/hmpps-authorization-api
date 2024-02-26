@@ -231,7 +231,6 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
       assertThat(client.authorizationGrantTypes).isEqualTo("client_credentials")
       assertThat(client.scopes).contains("read", "write")
-      // assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(200)
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(200))
       assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testz-mctest")
