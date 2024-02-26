@@ -139,7 +139,7 @@ class ClientsController(
 
 data class ClientExistsResponse(
   val clientId: String,
-  val accessTokenValidityMinutes: Long?,
+  val accessTokenValiditySeconds: Long?,
 )
 
 data class ClientDateSummary(
@@ -165,7 +165,7 @@ data class ClientViewResponse(
   val jiraNumber: String?,
   val databaseUserName: String?,
   val validDays: Long?,
-  val accessTokenValidityMinutes: Long?,
+  val accessTokenValiditySeconds: Long?,
   val deployment: ClientDeploymentDetails?,
   val jwtFields: String?,
   val mfaRememberMe: Boolean,
@@ -181,7 +181,7 @@ data class ClientUpdateRequest(
   val jiraNumber: String?,
   val databaseUserName: String?,
   val validDays: Long?,
-  val accessTokenValidityMinutes: Long?,
+  val accessTokenValiditySeconds: Long?,
   val jwtFields: String?,
   val mfaRememberMe: Boolean,
   val mfa: MfaAccess?,
@@ -213,7 +213,7 @@ data class ClientRegistrationRequest(
   val jiraNumber: String?,
   val databaseUserName: String?,
   val validDays: Long?,
-  val accessTokenValidityMinutes: Long?,
+  val accessTokenValiditySeconds: Long?,
   val redirectUris: String?,
   val jwtFields: String?,
   val mfaRememberMe: Boolean,

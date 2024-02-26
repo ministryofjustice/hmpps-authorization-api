@@ -347,7 +347,7 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testy-more-mctest-1",
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
             ),
           ),
         )
@@ -390,7 +390,7 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("ips[1]").isEqualTo("35.176.93.186/32")
         .jsonPath("jiraNumber").isEqualTo("HAAR-7777")
         .jsonPath("validDays").isEqualTo(5)
-        .jsonPath("accessTokenValidityMinutes").isEqualTo(20)
+        .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("deployment.clientType").isEqualTo("PERSONAL")
         .jsonPath("deployment.team").isEqualTo("testing team")
         .jsonPath("deployment.teamContact").isEqualTo("testy lead")

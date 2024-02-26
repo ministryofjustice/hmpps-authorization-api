@@ -36,7 +36,7 @@ class MigrationClientService(
     }
 
     migrationClientRequest.ips?.let { ips ->
-      clientConfigRepository.save(ClientConfig(client!!.clientId, ips, getClientEndDate(migrationClientRequest.validDays)))
+      clientConfigRepository.save(ClientConfig(clientIdService.toBase(client!!.clientId), ips, getClientEndDate(migrationClientRequest.validDays)))
     }
     migrationClientRequest.clientDeploymentDetails?.let { clientsService.saveClientDeploymentDetails(migrationClientRequest.clientId, it) }
   }

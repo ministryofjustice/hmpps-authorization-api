@@ -28,7 +28,7 @@ class ClientConverter(
         org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
           .requireProofKey(false)
           .requireAuthorizationConsent(false).build(),
-        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValidityMinutes),
+        tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValiditySeconds),
         latestClientAuthorization = mutableSetOf(),
         jwtFields = jwtFields,
         mfa = mfa,

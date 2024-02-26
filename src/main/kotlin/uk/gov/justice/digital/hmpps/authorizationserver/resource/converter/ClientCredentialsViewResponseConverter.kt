@@ -19,7 +19,7 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         latestClient.jira,
         latestClient.databaseUsername,
         clientConfig?.validDays,
-        latestClient.tokenSettings.accessTokenTimeToLive.toMinutes(),
+        latestClient.tokenSettings.accessTokenTimeToLive.seconds,
         deployment,
         latestClient.jwtFields,
         latestClient.mfaRememberMe,

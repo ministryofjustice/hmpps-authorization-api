@@ -202,7 +202,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testz-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 200,
               "clientSecret" to "clientSecret",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
               "clientDeploymentDetails" to mapOf(
@@ -231,7 +231,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
       assertThat(client.authorizationGrantTypes).isEqualTo("client_credentials")
       assertThat(client.scopes).contains("read", "write")
-      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
+      // assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(200)
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(200))
       assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testz-mctest")
 
@@ -282,7 +283,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "databaseUserName" to "testz-mctest",
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
-              "accessTokenValidityMinutes" to 20,
+              "accessTokenValiditySeconds" to 20,
               "clientSecret" to "clientSecret",
               "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
               "jwtFields" to "-name",
@@ -315,7 +316,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
       assertThat(client.authorizationGrantTypes).isEqualTo("authorization_code")
       assertThat(client.scopes).contains("read", "write")
-      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofMinutes(20))
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
       assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testz-mctest")
       assertThat(client.jwtFields).isEqualTo("-name")
