@@ -303,9 +303,20 @@ class OAuthIntTest : IntegrationTestBase() {
       val authorisationCode =
         header!!.substringAfter("?").split("&").first { it.startsWith("code=") }.substringAfter("code=")
 
+      val formData = LinkedMultiValueMap<String, String>().apply {
+        add("grant_type", "authorization_code")
+        add("code", authorisationCode)
+        add("state", state)
+        add("redirect_uri", validRedirectUri)
+      }
+
       val tokenResponse = webTestClient
-        .post().uri("/oauth2/token?grant_type=authorization_code&code=$authorisationCode&state=$state&redirect_uri=$validRedirectUri")
+        .post().uri("/oauth2/token")
         .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()))
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .bodyValue(
+          formData,
+        )
         .exchange()
         .expectStatus().isOk
         .expectBody()
