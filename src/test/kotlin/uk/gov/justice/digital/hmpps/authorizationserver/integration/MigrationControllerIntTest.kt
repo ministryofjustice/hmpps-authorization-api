@@ -423,7 +423,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(9) }
+        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(10) }
         .jsonPath("$.[*]").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
@@ -436,6 +436,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
               "test-complete-details-id",
               "ip-allow-c-client",
               "test-auth-code-client",
+              "hmpps-auth-authorization-server-client",
             ),
           )
         }
