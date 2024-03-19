@@ -172,6 +172,7 @@ data class ClientViewResponse(
   val mfa: MfaAccess?,
   val redirectUris: Set<String>?,
   val grantType: GrantType,
+  val serviceAuthorities: List<String>?,
 )
 
 data class ClientUpdateRequest(

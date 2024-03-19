@@ -2,6 +2,13 @@ info.app:
   name: HMPPS Authorization Server
   version: 1.0
 
+hmpps-auth:
+  endpoint:
+    url: ${hmpps-auth.endpoint.url}
+
+authorization:
+  endpoint.url: http://localhost:${server.port:8089}
+  token.url: ${authorization.endpoint.url}/oauth2/token
 jwt:
   keystore:
     password: s3cre3tK3y
@@ -26,6 +33,24 @@ spring:
     date-format: "yyyy-MM-dd HH:mm:ss"
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
+
+
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          jwk-set-uri: ${authorization.endpoint.url}/.well-known/jwks.json
+      client:
+        registration:
+          hmpps-auth:
+            provider: hmpps-auth
+            client-id: ${hmpps-auth.client.client-id}
+            client-secret: ${hmpps-auth.client.client-secret}
+            authorization-grant-type: client_credentials
+            scope: read
+        provider:
+          hmpps-auth:
+            token-uri: ${authorization.token.url}
 
   datasource:
     url: jdbc:postgresql://${SPRING_DATASOURCE_ENDPOINT}/${SPRING_DATASOURCE_NAME}?sslmode=verify-full

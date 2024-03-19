@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
+import uk.gov.justice.digital.hmpps.authorizationserver.adapter.AuthService
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
@@ -49,6 +51,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
   @MockBean
   lateinit var oAuthClientSecretGenerator: OAuthClientSecret
+
+  @MockBean
+  lateinit var authService: AuthService
 
   @MockBean
   private lateinit var telemetryClient: TelemetryClient
@@ -93,7 +98,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[6].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[6].teamName").isEqualTo("HAAR")
         .jsonPath("$.clients[6].grantType").isEqualTo("client_credentials")
-        .jsonPath("$.clients[6].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
+        .jsonPath("$.clients[6].roles").isEqualTo(
+          "AUDIT\n" +
+            "AUTH_INTERNAL\nOAUTH_ADMIN\nTESTING",
+        )
         .jsonPath("$.clients[6].count").isEqualTo(1)
         .jsonPath("$.clients[6].expired").isEmpty
         .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(9) }
@@ -126,7 +134,10 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[0].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[0].teamName").isEqualTo("HAAR")
         .jsonPath("$.clients[0].grantType").isEqualTo("client_credentials")
-        .jsonPath("$.clients[0].roles").isEqualTo("AUDIT\nOAUTH_ADMIN\nTESTING")
+        .jsonPath("$.clients[0].roles").isEqualTo(
+          "AUDIT\n" +
+            "AUTH_INTERNAL\nOAUTH_ADMIN\nTESTING",
+        )
         .jsonPath("$.clients[0].count").isEqualTo(1)
         .jsonPath("$.clients[0].expired").isEmpty
         .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(1) }
@@ -1115,6 +1126,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     fun `view client without deployment details`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+      whenever(authService.getServiceRoles(any())).thenReturn(listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"))
 
       webTestClient.post().uri("/base-clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
@@ -1154,6 +1166,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("grantType").isEqualTo("client_credentials")
         .jsonPath("deployment").isEmpty
+        .jsonPath("serviceAuthorities").isNotEmpty
+        .jsonPath("serviceAuthorities[0]").isEqualTo("SERVICE_ROLE_1")
+        .jsonPath("serviceAuthorities[1]").isEqualTo("SERVICE_ROLE_2")
 
       val client = clientRepository.findClientByClientId("test-more-test")
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
