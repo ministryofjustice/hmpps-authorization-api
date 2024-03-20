@@ -13,8 +13,7 @@ import reactor.core.publisher.Mono
 @Service
 class AuthService(
   @Qualifier("authWebClient") private val webClient: WebClient,
-  @Value("\${auth.enabled:false}") private val authEnabled: Boolean,
-) {
+  ) {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
