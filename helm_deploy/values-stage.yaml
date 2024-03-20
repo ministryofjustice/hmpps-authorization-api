@@ -12,6 +12,7 @@ generic-service:
     SPRING_PROFILES_ACTIVE: "logstash, stage"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     BASE_URL: https://authorization-api-stage.hmpps.service.justice.gov.uk
+    HMPPS_AUTH_ENDPOINT_URL: http://hmpps-auth.hmpps-auth-stage.svc.cluster.local/auth
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
