@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -1126,7 +1127,6 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     fun `view client without deployment details`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
-      whenever(authService.getServiceRoles(any())).thenReturn(listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"))
 
       webTestClient.post().uri("/base-clients")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
@@ -1166,9 +1166,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("grantType").isEqualTo("client_credentials")
         .jsonPath("deployment").isEmpty
-        .jsonPath("serviceAuthorities").isNotEmpty
-        .jsonPath("serviceAuthorities[0]").isEqualTo("SERVICE_ROLE_1")
-        .jsonPath("serviceAuthorities[1]").isEqualTo("SERVICE_ROLE_2")
+        .jsonPath("serviceAuthorities").isEmpty
 
       val client = clientRepository.findClientByClientId("test-more-test")
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
@@ -1176,6 +1174,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       clientRepository.delete(client)
       clientConfigRepository.delete(clientConfig)
       authorizationConsentRepository.delete(authorizationConsent)
+
+      verifyNoInteractions(authService)
     }
 
     @Test
@@ -1290,6 +1290,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
+      whenever(authService.getServiceRoles(any())).thenReturn(listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"))
+
       webTestClient.get().uri("/base-clients/$clientId")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
         .exchange()
@@ -1309,6 +1311,11 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("grantType").isEqualTo("authorization_code")
         .jsonPath("redirectUris[0]").isEqualTo("http://127.0.0.1:8089/authorized")
         .jsonPath("redirectUris[1]").isEqualTo("https://oauth.pstmn.io/v1/callback")
+        .jsonPath("serviceAuthorities").isNotEmpty
+        .jsonPath("serviceAuthorities[0]").isEqualTo("SERVICE_ROLE_1")
+        .jsonPath("serviceAuthorities[1]").isEqualTo("SERVICE_ROLE_2")
+
+      verify(authService).getServiceRoles("test-auth-code")
 
       val client = clientRepository.findClientByClientId(clientId)
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()

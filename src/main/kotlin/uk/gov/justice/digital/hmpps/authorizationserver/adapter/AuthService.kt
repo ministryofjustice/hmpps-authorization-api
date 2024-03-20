@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono
 @Service
 class AuthService(
   @Qualifier("authWebClient") private val webClient: WebClient,
-  ) {
+) {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

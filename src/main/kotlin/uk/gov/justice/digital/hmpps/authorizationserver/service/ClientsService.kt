@@ -209,8 +209,11 @@ class ClientsService(
     val clientConfig = clientClientConfigPair.second
     val deployment = getDeployment(clientId)
     setValidDays(clientConfig)
-
-    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment, authService.getServiceRoles(clientIdService.toBase(clientId)))
+    var serviceRoles = emptyList<String>()
+    if (GrantType.authorization_code.name == client.authorizationGrantTypes) {
+      serviceRoles = authService.getServiceRoles(clientIdService.toBase(clientId))
+    }
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment, serviceRoles)
   }
 
   @Transactional
