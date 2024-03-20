@@ -51,7 +51,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING")))
+      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_AUTH_INTERNAL", "ROLE_TESTING")))
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertTrue(token.isNull("user_name"))
@@ -98,8 +98,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING")))
-
+      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_AUTH_INTERNAL", "ROLE_TESTING")))
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertThat(token.get("user_name")).isEqualTo("testy")
     }
