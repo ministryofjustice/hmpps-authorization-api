@@ -41,6 +41,12 @@ class MigrationController(
   fun listAllClientIds(): ResponseEntity<Any> {
     return ResponseEntity.ok(migrationClientService.listAllClientIds())
   }
+
+  @GetMapping("client-details")
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun listClientDetails(): ResponseEntity<Any> {
+    return ResponseEntity.ok(migrationClientService.fetchClientDetails())
+  }
 }
 
 class MigrationClientRequest(
@@ -62,4 +68,20 @@ class MigrationClientRequest(
   val mfaRememberMe: Boolean,
   val mfa: MfaAccess?,
   val redirectUris: String?,
+)
+
+data class ClientDetailsResponse(
+  val clientId: String,
+  val accessTokenValiditySeconds: Long?,
+  val refreshTokenValiditySeconds: Long?,
+  val jwtFields: String?,
+  val mfaRememberMe: Boolean,
+  val mfa: MfaAccess?,
+  val redirectUris: String?,
+  val scopes: List<String>?,
+  val authorities: List<String>?,
+  val jiraNumber: String?,
+  val databaseUserName: String?,
+  val skipToAzureField: Boolean?,
+  val resourceIds: String?,
 )

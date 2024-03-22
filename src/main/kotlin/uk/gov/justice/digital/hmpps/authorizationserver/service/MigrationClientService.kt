@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationserver.service
 
 import org.springframework.core.convert.ConversionService
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
@@ -9,6 +10,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDetailsResponse
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.MigrationClientRequest
 import java.time.LocalDate
 
@@ -43,6 +45,37 @@ class MigrationClientService(
 
   fun listAllClientIds(): List<String> =
     clientRepository.findAll().map { it.clientId }.toList()
+
+  fun fetchClientDetails() = clientRepository.findAll().map { mapToClientDetails(it) }
+
+  private fun mapToClientDetails(client: Client) =
+
+    with(client) {
+      ClientDetailsResponse(
+        clientId = clientId,
+        redirectUris = redirectUris,
+        scopes = scopes,
+        accessTokenValiditySeconds = tokenSettings.accessTokenTimeToLive?.toSeconds(),
+        refreshTokenValiditySeconds = tokenSettings.refreshTokenTimeToLive?.toSeconds(),
+        jwtFields = jwtFields,
+        mfaRememberMe = mfaRememberMe,
+        mfa = mfa,
+        authorities = retrieveAuthorizationConsent(client)?.authorities,
+        databaseUserName = databaseUsername,
+        // TODO :  Fields(skipToAzureField, resourceIds) are not yet available in Authorization server
+        skipToAzureField = false,
+        resourceIds = "Not Implemented",
+        jiraNumber = jira,
+      )
+    }
+
+  private fun retrieveAuthorizationConsent(client: Client) =
+    authorizationConsentRepository.findByIdOrNull(
+      AuthorizationConsent.AuthorizationConsentId(
+        client.id,
+        client.clientId,
+      ),
+    )
 
   private fun withAuthoritiesPrefix(authorities: List<String>) =
     authorities
