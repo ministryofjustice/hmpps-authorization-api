@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.4"
   kotlin("plugin.spring") version "1.9.23"
   kotlin("plugin.jpa") version "1.9.23"
 }
@@ -12,7 +12,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.2.3")
+  implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.1.6")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
