@@ -36,6 +36,8 @@ class ClientConverter(
         redirectUris = redirectUris,
         databaseUsername = databaseUserName,
         jira = jiraNumber,
+        skipToAzureField = skipToAzureField,
+        resourceIds = if (source.resourceIds == null) emptyList() else resourceIds,
       )
     }
   }

@@ -44,6 +44,8 @@ class MigrationClientConverter(
         mfa = mfa,
         mfaRememberMe = mfaRememberMe,
         redirectUris = redirectUris,
+        resourceIds = if (source.resourceIds == null) emptyList() else resourceIds,
+        skipToAzureField = skipToAzureField,
       )
     }
   }

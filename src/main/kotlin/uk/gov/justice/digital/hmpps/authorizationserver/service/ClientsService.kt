@@ -196,6 +196,8 @@ class ClientsService(
         it.jwtFields = jwtFields
         it.mfaRememberMe = mfaRememberMe
         it.mfa = mfa
+        it.skipToAzureField = skipToAzureField
+        it.resourceIds = resourceIds ?: emptyList()
         updateClientConfig(clientId, clientConfig, this)
         updateAuthorizationConsent(it, clientDetails)
       }

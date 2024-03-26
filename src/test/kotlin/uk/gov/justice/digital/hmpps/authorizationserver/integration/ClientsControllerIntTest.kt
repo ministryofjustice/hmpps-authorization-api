@@ -666,6 +666,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
               "accessTokenValiditySeconds" to 20,
+              "skipToAzureField" to true,
+              "resourceIds" to listOf("resource-id1", "resource-id2"),
             ),
           ),
         )
@@ -688,6 +690,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
       assertThat(client.databaseUsername).contains("testy-mctest")
       assertThat(client.jira).isEqualTo("HAAR-9999")
+      assertThat(client.skipToAzureField).isTrue
+      assertThat(client.resourceIds).contains("resource-id1")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
@@ -855,6 +859,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "jiraNumber" to "HAAR-9999",
                 "validDays" to 5,
                 "accessTokenValiditySeconds" to 20,
+                "skipToAzureField" to true,
+                "resourceIds" to listOf("resource-id1", "resource-id2"),
               ),
             ),
           )
@@ -963,6 +969,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "jiraNumber" to "HAAR-8888",
                 "validDays" to 3,
                 "accessTokenValiditySeconds" to 10,
+                "skipToAzureField" to true,
+                "resourceIds" to listOf("resource-id1", "resource-id2"),
               ),
             ),
           )
@@ -974,6 +982,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
         assertThat(client.jira).isEqualTo("HAAR-8888")
         assertThat(client.databaseUsername).isEqualTo("testy-mctest-2")
+        assertThat(client.skipToAzureField).isEqualTo(true)
+        assertThat(client.resourceIds).isEqualTo(listOf("resource-id1", "resource-id2"))
 
         val clientConfig = clientConfigRepository.findById(client.clientId).get()
         assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
@@ -1142,6 +1152,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
               "accessTokenValiditySeconds" to 20,
+              "skipToAzureField" to true,
+              "resourceIds" to listOf("resource-id1", "resource-id2"),
             ),
           ),
         )
@@ -1166,7 +1178,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("grantType").isEqualTo("client_credentials")
         .jsonPath("deployment").isEmpty
-        .jsonPath("serviceAuthorities").isEmpty
+        .jsonPath("skipToAzureField").isEqualTo(true)
+        .jsonPath("resourceIds[0]").isEqualTo("resource-id1")
+        .jsonPath("resourceIds[1]").isEqualTo("resource-id2")
 
       val client = clientRepository.findClientByClientId("test-more-test")
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
