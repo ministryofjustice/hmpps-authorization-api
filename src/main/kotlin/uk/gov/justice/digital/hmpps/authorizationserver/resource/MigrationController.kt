@@ -68,6 +68,8 @@ class MigrationClientRequest(
   val mfaRememberMe: Boolean,
   val mfa: MfaAccess?,
   val redirectUris: String?,
+  val skipToAzureField: Boolean?,
+  val resourceIds: List<String>?,
 )
 
 data class ClientDetailsResponse(
@@ -83,5 +85,5 @@ data class ClientDetailsResponse(
   val jiraNumber: String?,
   val databaseUserName: String?,
   val skipToAzureField: Boolean?,
-  val resourceIds: String?,
+  val resourceIds: List<String>?,
 )

@@ -485,7 +485,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[0].jwtFields").isEmpty
         .jsonPath("\$.[0].scopes[0]").isEqualTo("read")
         .jsonPath("\$.[0].scopes[1]").isEqualTo("write")
-        .jsonPath("\$.[0].resourceIds").isEqualTo("Not Implemented")
+        .jsonPath("\$.[0].resourceIds[0]").isEqualTo("resourceId-1")
+        .jsonPath("\$.[0].resourceIds[1]").isEqualTo("resourceId-2")
         .jsonPath("\$.[0].jiraNumber").isEmpty
         .jsonPath("\$.[0].databaseUserName").isEmpty
         .jsonPath("\$.[0].skipToAzureField").isBoolean

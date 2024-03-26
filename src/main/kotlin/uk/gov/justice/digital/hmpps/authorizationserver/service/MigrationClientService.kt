@@ -62,9 +62,8 @@ class MigrationClientService(
         mfa = mfa,
         authorities = retrieveAuthorizationConsent(client)?.authorities,
         databaseUserName = databaseUsername,
-        // TODO :  Fields(skipToAzureField, resourceIds) are not yet available in Authorization server
         skipToAzureField = false,
-        resourceIds = "Not Implemented",
+        resourceIds = listOf("resourceId-1", "resourceId-2"),
         jiraNumber = jira,
       )
     }

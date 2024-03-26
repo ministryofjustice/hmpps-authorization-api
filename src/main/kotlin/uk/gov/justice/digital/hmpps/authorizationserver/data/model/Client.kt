@@ -65,6 +65,12 @@ data class Client(
   var databaseUsername: String?,
 
   var jira: String?,
+
+  var skipToAzureField: Boolean?,
+
+  @Column(length = 1000)
+  @Convert(converter = StringListConverter::class)
+  var resourceIds: List<String>?,
 ) {
 
   fun getLastAccessedDate(): Instant {
