@@ -117,76 +117,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `bad request when client already exists`() {
-      assertNotNull(jdbcRegisteredClientRepository.findByClientId("test-client-id"))
-
-      webTestClient.post().uri("/migrate-client")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .body(
-          BodyInserters.fromValue(
-            mapOf(
-              "clientId" to "test-client-id",
-              "clientName" to "test client",
-              "scopes" to listOf("read", "write"),
-              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-              "clientSecret" to "clientSecret",
-              "grantType" to "CLIENT_CREDENTIALS",
-              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
-            ),
-          ),
-        )
-        .exchange()
-        .expectStatus().isBadRequest
-        .expectBody()
-        .json(
-          """
-              {
-              "userMessage":"Client with client id test-client-id cannot be created as already exists",
-              "developerMessage":"Client with client id test-client-id cannot be created as already exists"
-              }
-          """
-            .trimIndent(),
-        )
-    }
-
-    @Test
-    fun `bad request when client with same base client id already exists`() {
-      assertNotNull(jdbcRegisteredClientRepository.findByClientId("ip-allow-a-client-1"))
-      assertNull(jdbcRegisteredClientRepository.findByClientId("ip-allow-a-client"))
-
-      webTestClient.post().uri("/migrate-client")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .body(
-          BodyInserters.fromValue(
-            mapOf(
-              "clientId" to "ip-allow-a-client",
-              "clientName" to "test client",
-              "grantType" to "CLIENT_CREDENTIALS",
-              "scopes" to listOf("read", "write"),
-              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-              "clientSecret" to "clientSecret",
-              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
-            ),
-          ),
-        )
-        .exchange()
-        .expectStatus().isBadRequest
-        .expectBody()
-        .json(
-          """
-              {
-              "userMessage":"Client with client id ip-allow-a-client cannot be created as already exists",
-              "developerMessage":"Client with client id ip-allow-a-client cannot be created as already exists"
-              }
-          """
-            .trimIndent(),
-        )
-    }
-
-    @Test
-    fun `migrate client success`() {
+    fun `migrate and update client success`() {
       assertNull(clientRepository.findClientByClientId("testz"))
 
       webTestClient.post().uri("/migrate-client")
@@ -223,7 +154,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      val client = clientRepository.findClientByClientId("testz")
+      var client = clientRepository.findClientByClientId("testz")
 
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo("testz")
@@ -235,13 +166,13 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.jira).isEqualTo("HAAR-9999")
       assertThat(client.databaseUsername).isEqualTo("testz-mctest")
 
-      val clientConfig = clientConfigRepository.findById(client.clientId).get()
+      var clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
-      val authorizationConsent =
+      var authorizationConsent =
         verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
-      val clientDeployment = clientDeploymentRepository.findById("testz").get()
+      var clientDeployment = clientDeploymentRepository.findById("testz").get()
       assertThat(clientDeployment.baseClientId).isEqualTo("testz")
       assertThat(clientDeployment.clientType).isEqualTo(ClientType.PERSONAL)
       assertThat(clientDeployment.team).isEqualTo("testing team")
@@ -259,6 +190,73 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         mapOf("username" to "AUTH_ADM", "clientId" to "testz", "grantType" to "client_credentials"),
         null,
       )
+
+      // Update existing client
+
+      webTestClient.post().uri("/migrate-client")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testz",
+              "grantType" to "client_credentials",
+              "scopes" to listOf("read"),
+              "authorities" to listOf("CURIOUS_API1", "VIEW_PRISONER_DATA1", "ROLE_COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testz-mctest",
+              "jiraNumber" to "HAAR-2000",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 100,
+              "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
+              "clientDeploymentDetails" to mapOf(
+                "clientType" to "PERSONAL",
+                "team" to "testing team_update",
+                "teamContact" to "testz lead_update",
+                "teamSlack" to "#testz",
+                "hosting" to "CLOUDPLATFORM",
+                "namespace" to "testz-testing-dev",
+                "deployment" to "hmpps-testing-dev",
+                "secretName" to "hmpps-testing-new",
+                "clientIdKey" to "SYSTEM_CLIENT_ID",
+                "secretKey" to "SYSTEM_CLIENT_SECRET",
+              ),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      client = clientRepository.findClientByClientId("testz")
+
+      assertNotNull(client)
+      assertThat(client!!.clientId).isEqualTo("testz")
+      assertThat(client.clientName).isEqualTo("testz")
+      assertThat(client.clientSecret).isEqualTo("{bcrypt}clientSecret")
+      assertThat(client.authorizationGrantTypes).isEqualTo("client_credentials")
+      assertThat(client.scopes).contains("read")
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(100))
+      assertThat(client.jira).isEqualTo("HAAR-2000")
+      assertThat(client.databaseUsername).isEqualTo("testz-mctest")
+
+      clientConfig = clientConfigRepository.findById(client.clientId).get()
+      assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
+      assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
+      authorizationConsent =
+        verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API1", "ROLE_VIEW_PRISONER_DATA1", "ROLE_COMMUNITY")
+
+      clientDeployment = clientDeploymentRepository.findById("testz").get()
+      assertThat(clientDeployment.baseClientId).isEqualTo("testz")
+      assertThat(clientDeployment.clientType).isEqualTo(ClientType.PERSONAL)
+      assertThat(clientDeployment.team).isEqualTo("testing team_update")
+      assertThat(clientDeployment.teamContact).isEqualTo("testz lead_update")
+      assertThat(clientDeployment.teamSlack).isEqualTo("#testz")
+      assertThat(clientDeployment.hosting).isEqualTo(Hosting.CLOUDPLATFORM)
+      assertThat(clientDeployment.namespace).isEqualTo("testz-testing-dev")
+      assertThat(clientDeployment.deployment).isEqualTo("hmpps-testing-dev")
+      assertThat(clientDeployment.secretName).isEqualTo("hmpps-testing-new")
+      assertThat(clientDeployment.clientIdKey).isEqualTo("SYSTEM_CLIENT_ID")
+      assertThat(clientDeployment.secretKey).isEqualTo("SYSTEM_CLIENT_SECRET")
 
       clientRepository.delete(client)
       clientConfigRepository.delete(clientConfig)
@@ -485,8 +483,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[0].jwtFields").isEmpty
         .jsonPath("\$.[0].scopes[0]").isEqualTo("read")
         .jsonPath("\$.[0].scopes[1]").isEqualTo("write")
-        .jsonPath("\$.[0].resourceIds[0]").isEqualTo("resourceId-1")
-        .jsonPath("\$.[0].resourceIds[1]").isEqualTo("resourceId-2")
+        .jsonPath("\$.[0].resourceIds[*]").doesNotExist()
         .jsonPath("\$.[0].jiraNumber").isEmpty
         .jsonPath("\$.[0].databaseUserName").isEmpty
         .jsonPath("\$.[0].skipToAzureField").isBoolean

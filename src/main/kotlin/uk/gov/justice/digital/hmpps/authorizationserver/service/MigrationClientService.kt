@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.Authoriz
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientDetailsResponse
+import uk.gov.justice.digital.hmpps.authorizationserver.resource.ClientUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationserver.resource.MigrationClientRequest
 import java.time.LocalDate
 
@@ -25,20 +26,31 @@ class MigrationClientService(
 ) {
 
   @Transactional
-  fun addClient(migrationClientRequest: MigrationClientRequest) {
-    val clientList = clientIdService.findByBaseClientId(migrationClientRequest.clientId!!)
-    if (clientList.isNotEmpty()) {
-      throw ClientAlreadyExistsException(migrationClientRequest.clientId)
-    }
-    var client = conversionService.convert(migrationClientRequest, Client::class.java)
+  fun addUpdateClient(migrationClientRequest: MigrationClientRequest) {
+    val existingClient = clientRepository.findClientByClientId(migrationClientRequest.clientId)
 
-    client = client.let { clientRepository.save(it) }
+    val client = conversionService.convert(migrationClientRequest, Client::class.java)
+
+    if (existingClient != null) updateMigratedClient(migrationClientRequest) else client?.let { saveClient(it, migrationClientRequest) }
+  }
+
+  private fun updateMigratedClient(migrationClientRequest: MigrationClientRequest) {
+    clientsService.editClient(
+      migrationClientRequest.clientId,
+      mapToClientDetails(migrationClientRequest),
+    )
+    migrationClientRequest.clientDeploymentDetails?.let { clientsService.upsert(migrationClientRequest.clientId, it) }
+  }
+
+  private fun saveClient(client: Client, migrationClientRequest: MigrationClientRequest) {
+    client.let { clientRepository.save(it) }
+
     migrationClientRequest.authorities?.let { authorities ->
-      authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, (withAuthoritiesPrefix(authorities))))
+      authorizationConsentRepository.save(AuthorizationConsent(client.id, client.clientId, (withAuthoritiesPrefix(authorities))))
     }
 
     migrationClientRequest.ips?.let { ips ->
-      clientConfigRepository.save(ClientConfig(clientIdService.toBase(client!!.clientId), ips, getClientEndDate(migrationClientRequest.validDays)))
+      clientConfigRepository.save(ClientConfig(clientIdService.toBase(client.clientId), ips, getClientEndDate(migrationClientRequest.validDays)))
     }
     migrationClientRequest.clientDeploymentDetails?.let { clientsService.saveClientDeploymentDetails(migrationClientRequest.clientId, it) }
   }
@@ -62,8 +74,8 @@ class MigrationClientService(
         mfa = mfa,
         authorities = retrieveAuthorizationConsent(client)?.authorities,
         databaseUserName = databaseUsername,
-        skipToAzureField = false,
-        resourceIds = listOf("resourceId-1", "resourceId-2"),
+        skipToAzureField = skipToAzureField,
+        resourceIds = resourceIds,
         jiraNumber = jira,
       )
     }
@@ -87,4 +99,23 @@ class MigrationClientService(
       LocalDate.now().plusDays(validDaysIncludeToday)
     }
   }
+
+  private fun mapToClientDetails(migrationClientRequest: MigrationClientRequest) =
+    with(migrationClientRequest) {
+      ClientUpdateRequest(
+        scopes = scopes ?: emptyList(),
+        authorities = authorities ?: emptyList(),
+        jiraNumber = jiraNumber,
+        databaseUserName = databaseUserName,
+        accessTokenValiditySeconds = accessTokenValiditySeconds,
+        jwtFields = jwtFields,
+        mfaRememberMe = mfaRememberMe,
+        mfa = mfa,
+        redirectUris = redirectUris,
+        skipToAzureField = skipToAzureField,
+        resourceIds = resourceIds,
+        ips = ips ?: emptyList(),
+        validDays = validDays,
+      )
+    }
 }
