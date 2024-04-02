@@ -9,16 +9,16 @@ configurations {
 }
 
 dependencies {
-  implementation("org.springframework.boot:spring-boot-starter-security")
-  implementation("org.springframework.boot:spring-boot-starter-web")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.2.3")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+  implementation("org.springframework.boot:spring-boot-starter-security")
+  implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.security:spring-security-oauth2-authorization-server")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
-  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.11.0")
@@ -27,7 +27,6 @@ dependencies {
   implementation("io.jsonwebtoken:jjwt:0.12.5")
   implementation("javax.xml.bind:jaxb-api:2.3.1")
   implementation("com.sun.xml.bind:jaxb-impl:4.0.5")
-  implementation("com.sun.xml.bind:jaxb-core:4.0.5")
 
   runtimeOnly("com.h2database:h2:2.2.224")
   runtimeOnly("org.postgresql:postgresql:42.7.3")
