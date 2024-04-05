@@ -21,7 +21,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.adapter.AuthService
-import uk.gov.justice.digital.hmpps.authorizationserver.adapter.ServiceDetails
+import uk.gov.justice.digital.hmpps.authorizationserver.adapter.Service
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
@@ -1305,9 +1305,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      val serviceDetails = ServiceDetails(name = "Service name", description = "Service description", authorisedRoles = listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"), url = "http://url.com", enabled = false, contact = "email@email.com")
+      val service = Service(name = "Service name", description = "Service description", authorisedRoles = listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"), url = "http://url.com", enabled = false, contact = "email@email.com")
 
-      whenever(authService.getServiceRoles(any())).thenReturn(serviceDetails)
+      whenever(authService.getService(any())).thenReturn(service)
 
       webTestClient.get().uri("/base-clients/$clientId")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
@@ -1328,15 +1328,15 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("grantType").isEqualTo("authorization_code")
         .jsonPath("redirectUris[0]").isEqualTo("http://127.0.0.1:8089/authorized")
         .jsonPath("redirectUris[1]").isEqualTo("https://oauth.pstmn.io/v1/callback")
-        .jsonPath("serviceDetails.name").isEqualTo("Service name")
-        .jsonPath("serviceDetails.description").isEqualTo("Service description")
-        .jsonPath("serviceDetails.url").isEqualTo("http://url.com")
-        .jsonPath("serviceDetails.enabled").isEqualTo(false)
-        .jsonPath("serviceDetails.contact").isEqualTo("email@email.com")
-        .jsonPath("serviceDetails.authorisedRoles[0]").isEqualTo("SERVICE_ROLE_1")
-        .jsonPath("serviceDetails.authorisedRoles[1]").isEqualTo("SERVICE_ROLE_2")
+        .jsonPath("service.name").isEqualTo("Service name")
+        .jsonPath("service.description").isEqualTo("Service description")
+        .jsonPath("service.url").isEqualTo("http://url.com")
+        .jsonPath("service.enabled").isEqualTo(false)
+        .jsonPath("service.contact").isEqualTo("email@email.com")
+        .jsonPath("service.authorisedRoles[0]").isEqualTo("SERVICE_ROLE_1")
+        .jsonPath("service.authorisedRoles[1]").isEqualTo("SERVICE_ROLE_2")
 
-      verify(authService).getServiceRoles("test-auth-code")
+      verify(authService).getService("test-auth-code")
 
       val client = clientRepository.findClientByClientId(clientId)
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()

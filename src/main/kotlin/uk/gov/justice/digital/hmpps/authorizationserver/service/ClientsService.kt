@@ -4,10 +4,9 @@ import org.springframework.core.convert.ConversionService
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.adapter.AuthService
-import uk.gov.justice.digital.hmpps.authorizationserver.adapter.ServiceDetails
+import uk.gov.justice.digital.hmpps.authorizationserver.adapter.Service
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
@@ -30,8 +29,9 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Base64.getEncoder
 import kotlin.collections.ArrayList
+import org.springframework.stereotype.Service as ServiceAnnotation
 
-@Service
+@ServiceAnnotation
 class ClientsService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
@@ -212,11 +212,11 @@ class ClientsService(
     val clientConfig = clientClientConfigPair.second
     val deployment = getDeployment(clientId)
     setValidDays(clientConfig)
-    var serviceDetails: ServiceDetails? = null
+    var service: uk.gov.justice.digital.hmpps.authorizationserver.adapter.Service? = null
     if (GrantType.authorization_code.name == client.authorizationGrantTypes) {
-      serviceDetails = authService.getServiceRoles(clientIdService.toBase(clientId))
+      service = authService.getService(clientIdService.toBase(clientId))
     }
-    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment, serviceDetails)
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment, service)
   }
 
   @Transactional
@@ -380,7 +380,7 @@ data class ClientComposite(
   val clientConfig: ClientConfig?,
   val authorizationConsent: AuthorizationConsent?,
   val deployment: ClientDeploymentDetails?,
-  val serviceDetails: ServiceDetails?,
+  val service: uk.gov.justice.digital.hmpps.authorizationserver.adapter.Service?,
 )
 
 data class DuplicateRegistrationResponse(
