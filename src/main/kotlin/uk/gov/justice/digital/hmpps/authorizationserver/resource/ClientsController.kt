@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
+import uk.gov.justice.digital.hmpps.authorizationserver.adapter.ServiceDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationserver.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
@@ -172,7 +173,7 @@ data class ClientViewResponse(
   val mfa: MfaAccess?,
   val redirectUris: Set<String>?,
   val grantType: GrantType,
-  val serviceAuthorities: List<String>?,
+  val serviceDetails: ServiceDetails?,
   val skipToAzureField: Boolean?,
   val resourceIds: List<String>?,
 )

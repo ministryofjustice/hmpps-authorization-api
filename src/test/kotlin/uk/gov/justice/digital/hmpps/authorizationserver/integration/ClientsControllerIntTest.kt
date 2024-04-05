@@ -21,6 +21,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.adapter.AuthService
+import uk.gov.justice.digital.hmpps.authorizationserver.adapter.ServiceDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
@@ -101,7 +102,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[6].grantType").isEqualTo("client_credentials")
         .jsonPath("$.clients[6].roles").isEqualTo(
           "AUDIT\n" +
-            "AUTH_INTERNAL\nOAUTH_ADMIN\nTESTING",
+            "OAUTH_ADMIN\nTESTING\nVIEW_AUTH_SERVICE_DETAILS",
         )
         .jsonPath("$.clients[6].count").isEqualTo(1)
         .jsonPath("$.clients[6].expired").isEmpty
@@ -137,7 +138,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[0].grantType").isEqualTo("client_credentials")
         .jsonPath("$.clients[0].roles").isEqualTo(
           "AUDIT\n" +
-            "AUTH_INTERNAL\nOAUTH_ADMIN\nTESTING",
+            "OAUTH_ADMIN\nTESTING\nVIEW_AUTH_SERVICE_DETAILS",
         )
         .jsonPath("$.clients[0].count").isEqualTo(1)
         .jsonPath("$.clients[0].expired").isEmpty
@@ -1304,7 +1305,9 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      whenever(authService.getServiceRoles(any())).thenReturn(listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"))
+      val serviceDetails = ServiceDetails(name = "Service name", description = "Service description", authorisedRoles = listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"), url = "http://url.com", enabled = false, contact = "email@email.com")
+
+      whenever(authService.getServiceRoles(any())).thenReturn(serviceDetails)
 
       webTestClient.get().uri("/base-clients/$clientId")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
@@ -1325,9 +1328,13 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("grantType").isEqualTo("authorization_code")
         .jsonPath("redirectUris[0]").isEqualTo("http://127.0.0.1:8089/authorized")
         .jsonPath("redirectUris[1]").isEqualTo("https://oauth.pstmn.io/v1/callback")
-        .jsonPath("serviceAuthorities").isNotEmpty
-        .jsonPath("serviceAuthorities[0]").isEqualTo("SERVICE_ROLE_1")
-        .jsonPath("serviceAuthorities[1]").isEqualTo("SERVICE_ROLE_2")
+        .jsonPath("serviceDetails.name").isEqualTo("Service name")
+        .jsonPath("serviceDetails.description").isEqualTo("Service description")
+        .jsonPath("serviceDetails.url").isEqualTo("http://url.com")
+        .jsonPath("serviceDetails.enabled").isEqualTo(false)
+        .jsonPath("serviceDetails.contact").isEqualTo("email@email.com")
+        .jsonPath("serviceDetails.authorisedRoles[0]").isEqualTo("SERVICE_ROLE_1")
+        .jsonPath("serviceDetails.authorisedRoles[1]").isEqualTo("SERVICE_ROLE_2")
 
       verify(authService).getServiceRoles("test-auth-code")
 

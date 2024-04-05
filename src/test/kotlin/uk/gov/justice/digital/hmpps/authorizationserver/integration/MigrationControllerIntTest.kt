@@ -490,7 +490,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[0].mfaRememberMe").isBoolean
         .jsonPath("\$.[0].authorities[*]").value<List<String>> {
           assertThat(it)
-            .containsExactlyInAnyOrder("ROLE_OAUTH_ADMIN", "ROLE_AUDIT", "ROLE_TESTING", "ROLE_AUTH_INTERNAL")
+            .containsExactlyInAnyOrder("ROLE_OAUTH_ADMIN", "ROLE_AUDIT", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")
         }
         .jsonPath(matchByClientId, "test-client-id").exists()
         .jsonPath(matchByClientId, "test-client-create-id").exists()
