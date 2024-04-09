@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationserver.adapter.AuthService
+import uk.gov.justice.digital.hmpps.authorizationserver.adapter.ServiceDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.Client
@@ -211,11 +212,11 @@ class ClientsService(
     val clientConfig = clientClientConfigPair.second
     val deployment = getDeployment(clientId)
     setValidDays(clientConfig)
-    var serviceRoles: List<String>? = null
+    var service: ServiceDetails? = null
     if (GrantType.authorization_code.name == client.authorizationGrantTypes) {
-      serviceRoles = authService.getServiceRoles(clientIdService.toBase(clientId))
+      service = authService.getService(clientIdService.toBase(clientId))
     }
-    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment, serviceRoles)
+    return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment, service)
   }
 
   @Transactional
@@ -379,7 +380,7 @@ data class ClientComposite(
   val clientConfig: ClientConfig?,
   val authorizationConsent: AuthorizationConsent?,
   val deployment: ClientDeploymentDetails?,
-  val serviceAuthorities: List<String>?,
+  val service: ServiceDetails?,
 )
 
 data class DuplicateRegistrationResponse(

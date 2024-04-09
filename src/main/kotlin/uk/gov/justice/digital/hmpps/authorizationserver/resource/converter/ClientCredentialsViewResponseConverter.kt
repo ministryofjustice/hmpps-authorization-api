@@ -26,7 +26,7 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         latestClient.mfa,
         latestClient.getRegisteredRedirectUriWithNewlines(),
         GrantType.valueOf(latestClient.authorizationGrantTypes),
-        serviceAuthorities,
+        service,
         latestClient.skipToAzureField,
         latestClient.resourceIds,
       )
