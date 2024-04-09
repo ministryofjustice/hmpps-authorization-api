@@ -5,11 +5,11 @@ generic-service:
   replicaCount: 2
 
   ingress:
-    host: authorization-server-dev.hmpps.service.justice.gov.uk
+    host: authorization-api-dev.hmpps.service.justice.gov.uk
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
-    BASE_URL: https://authorization-server-dev.hmpps.service.justice.gov.uk
+    BASE_URL: https://authorization-api-dev.hmpps.service.justice.gov.uk
     HMPPS_AUTH_ENDPOINT_URL: http://hmpps-auth.hmpps-auth-dev.svc.cluster.local/auth
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack

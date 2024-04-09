@@ -12,7 +12,7 @@ generic-service:
   ingress:
     enabled: true
     host: app-hostname.local # override per environment
-    tlsSecretName: hmpps-authorization-server-cert
+    tlsSecretName: hmpps-authorization-api-cert
 
   # Environment variables to load into the deployment
   env:
@@ -28,7 +28,7 @@ generic-service:
   #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
 
   namespace_secrets:
-    hmpps-authorization-server:
+    hmpps-authorization-api:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
       JWT_JWK_KEY_ID: "JWT_JWK_KEY_ID"
       JWT_KEYSTORE_ALIAS: "JWT_KEYSTORE_ALIAS"
@@ -52,4 +52,4 @@ generic-service:
       - internal
 
 generic-prometheus-alerts:
-  targetApplication: hmpps-authorization-server
+  targetApplication: hmpps-authorization-api
