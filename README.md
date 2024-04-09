@@ -71,6 +71,6 @@ The generated token will live for 5 minutes so subsequent attempts to retrieve t
 To test the client credentials flow in the DEV environment, the only difference is the URLs (client-id and client-secret are the same). Use the following URLs:
 
 ```bash
-access-token-url=https://authorization-server-dev.hmpps.service.justice.gov.uk/oauth2/token
-auth-url=https://authorization-server-dev.hmpps.service.justice.gov.uk/
+access-token-url=https://authorization-api-dev.hmpps.service.justice.gov.uk/oauth2/token
+auth-url=https://authorization-api-dev.hmpps.service.justice.gov.uk/
 ```
