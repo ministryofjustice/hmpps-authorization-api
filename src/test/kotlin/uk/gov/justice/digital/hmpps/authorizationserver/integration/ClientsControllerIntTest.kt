@@ -21,7 +21,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationserver.adapter.AuthService
-import uk.gov.justice.digital.hmpps.authorizationserver.adapter.Service
+import uk.gov.justice.digital.hmpps.authorizationserver.adapter.ServiceDetails
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.AuthorizationConsent.AuthorizationConsentId
 import uk.gov.justice.digital.hmpps.authorizationserver.data.model.ClientType
@@ -1305,7 +1305,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      val service = Service(name = "Service name", description = "Service description", authorisedRoles = listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"), url = "http://url.com", enabled = false, contact = "email@email.com")
+      val service = ServiceDetails(name = "Service name", description = "Service description", authorisedRoles = listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"), url = "http://url.com", enabled = false, contact = "email@email.com")
 
       whenever(authService.getService(any())).thenReturn(service)
 

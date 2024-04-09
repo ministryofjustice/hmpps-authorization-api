@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.authorizationserver.adapter
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
-import org.springframework.stereotype.Service as ServiceAnnotation
 
 @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-@ServiceAnnotation
+@Service
 class AuthService(
   @Qualifier("authWebClient") private val webClient: WebClient,
 ) {
@@ -17,10 +17,10 @@ class AuthService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun getService(clientId: String): Service? {
+  fun getService(clientId: String): ServiceDetails? {
     return webClient.get().uri("/api/services/roles/{clientId}", clientId)
       .retrieve()
-      .bodyToMono(Service::class.java)
+      .bodyToMono(ServiceDetails::class.java)
       .onErrorResume(WebClientResponseException::class.java) {
         log.error("Error response on attempt to retrieve service roles", it)
         Mono.empty()
@@ -33,7 +33,7 @@ class AuthService(
   }
 }
 
-data class Service(
+data class ServiceDetails(
   val name: String?,
   val description: String?,
   var authorisedRoles: List<String>?,
