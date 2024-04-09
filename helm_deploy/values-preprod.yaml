@@ -1,11 +1,11 @@
 ---
-# Per environment values which override defaults in hmpps-authorization-server/values.yaml
+# Per environment values which override defaults in hmpps-authorization-api/values.yaml
 
 generic-service:
   replicaCount: 2
 
   ingress:
-    host: hmpps-authorization-server-preprod.hmpps.service.justice.gov.uk
+    host: authorization-api-preprod.hmpps.service.justice.gov.uk
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json

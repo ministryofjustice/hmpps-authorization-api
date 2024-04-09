@@ -1,10 +1,10 @@
 version: "3"
 services:
-  hmpps-authorization-server:
+  hmpps-authorization-api:
     build:
       context: .
     network_mode: "host"
-    container_name: hmpps-authorization-server
+    container_name: hmpps-authorization-api
     ports:
       - "8081:8080"
     healthcheck:

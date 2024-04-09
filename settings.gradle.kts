@@ -1,1 +1,1 @@
-rootProject.name = "hmpps-authorization-server"
+rootProject.name = "hmpps-authorization-api"
