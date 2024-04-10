@@ -1,6 +1,6 @@
 {
   "role": {
-    "name": "hmpps-authorization-server"
+    "name": "hmpps-authorization-api"
   },
   "customDimensions": {
     "service.version": "${BUILD_NUMBER}"

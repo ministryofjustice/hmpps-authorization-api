@@ -7,7 +7,7 @@ if ! echo "$BASH_VERSION" | grep -E "^[45]" &>/dev/null; then
   exit 1
 fi
 
-# Set via env vars for authorization server
+# Set via env vars for authorization api
 #ENV=
 #USER=
 #CLIENTID=(clientID with rotate permissions)
@@ -74,12 +74,12 @@ HTTPIE_OPTS=("--body" "--check-status" "--timeout=4.5" "--session-read-only=${HT
 
 # Setup httpie session, enable preview API features
 if ! OUTPUT=$(http --check-status --ignore-stdin --session=${HTTPIE_SESSION} "${HOST}/rotate/base-clients/${CLIENTID}" "${AUTH_TOKEN_HEADER}"); then
-  echo "Unable to talk to HMPPS Authorization Server API, check credentials are set correctly and permissions granted."
+  echo "Unable to talk to HMPPS Authorization API, check credentials are set correctly and permissions granted."
   echo "$OUTPUT"
   exit 1
 fi
 
-hmpps_authorization_server() {
+hmpps_authorization_api() {
   http "${HTTPIE_OPTS[@]}" "$@"
 }
 
@@ -88,7 +88,7 @@ echo "Talking to host \"${HOST}\""
 
 # Fetch clientID data
 echo "Fetching deployment data for clientID \"${BASE_CLIENT_ID}\""
-clientInfo_json=$(hmpps_authorization_server GET "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}")
+clientInfo_json=$(hmpps_authorization_api GET "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}")
 
 contextAndNamespace=$(echo "${clientInfo_json}" | jq -r .deployment.namespace)
 deployment=$(echo "${clientInfo_json}" | jq -r .deployment.deployment)
@@ -141,7 +141,7 @@ fi
 
 # Duplicate clientID get new secret
 echo "duplicating client with limited special characters"
-results_json=$(hmpps_authorization_server POST "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}/clients")
+results_json=$(hmpps_authorization_api POST "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}/clients")
 
 new_clientID_name=$(echo "${results_json}" | jq -r .clientId)
 new_clientID_b64name=$(echo "${results_json}" | jq -r .base64ClientId)
@@ -178,7 +178,7 @@ fi
 
 ### Delete the old secret no longer used
 echo "Deleting old clientID ${currentClientID}"
-hmpps_authorization_server DELETE "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}/clients/${currentClientID}"
+hmpps_authorization_api DELETE "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}/clients/${currentClientID}"
 
 # remove session file
 rm $HTTPIE_SESSION

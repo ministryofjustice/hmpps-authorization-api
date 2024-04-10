@@ -4,13 +4,13 @@ calculateHostname() {
   local ENV=$1
   # Set the environment-specific hostname for the oauth2 service
   if [[ "$ENV" == "t3" ]]; then
-    echo "https://authorization-server-dev.hmpps.service.justice.gov.uk"
+    echo "https://authorization-api-dev.hmpps.service.justice.gov.uk"
   elif [[ "$ENV" == "t2" ]]; then
-    echo "https://authorization-server-stage.hmpps.service.justice.gov.uk"
+    echo "https://authorization-api-stage.hmpps.service.justice.gov.uk"
   elif [[ "$ENV" == "preprod" ]]; then
-    echo "https://authorization-server-preprod.hmpps.service.justice.gov.uk"
+    echo "https://authorization-api-preprod.hmpps.service.justice.gov.uk"
   elif [[ "$ENV" == "prod" ]]; then
-    echo "https://authorization-server.hmpps.service.justice.gov.uk"
+    echo "https://authorization-api.hmpps.service.justice.gov.uk"
   elif [[ "$ENV" =~ localhost* ]]; then
     echo "http://$ENV"
   fi

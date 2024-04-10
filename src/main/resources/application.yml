@@ -1,5 +1,5 @@
 info.app:
-  name: HMPPS Authorization Server
+  name: HMPPS Authorization API
   version: 1.0
 
 hmpps-auth:
@@ -25,7 +25,7 @@ jwt:
 
 spring:
   application:
-    name: hmpps-authorization-server
+    name: hmpps-authorization-api
   codec:
     max-in-memory-size: 10MB
 
@@ -56,7 +56,7 @@ spring:
     url: jdbc:postgresql://${SPRING_DATASOURCE_ENDPOINT}/${SPRING_DATASOURCE_NAME}?sslmode=verify-full
     continue-on-error: true
     hikari:
-      pool-name: AuthorizationServer-CP
+      pool-name: AuthorizationApi-CP
       connectionTimeout: 1000
       validationTimeout: 500
 
