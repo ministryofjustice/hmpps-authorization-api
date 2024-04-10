@@ -18,7 +18,7 @@ class AuthService(
   }
 
   fun getService(clientId: String): ServiceDetails? {
-    return webClient.get().uri("/api/services/roles/{clientId}", clientId)
+    return webClient.get().uri("/api/services/{clientId}", clientId)
       .retrieve()
       .bodyToMono(ServiceDetails::class.java)
       .onErrorResume(WebClientResponseException::class.java) {
