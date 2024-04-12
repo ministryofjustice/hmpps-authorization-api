@@ -29,6 +29,7 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfi
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientMfaStatusCheck
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
 import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
@@ -78,6 +80,13 @@ class AuthorizationApiConfig(
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
+      }
+    }
+
+    authorizationServerConfigurer.authorizationEndpoint { authorizationEndpointConfigurer ->
+      authorizationEndpointConfigurer.authenticationProviders {
+          authenticationProviders ->
+        authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForMfa(authenticationProvider) }
       }
     }
 
@@ -169,6 +178,14 @@ class AuthorizationApiConfig(
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
       return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, clientIdService)
+    }
+
+    return authenticationProvider
+  }
+
+  private fun withRequestValidatorForMfa(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+    if (authenticationProvider.supports(OAuth2AuthorizationCodeRequestAuthenticationToken::class.java)) {
+      return ClientMfaStatusCheck(authenticationProvider)
     }
 
     return authenticationProvider
