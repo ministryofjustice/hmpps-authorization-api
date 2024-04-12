@@ -34,6 +34,7 @@ class AuthService(
         .block()!!
       return Optional.of(serviceDetails)
     } catch (e: Exception) {
+      log.error("Exception while retrieving service details", e)
       return Optional.empty()
     }
   }

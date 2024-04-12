@@ -1347,6 +1347,54 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `view authorization code client without service details`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      val clientId = "test-auth-code"
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to clientId,
+              "scopes" to listOf("read", "write"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-more-mctest-1",
+              "jiraNumber" to "HAAR-7777",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+              "jwtFields" to "-name",
+              "mfaRememberMe" to true,
+              "mfa" to "ALL",
+              "grantType" to "authorization_code",
+              "redirectUris" to "http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      whenever(authService.getService(any())).thenReturn(Optional.empty())
+
+      webTestClient.get().uri("/base-clients/$clientId")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo(clientId)
+        .jsonPath("service").isEmpty
+
+      verify(authService).getService("test-auth-code")
+
+      val client = clientRepository.findClientByClientId(clientId)
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+    }
+
+    @Test
     fun `view incomplete client success`() {
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
