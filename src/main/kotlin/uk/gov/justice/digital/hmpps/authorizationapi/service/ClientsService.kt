@@ -214,7 +214,8 @@ class ClientsService(
     setValidDays(clientConfig)
     var service: ServiceDetails? = null
     if (GrantType.authorization_code.name == client.authorizationGrantTypes) {
-      service = authService.getService(clientIdService.toBase(clientId))
+      val optionalService = authService.getService(clientIdService.toBase(clientId))
+      if (!optionalService.isEmpty) service = optionalService.get()
     }
     return ClientComposite(client, clientConfig, retrieveAuthorizationConsent(client), deployment, service)
   }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
+import java.util.Optional
 
 @Suppress("SpringJavaInjectionPointsAutowiringInspection")
 @Service
@@ -17,19 +18,25 @@ class AuthService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun getService(clientId: String): ServiceDetails? {
-    return webClient.get().uri("/api/services/{clientId}", clientId)
-      .retrieve()
-      .bodyToMono(ServiceDetails::class.java)
-      .onErrorResume(WebClientResponseException::class.java) {
-        log.error("Error response on attempt to retrieve service roles", it)
-        Mono.empty()
-      }
-      .onErrorResume(Exception::class.java) {
-        log.error("Failed to retrieve service roles", it)
-        Mono.empty()
-      }
-      .block()!!
+  fun getService(clientId: String): Optional<ServiceDetails> {
+    try {
+      val serviceDetails = webClient.get().uri("/api/services/{clientId}", clientId)
+        .retrieve()
+        .bodyToMono(ServiceDetails::class.java)
+        .onErrorResume(WebClientResponseException::class.java) {
+          log.error("Error response on attempt to retrieve service details", it)
+          Mono.empty()
+        }
+        .onErrorResume(Exception::class.java) {
+          log.error("Failed to retrieve service details", it)
+          Mono.empty()
+        }
+        .block()!!
+      return Optional.of(serviceDetails)
+    } catch (e: Exception) {
+      log.error("Exception while retrieving service details", e)
+      return Optional.empty()
+    }
   }
 }
 
