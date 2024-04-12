@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
+import java.util.*
 import java.util.Base64.getEncoder
 
 class ClientsControllerIntTest : IntegrationTestBase() {
@@ -1307,7 +1308,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       val service = ServiceDetails(name = "Service name", description = "Service description", authorisedRoles = listOf("SERVICE_ROLE_1", "SERVICE_ROLE_2"), url = "http://url.com", enabled = false, contact = "email@email.com")
 
-      whenever(authService.getService(any())).thenReturn(service)
+      whenever(authService.getService(any())).thenReturn(Optional.of(service))
 
       webTestClient.get().uri("/base-clients/$clientId")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
