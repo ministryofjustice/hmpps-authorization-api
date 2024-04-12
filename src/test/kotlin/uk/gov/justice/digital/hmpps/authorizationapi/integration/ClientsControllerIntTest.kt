@@ -35,8 +35,8 @@ import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
-import java.util.*
 import java.util.Base64.getEncoder
+import java.util.Optional
 
 class ClientsControllerIntTest : IntegrationTestBase() {
 
