@@ -5,6 +5,8 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.security.SecurityProperties
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,6 +41,8 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
+import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorizationCodeFilter
+import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
@@ -87,6 +91,15 @@ class AuthorizationApiConfig(
       .cors { it.disable() }.csrf { it.disable() }
 
     return http.build()
+  }
+
+  @Bean
+  fun authorizeFilter(signedJwtParser: SignedJwtParser): FilterRegistrationBean<OAuthAuthorizationCodeFilter> {
+    val registrationBean = FilterRegistrationBean<OAuthAuthorizationCodeFilter>()
+    registrationBean.filter = OAuthAuthorizationCodeFilter(signedJwtParser)
+    registrationBean.addUrlPatterns("/oauth2/authorize")
+    registrationBean.order = SecurityProperties.DEFAULT_FILTER_ORDER - 1
+    return registrationBean
   }
 
   @Bean
