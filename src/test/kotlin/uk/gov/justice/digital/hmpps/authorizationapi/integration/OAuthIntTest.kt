@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
@@ -248,6 +247,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `unauthenticated user`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
         .exchange()
         .expectStatus().isUnauthorized
     }
@@ -256,6 +256,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `invalid client id`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$invalidClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isBadRequest
@@ -265,6 +266,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `invalid redirect url`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$invalidRedirectUri")
+        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isBadRequest
@@ -274,15 +276,36 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `missing response type`() {
       webTestClient
         .get().uri("/oauth2/authorize?client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isBadRequest
     }
 
     @Test
+    fun `missing client credentials token`() {
+      webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `client credentials token with incorrect authority`() {
+      webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsToken("ROLE_NOT_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
     fun `success redirects with code`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isFound
@@ -295,6 +318,7 @@ class OAuthIntTest : IntegrationTestBase() {
       var header: String? = null
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectHeader()
@@ -328,13 +352,29 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("aud")).isEqualTo(validClientId)
     }
 
+    private fun createClientCredentialsToken(vararg roles: String): String {
+      val authoritiesAsString = roles.asList().joinToString(",")
+
+      return Jwts.builder()
+        .id("1234")
+        .claims(
+          mapOf<String, Any>(
+            "authorities" to authoritiesAsString,
+            "name" to "name",
+          ),
+        )
+        .expiration(Date(System.currentTimeMillis() + Duration.ofSeconds(5).toMillis()))
+        .signWith(jwkKeyAccessor.getPrimaryKeyPair().private)
+        .compact()
+    }
+
     private fun createAuthenticationJwt(username: String, vararg roles: String): String {
       val authoritiesAsString = roles.asList().joinToString(",")
 
       return Jwts.builder()
-        .setId("1234")
-        .setSubject(username)
-        .addClaims(
+        .id("1234")
+        .subject(username)
+        .claims(
           mapOf<String, Any>(
             "authorities" to authoritiesAsString,
             "name" to "name",
@@ -343,8 +383,8 @@ class OAuthIntTest : IntegrationTestBase() {
             "passed_mfa" to true,
           ),
         )
-        .setExpiration(Date(System.currentTimeMillis() + Duration.ofSeconds(5).toMillis()))
-        .signWith(SignatureAlgorithm.RS256, jwkKeyAccessor.getPrimaryKeyPair().private)
+        .expiration(Date(System.currentTimeMillis() + Duration.ofSeconds(5).toMillis()))
+        .signWith(jwkKeyAccessor.getPrimaryKeyPair().private)
         .compact()
     }
   }
