@@ -247,7 +247,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `unauthenticated user`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
-        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
+        .header("Authorization", createClientCredentialsToken("ROLE_OAUTH_AUTHORIZE"))
         .exchange()
         .expectStatus().isUnauthorized
     }
@@ -256,7 +256,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `invalid client id`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$invalidClientId&state=$state&redirect_uri=$validRedirectUri")
-        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
+        .header("Authorization", createClientCredentialsToken("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isBadRequest
@@ -266,7 +266,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `invalid redirect url`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$invalidRedirectUri")
-        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
+        .header("Authorization", createClientCredentialsToken("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isBadRequest
@@ -276,7 +276,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `missing response type`() {
       webTestClient
         .get().uri("/oauth2/authorize?client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
-        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
+        .header("Authorization", createClientCredentialsToken("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isBadRequest
@@ -305,7 +305,7 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `success redirects with code`() {
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
-        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
+        .header("Authorization", createClientCredentialsToken("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isFound
@@ -318,7 +318,7 @@ class OAuthIntTest : IntegrationTestBase() {
       var header: String? = null
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
-        .header("Authorization", createClientCredentialsToken("ROLE_AUTH_AUTHORIZE"))
+        .header("Authorization", createClientCredentialsToken("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectHeader()

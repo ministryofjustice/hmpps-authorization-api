@@ -46,7 +46,7 @@ class OAuthAuthorizationCodeFilter(
   }
 
   companion object {
-    private const val AUTHORIZE_ROLE = "ROLE_AUTH_AUTHORIZE"
+    private const val AUTHORIZE_ROLE = "ROLE_OAUTH_AUTHORIZE"
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 }
