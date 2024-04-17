@@ -345,6 +345,9 @@ class ClientsService(
       LocalDate.now().plusDays(validDaysIncludeToday)
     }
   }
+  companion object {
+    const val REDIRECT_URL_DEFAULT = "N/a"
+  }
 }
 
 data class ClientDetail(

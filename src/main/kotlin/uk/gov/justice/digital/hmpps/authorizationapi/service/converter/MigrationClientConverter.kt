@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.MigrationClientRequest
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsService.Companion.REDIRECT_URL_DEFAULT
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import java.time.ZoneOffset
 
@@ -43,7 +44,7 @@ class MigrationClientConverter(
         jwtFields = jwtFields,
         mfa = mfa,
         mfaRememberMe = mfaRememberMe,
-        redirectUris = redirectUris,
+        redirectUris = if (redirectUris.isNullOrBlank()) REDIRECT_URL_DEFAULT else redirectUris,
         resourceIds = if (source.resourceIds == null) emptyList() else resourceIds,
         skipToAzureField = skipToAzureField,
       )

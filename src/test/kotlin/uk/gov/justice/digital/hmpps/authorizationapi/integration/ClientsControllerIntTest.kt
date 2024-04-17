@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfi
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsService.Companion.REDIRECT_URL_DEFAULT
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
 import java.time.Duration
 import java.time.LocalDate
@@ -518,6 +519,70 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       )
 
       clientRepository.delete(duplicatedClient)
+    }
+
+    @Test
+    fun `should be able to duplicate authorization code grant type client without redirect url`() {
+      val clientId = "new-auth-client"
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn(clientId)
+      whenever(oAuthClientSecretGenerator.encode(clientId)).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to clientId,
+              "grantType" to "authorization_code",
+              "scopes" to listOf("read", "write"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+              "jwtFields" to "-name",
+              "mfaRememberMe" to true,
+              "mfa" to MfaAccess.ALL,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo(clientId)
+        .jsonPath("clientSecret").isEqualTo("new-auth-client")
+        .jsonPath("base64ClientId").isEqualTo(getEncoder().encodeToString(clientId.toByteArray()))
+        .jsonPath("base64ClientSecret").isEqualTo(getEncoder().encodeToString("new-auth-client".toByteArray()))
+
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("new-auth-client-1")
+      whenever(oAuthClientSecretGenerator.encode("new-auth-client-1")).thenReturn("new-auth-client-1")
+      webTestClient.post().uri("/base-clients/new-auth-client/clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("clientId").isEqualTo("new-auth-client-1")
+        .jsonPath("clientSecret").isEqualTo("new-auth-client-1")
+        .jsonPath("base64ClientId").isEqualTo(getEncoder().encodeToString("new-auth-client-1".toByteArray()))
+        .jsonPath("base64ClientSecret").isEqualTo(getEncoder().encodeToString("new-auth-client-1".toByteArray()))
+
+      val originalClient = clientRepository.findClientByClientId("new-auth-client")
+      val duplicatedClient = clientRepository.findClientByClientId("new-auth-client-1")
+      assertThat(duplicatedClient!!.clientName).isEqualTo(originalClient!!.clientName)
+      assertThat(duplicatedClient.redirectUris).isEqualTo(REDIRECT_URL_DEFAULT)
+      assertThat(duplicatedClient.authorizationGrantTypes).isEqualTo(originalClient.authorizationGrantTypes)
+      assertThat(duplicatedClient.clientAuthenticationMethods).isEqualTo(originalClient.clientAuthenticationMethods)
+      assertThat(duplicatedClient.clientSettings).isEqualTo(originalClient.clientSettings)
+      assertThat(duplicatedClient.tokenSettings).isEqualTo(originalClient.tokenSettings)
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationApiClientDetailsDuplicated",
+        mapOf("username" to "AUTH_ADM", "clientId" to "new-auth-client-1"),
+        null,
+      )
+
+      clientRepository.delete(duplicatedClient)
+      clientRepository.delete(originalClient)
     }
   }
 

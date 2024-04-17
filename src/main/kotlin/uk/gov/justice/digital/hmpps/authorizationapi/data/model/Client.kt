@@ -12,6 +12,7 @@ import jakarta.persistence.Table
 import org.apache.commons.lang3.StringUtils
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsService.Companion.REDIRECT_URL_DEFAULT
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthJson
 import java.time.Instant
 
@@ -78,6 +79,7 @@ data class Client(
   }
 
   fun getRegisteredRedirectUriWithNewlines(): Set<String>? {
+    redirectUris = redirectUris?.replace(REDIRECT_URL_DEFAULT, "")
     return redirectUris?.replace("""\s+""".toRegex(), ",")
       ?.split(',')
       ?.mapNotNull { StringUtils.trimToNull(it) }
