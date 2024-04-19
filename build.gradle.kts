@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.5"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
   kotlin("plugin.spring") version "1.9.23"
   kotlin("plugin.jpa") version "1.9.23"
 }
@@ -21,7 +21,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
   implementation("commons-codec:commons-codec")
-  implementation("org.apache.commons:commons-text:1.11.0")
+  implementation("org.apache.commons:commons-text:1.12.0")
   implementation("io.opentelemetry:opentelemetry-api")
 
   implementation("io.jsonwebtoken:jjwt:0.12.5")
