@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.security
 
+import io.jsonwebtoken.Claims
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -19,7 +20,7 @@ class OAuthAuthorizationCodeFilter(
     } else {
       try {
         val claims = signedJwtParser.parseSignedJwt(authorizationHeader.split(" ").last())
-        val authorities = claims["authorities"] as? ArrayList<*>
+        val authorities = extractAuthoritiesFrom(claims)
         if (authorities == null || !authorities.contains(AUTHORIZE_ROLE)) {
           log.error("Token presented to authorize end point does not contain required role")
           sendUnauthorisedErrorResponse(response)
@@ -32,6 +33,19 @@ class OAuthAuthorizationCodeFilter(
         sendUnauthorisedErrorResponse(response)
       }
     }
+  }
+
+  private fun extractAuthoritiesFrom(claims: Claims): List<*>? {
+    val authorities = claims["authorities"] as? ArrayList<*>?
+    authorities?.let { return it }
+
+    val authority = claims["authorities"] as? String?
+    authority?.let {
+      return it.split(",")
+        .filterNot { authority -> authority.isEmpty() }
+    }
+
+    return null
   }
 
   private fun sendUnauthorisedErrorResponse(response: HttpServletResponse) {
