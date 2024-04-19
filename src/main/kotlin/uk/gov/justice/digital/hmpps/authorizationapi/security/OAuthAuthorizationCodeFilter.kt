@@ -5,8 +5,6 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.web.filter.OncePerRequestFilter
 
 class OAuthAuthorizationCodeFilter(
@@ -20,13 +18,9 @@ class OAuthAuthorizationCodeFilter(
       sendUnauthorisedErrorResponse(response)
     } else {
       try {
-        val claims = signedJwtParser.parseSignedJwt(authorizationHeader)
-        val authoritiesString = claims.get("authorities", String::class.java)
-        val authorities: Collection<GrantedAuthority> = authoritiesString.split(",")
-          .filterNot { authority -> authority.isEmpty() }
-          .map { authority -> SimpleGrantedAuthority(authority) }
-
-        if (!authorities.contains(SimpleGrantedAuthority(AUTHORIZE_ROLE))) {
+        val claims = signedJwtParser.parseSignedJwt(authorizationHeader.split(" ").last())
+        val authorities = claims["authorities"] as? ArrayList<*>
+        if (authorities == null || !authorities.contains(AUTHORIZE_ROLE)) {
           log.error("Token presented to authorize end point does not contain required role")
           sendUnauthorisedErrorResponse(response)
         } else {
