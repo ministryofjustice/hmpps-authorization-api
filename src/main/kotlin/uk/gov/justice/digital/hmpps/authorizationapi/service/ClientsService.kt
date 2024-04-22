@@ -29,7 +29,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Base64.getEncoder
-import kotlin.collections.ArrayList
 
 @Service
 class ClientsService(
@@ -101,7 +100,7 @@ class ClientsService(
 
     client = clientRepository.save(client)
     clientDetails.authorities?.let { authorities ->
-      authorizationConsentRepository.save(AuthorizationConsent(client!!.id!!, client.clientId, withAuthoritiesPrefix(authorities)))
+      authorizationConsentRepository.save(AuthorizationConsent(client!!.id, client.clientId, withAuthoritiesPrefix(authorities)))
     }
 
     clientDetails.ips?.let { ips ->
@@ -140,11 +139,6 @@ class ClientsService(
     }
     return clients
   }
-
-  @Transactional(readOnly = true)
-  fun findClientByClientId(clientId: String) =
-    clientRepository.findClientByClientId(clientId)
-      ?: throw ClientNotFoundException(Client::class.simpleName, clientId)
 
   @Transactional
   fun duplicate(clientId: String): DuplicateRegistrationResponse {
@@ -286,7 +280,7 @@ class ClientsService(
     val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
       existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities)
       return@let existingAuthorizationConsent
-    } ?: AuthorizationConsent(client.id!!, client.clientId, withAuthoritiesPrefix(clientDetails.authorities))
+    } ?: AuthorizationConsent(client.id, client.clientId, withAuthoritiesPrefix(clientDetails.authorities))
 
     authorizationConsentRepository.save(authorizationConsentToPersist)
   }

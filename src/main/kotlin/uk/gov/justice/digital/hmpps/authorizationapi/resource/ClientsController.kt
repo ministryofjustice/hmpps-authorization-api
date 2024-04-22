@@ -70,13 +70,6 @@ class ClientsController(
     return ResponseEntity.ok(conversionService.convert(clientsService.findClientWithCopies(baseClientId), ClientDuplicatesResponse::class.java))
   }
 
-  @GetMapping("clients/exists/{clientId}")
-  @PreAuthorize("hasRole('ROLE_OAUTH_CLIENTS_VIEW')")
-  @ResponseStatus(HttpStatus.OK)
-  fun findClientByClientId(@PathVariable clientId: String): ResponseEntity<Any> {
-    return ResponseEntity.ok(conversionService.convert(clientsService.findClientByClientId(clientId), ClientExistsResponse::class.java))
-  }
-
   @DeleteMapping("base-clients/{baseClientId}/clients/{clientId}")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
