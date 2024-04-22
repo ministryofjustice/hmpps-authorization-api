@@ -170,7 +170,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
       var authorizationConsent =
-        verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+        verifyAuthorities(client.id, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
       var clientDeployment = clientDeploymentRepository.findById("testz").get()
       assertThat(clientDeployment.baseClientId).isEqualTo("testz")
@@ -243,7 +243,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
       authorizationConsent =
-        verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API1", "ROLE_VIEW_PRISONER_DATA1", "ROLE_COMMUNITY")
+        verifyAuthorities(client.id, client.clientId, "ROLE_CURIOUS_API1", "ROLE_VIEW_PRISONER_DATA1", "ROLE_COMMUNITY")
 
       clientDeployment = clientDeploymentRepository.findById("testz").get()
       assertThat(clientDeployment.baseClientId).isEqualTo("testz")
@@ -385,59 +385,6 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       )
 
       clientRepository.delete(client)
-    }
-  }
-
-  @Nested
-  inner class ListAllClientIds {
-    @Test
-    fun `access unauthorized when no authority`() {
-      webTestClient.get().uri("/all-clients")
-        .exchange()
-        .expectStatus().isUnauthorized
-    }
-
-    @Test
-    fun `access forbidden when no role`() {
-      webTestClient.get().uri("/all-clients")
-        .headers(setAuthorisation(roles = listOf()))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `access forbidden when wrong role`() {
-      webTestClient.get().uri("/all-clients")
-        .headers(setAuthorisation(roles = listOf("WRONG")))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `list client Ids success`() {
-      webTestClient.get().uri("/all-clients")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-        .exchange()
-        .expectStatus().isOk
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(10) }
-        .jsonPath("$.[*]").value<List<String>> {
-          assertThat(it).containsAll(
-            listOf(
-              "test-client-id",
-              "test-client-create-id",
-              "ip-allow-a-client-1",
-              "ip-allow-b-client",
-              "ip-allow-b-client-8",
-              "test-duplicate-id",
-              "test-complete-details-id",
-              "ip-allow-c-client",
-              "test-auth-code-client",
-              "hmpps-auth-authorization-api-client",
-            ),
-          )
-        }
     }
   }
 

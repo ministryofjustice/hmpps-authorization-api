@@ -55,9 +55,6 @@ class MigrationClientService(
     migrationClientRequest.clientDeploymentDetails?.let { clientsService.saveClientDeploymentDetails(migrationClientRequest.clientId, it) }
   }
 
-  fun listAllClientIds(): List<String> =
-    clientRepository.findAll().map { it.clientId }.toList()
-
   fun fetchClientDetails() = clientRepository.findAll().map { mapToClientDetails(it) }
 
   private fun mapToClientDetails(client: Client) =

@@ -36,12 +36,6 @@ class MigrationController(
     telemetryClient.trackEvent("AuthorizationApiDetailsMigrate", telemetryMap)
   }
 
-  @GetMapping("all-clients")
-  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun listAllClientIds(): ResponseEntity<Any> {
-    return ResponseEntity.ok(migrationClientService.listAllClientIds())
-  }
-
   @GetMapping("client-details")
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun listClientDetails(): ResponseEntity<Any> {
