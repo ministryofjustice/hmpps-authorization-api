@@ -34,8 +34,6 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
 
     @Test
     fun `list client details success`() {
-      // val ips: List<String>?,
-
       val matchByClientId = "$[?(@.clientId == '%s')]"
       webTestClient.get().uri("/client-details")
         .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
