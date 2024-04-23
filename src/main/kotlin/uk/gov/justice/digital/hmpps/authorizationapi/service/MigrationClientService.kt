@@ -55,25 +55,22 @@ class MigrationClientService(
     migrationClientRequest.clientDeploymentDetails?.let { clientsService.saveClientDeploymentDetails(migrationClientRequest.clientId, it) }
   }
 
-  fun fetchClientDetails() = clientRepository.findAll().map { mapToClientDetails(it) }
+  fun fetchClientDetails(): List<ClientDetailsResponse> {
+    val allClients = clientRepository.findAll()
+    val allClientConfigsMap = clientConfigRepository.findAll().associateBy { it.baseClientId }
+    return allClients.map { client -> mapToClientDetails(client, allClientConfigsMap) }
+  }
 
-  private fun mapToClientDetails(client: Client) =
-
+  private fun mapToClientDetails(client: Client, clientConfigsMap: Map<String, ClientConfig>) =
     with(client) {
       ClientDetailsResponse(
         clientId = clientId,
-        redirectUris = redirectUris,
         scopes = scopes,
-        accessTokenValiditySeconds = tokenSettings.accessTokenTimeToLive?.toSeconds(),
-        refreshTokenValiditySeconds = tokenSettings.refreshTokenTimeToLive?.toSeconds(),
-        jwtFields = jwtFields,
         mfaRememberMe = mfaRememberMe,
         mfa = mfa,
         authorities = retrieveAuthorizationConsent(client)?.authorities,
-        databaseUserName = databaseUsername,
         skipToAzureField = skipToAzureField,
-        resourceIds = resourceIds,
-        jiraNumber = jira,
+        ips = clientConfigsMap[clientIdService.toBase(clientId)]?.ips,
       )
     }
 

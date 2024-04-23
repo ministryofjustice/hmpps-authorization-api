@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.SortBy
 import java.time.Instant
 
 @Controller
-class ClientsController(
+class ClientsInterfaceController(
   private val clientsService: ClientsService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
