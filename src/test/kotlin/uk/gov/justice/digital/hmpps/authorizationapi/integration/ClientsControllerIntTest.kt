@@ -298,52 +298,6 @@ class ClientsControllerIntTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class ClientExists {
-    @Test
-    fun `access unauthorized when no authority`() {
-      webTestClient.get().uri("/clients/exists/test-client-id")
-        .exchange()
-        .expectStatus().isUnauthorized
-    }
-
-    @Test
-    fun `access forbidden when no role`() {
-      webTestClient.get().uri("/clients/exists/test-client-id")
-        .headers(setAuthorisation(roles = listOf()))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `access forbidden when wrong role`() {
-      webTestClient.get().uri("/clients/exists/test-client-id")
-        .headers(setAuthorisation(roles = listOf("WRONG")))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `unrecognised client id`() {
-      webTestClient.get().uri("/clients/exists/test-test")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_CLIENTS_VIEW")))
-        .exchange()
-        .expectStatus().isNotFound
-    }
-
-    @Test
-    fun `client exists`() {
-      webTestClient.get().uri("/clients/exists/test-client-id")
-        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_CLIENTS_VIEW")))
-        .exchange()
-        .expectStatus().isOk
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-        .jsonPath("$.clientId").isEqualTo("test-client-id")
-        .jsonPath("$.accessTokenValiditySeconds").isEqualTo(300)
-    }
-  }
-
-  @Nested
   inner class ListCopies {
     @Test
     fun `access unauthorized when no authority`() {
@@ -699,7 +653,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
       assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(4))
       val authorizationConsent =
-        verifyAuthorities(client.id!!, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+        verifyAuthorities(client.id, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
       verify(telemetryClient).trackEvent(
         "AuthorizationApiDetailsAdd",
@@ -809,7 +763,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(GrantType.client_credentials.name)
       assertThat(client.scopes).containsOnly("read")
       assertFalse(clientConfigRepository.findById(client.clientId).isPresent)
-      assertFalse(authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).isPresent)
+      assertFalse(authorizationConsentRepository.findById(AuthorizationConsentId(client.id, client.clientId)).isPresent)
 
       verify(telemetryClient).trackEvent(
         "AuthorizationApiDetailsAdd",
@@ -991,7 +945,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
         assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
         val authorizationConsent =
-          verifyAuthorities(client.id!!, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+          verifyAuthorities(client.id, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
         verify(telemetryClient).trackEvent(
           "AuthorizationApiCredentialsUpdate",
@@ -1051,7 +1005,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
         assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
         val authorizationConsent =
-          verifyAuthorities(client.id!!, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+          verifyAuthorities(client.id, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
 
         verify(telemetryClient).trackEvent(
           "AuthorizationApiCredentialsUpdate",
@@ -1186,7 +1140,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       val client = clientRepository.findClientByClientId("test-more-test")
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
-      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).get()
+      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsentId(client.id, client.clientId)).get()
       clientRepository.delete(client)
       clientConfigRepository.delete(clientConfig)
       authorizationConsentRepository.delete(authorizationConsent)
@@ -1271,7 +1225,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       val client = clientRepository.findClientByClientId("test-more-test")
       val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
-      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)).get()
+      val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsentId(client.id, client.clientId)).get()
       clientRepository.delete(client)
       clientConfigRepository.delete(clientConfig)
       authorizationConsentRepository.delete(authorizationConsent)
@@ -1422,7 +1376,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       val client = clientRepository.findClientByClientId("test-more-test")
       assertNull(clientConfigRepository.findByIdOrNull(client!!.clientId))
-      assertNull(authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(client.id, client.clientId)))
+      assertNull(authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(client.id, client.clientId)))
       clientRepository.delete(client)
     }
   }
@@ -1617,7 +1571,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
   }
   private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String): AuthorizationConsent {
-    val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId)).get()
+    val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsentId(id, clientId)).get()
     assertThat(authorizationConsent.authorities).containsOnly(*authorities)
     return authorizationConsent
   }

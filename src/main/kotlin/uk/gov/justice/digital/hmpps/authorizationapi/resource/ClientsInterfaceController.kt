@@ -25,13 +25,13 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.model.MfaAccess
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientDetail
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
-import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsInterfaceService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.SortBy
 import java.time.Instant
 
 @Controller
-class ClientsController(
-  private val clientsService: ClientsService,
+class ClientsInterfaceController(
+  private val clientsService: ClientsInterfaceService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
@@ -68,13 +68,6 @@ class ClientsController(
     @PathVariable baseClientId: String,
   ): ResponseEntity<Any> {
     return ResponseEntity.ok(conversionService.convert(clientsService.findClientWithCopies(baseClientId), ClientDuplicatesResponse::class.java))
-  }
-
-  @GetMapping("clients/exists/{clientId}")
-  @PreAuthorize("hasRole('ROLE_OAUTH_CLIENTS_VIEW')")
-  @ResponseStatus(HttpStatus.OK)
-  fun findClientByClientId(@PathVariable clientId: String): ResponseEntity<Any> {
-    return ResponseEntity.ok(conversionService.convert(clientsService.findClientByClientId(clientId), ClientExistsResponse::class.java))
   }
 
   @DeleteMapping("base-clients/{baseClientId}/clients/{clientId}")
