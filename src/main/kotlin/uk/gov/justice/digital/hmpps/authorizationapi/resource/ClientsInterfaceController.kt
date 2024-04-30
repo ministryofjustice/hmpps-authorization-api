@@ -25,13 +25,13 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.model.MfaAccess
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientDetail
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
-import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsInterfaceService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.SortBy
 import java.time.Instant
 
 @Controller
 class ClientsInterfaceController(
-  private val clientsService: ClientsService,
+  private val clientsService: ClientsInterfaceService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,

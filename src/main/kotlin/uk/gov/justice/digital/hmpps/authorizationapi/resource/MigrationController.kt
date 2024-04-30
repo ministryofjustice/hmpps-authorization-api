@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationapi.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationapi.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.MfaAccess
-import uk.gov.justice.digital.hmpps.authorizationapi.service.MigrationClientService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.MigrateClientService
 import java.time.Instant
 import java.time.LocalDate
 
 @Controller
 class MigrationController(
-  private val migrationClientService: MigrationClientService,
+  private val migrationClientService: MigrateClientService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
 ) {

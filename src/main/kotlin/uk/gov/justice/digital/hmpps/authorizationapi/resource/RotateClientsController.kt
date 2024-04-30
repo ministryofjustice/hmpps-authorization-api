@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationapi.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationapi.config.trackEvent
-import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsInterfaceService
 
 @Controller
 class RotateClientsController(
-  private val clientsService: ClientsService,
+  private val clientsService: ClientsInterfaceService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,

@@ -5,17 +5,17 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.MfaAccess
-import uk.gov.justice.digital.hmpps.authorizationapi.service.MigrationClientService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientDataService
 
 @Controller
 class ClientsDataController(
-  private val migrationClientService: MigrationClientService,
+  private val clientDataService: ClientDataService,
 ) {
 
   @GetMapping("client-details")
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun listClientDetails(): ResponseEntity<Any> {
-    return ResponseEntity.ok(migrationClientService.fetchClientDetails())
+    return ResponseEntity.ok(clientDataService.fetchClientDetails())
   }
 }
 

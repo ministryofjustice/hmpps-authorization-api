@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import org.springframework.core.convert.ConversionService
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.AuthorizationConsent
@@ -10,19 +9,18 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.model.ClientConfig
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientDetailsResponse
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.MigrationClientRequest
 import java.time.LocalDate
 
 @Service
-class MigrationClientService(
+class MigrateClientService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val clientIdService: ClientIdService,
   private val conversionService: ConversionService,
-  private val clientsService: ClientsService,
+  private val clientsService: ClientsInterfaceService,
 ) {
 
   @Transactional
@@ -54,33 +52,6 @@ class MigrationClientService(
     }
     migrationClientRequest.clientDeploymentDetails?.let { clientsService.saveClientDeploymentDetails(migrationClientRequest.clientId, it) }
   }
-
-  fun fetchClientDetails(): List<ClientDetailsResponse> {
-    val allClients = clientRepository.findAll()
-    val allClientConfigsMap = clientConfigRepository.findAll().associateBy { it.baseClientId }
-    return allClients.map { client -> mapToClientDetails(client, allClientConfigsMap) }
-  }
-
-  private fun mapToClientDetails(client: Client, clientConfigsMap: Map<String, ClientConfig>) =
-    with(client) {
-      ClientDetailsResponse(
-        clientId = clientId,
-        scopes = scopes,
-        mfaRememberMe = mfaRememberMe,
-        mfa = mfa,
-        authorities = retrieveAuthorizationConsent(client)?.authorities,
-        skipToAzureField = skipToAzureField,
-        ips = clientConfigsMap[clientIdService.toBase(clientId)]?.ips,
-      )
-    }
-
-  private fun retrieveAuthorizationConsent(client: Client) =
-    authorizationConsentRepository.findByIdOrNull(
-      AuthorizationConsent.AuthorizationConsentId(
-        client.id,
-        client.clientId,
-      ),
-    )
 
   private fun withAuthoritiesPrefix(authorities: List<String>) =
     authorities

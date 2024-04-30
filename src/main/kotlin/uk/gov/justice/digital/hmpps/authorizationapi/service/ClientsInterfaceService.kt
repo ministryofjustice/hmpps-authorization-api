@@ -31,7 +31,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Base64.getEncoder
 
 @Service
-class ClientsService(
+class ClientsInterfaceService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
