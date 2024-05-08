@@ -181,7 +181,7 @@ class AuthorizationApiConfig(
 
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, clientIdService)
+      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, clientIdService)
     }
 
     return authenticationProvider
