@@ -146,11 +146,9 @@ class ClientsInterfaceService(
 
     val client = clientsByBaseClientId.last()
 
-    val newClient = clientRepository.findClientByClientId(client.clientId)
-
     val externalClientSecret = oAuthClientSecret.generate()
 
-    val duplicatedRegisteredClient = newClient!!.copy(
+    val duplicatedRegisteredClient = client.copy(
       id = java.util.UUID.randomUUID().toString(),
       clientId = clientIdService.incrementClientId(client.clientId),
       clientIdIssuedAt = Instant.now(),
