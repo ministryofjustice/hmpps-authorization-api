@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import org.springframework.stereotype.Component
 import java.time.Duration
@@ -9,9 +10,9 @@ import java.time.Duration
 class RegisteredClientAdditionalInformation {
 
   companion object {
-    private const val TOKEN_ADDITIONAL_DATA = "settings.token.additional-data."
-    const val JIRA_NUMBER_KEY = TOKEN_ADDITIONAL_DATA + "jira-number"
-    const val DATABASE_USER_NAME_KEY = TOKEN_ADDITIONAL_DATA + "database-user-name"
+    private const val CLIENT_ADDITIONAL_DATA = "settings.client.additional-data."
+    const val JIRA_NUMBER_KEY = CLIENT_ADDITIONAL_DATA + "jira-number"
+    const val DATABASE_USER_NAME_KEY = CLIENT_ADDITIONAL_DATA + "database-user-name"
     const val CLAIMS_JIRA_NUMBER = "jira_number"
   }
 
@@ -24,8 +25,26 @@ class RegisteredClientAdditionalInformation {
     return tokenSettingsBuilder.build()
   }
 
-  fun getDatabaseUserName(tokenSettings: TokenSettings?): String? {
-    return tokenSettings?.let { it.settings[DATABASE_USER_NAME_KEY] as String? }
+  fun buildClientSettings(databaseUserName: String?, jiraNumber: String?): ClientSettings {
+    val clientSettingsBuilder = ClientSettings.builder().requireProofKey(false)
+      .requireAuthorizationConsent(false)
+
+    databaseUserName?.let {
+      clientSettingsBuilder.settings { it[DATABASE_USER_NAME_KEY] = databaseUserName }
+    }
+
+    jiraNumber?.let {
+      clientSettingsBuilder.settings { it[JIRA_NUMBER_KEY] = jiraNumber }
+    }
+    return clientSettingsBuilder.build()
+  }
+
+  fun getDatabaseUserName(clientSettings: ClientSettings?): String? {
+    return clientSettings?.let { it.settings[DATABASE_USER_NAME_KEY] as String? }
+  }
+
+  fun getJiraNumber(clientSettings: ClientSettings?): String? {
+    return clientSettings?.let { it.settings[JIRA_NUMBER_KEY] as String? }
   }
 
   fun mapFrom(claims: Map<String, Any>): Map<String, Any> {

@@ -46,7 +46,7 @@ data class Client(
 
   @Column(length = 2000)
   @Convert(converter = ClientSettingsConverter::class)
-  val clientSettings: ClientSettings,
+  var clientSettings: ClientSettings,
 
   @Column(length = 2000)
   @Convert(converter = TokenSettingsConverter::class)
@@ -61,10 +61,6 @@ data class Client(
   var mfaRememberMe: Boolean,
 
   var mfa: MfaAccess?,
-
-  var databaseUsername: String?,
-
-  var jira: String?,
 
   var skipToAzureField: Boolean?,
 

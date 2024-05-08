@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import java.time.Duration
 import java.time.LocalDate
 
@@ -26,6 +27,9 @@ class MigrationControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var clientConfigRepository: ClientConfigRepository
+
+  @Autowired
+  lateinit var registeredClientAdditionalInformation: RegisteredClientAdditionalInformation
 
   @Autowired
   lateinit var clientRepository: ClientRepository
@@ -154,8 +158,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo("client_credentials")
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(200))
-      assertThat(client.jira).isEqualTo("HAAR-9999")
-      assertThat(client.databaseUsername).isEqualTo("testz-mctest")
+      assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-9999")
+      assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testz-mctest")
 
       var clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
@@ -227,8 +231,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo("client_credentials")
       assertThat(client.scopes).contains("read")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(100))
-      assertThat(client.jira).isEqualTo("HAAR-2000")
-      assertThat(client.databaseUsername).isEqualTo("testz-mctest")
+      assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-2000")
+      assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testz-mctest")
 
       clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
@@ -305,8 +309,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo("authorization_code")
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
-      assertThat(client.jira).isEqualTo("HAAR-9999")
-      assertThat(client.databaseUsername).isEqualTo("testz-mctest")
+      assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-9999")
+      assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testz-mctest")
       assertThat(client.jwtFields).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue
       assertThat(client.mfa).isEqualTo(MfaAccess.ALL)

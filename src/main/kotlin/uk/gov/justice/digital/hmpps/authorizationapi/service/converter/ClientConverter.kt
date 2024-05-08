@@ -24,18 +24,13 @@ class ClientConverter(
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
         authorizationGrantTypes = grantType.name,
         scopes = scopes ?: listOf("read"),
-        clientSettings =
-        org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
-          .requireProofKey(false)
-          .requireAuthorizationConsent(false).build(),
+        clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValiditySeconds),
         latestClientAuthorization = mutableSetOf(),
         jwtFields = jwtFields,
         mfa = mfa,
         mfaRememberMe = mfaRememberMe,
         redirectUris = redirectUris,
-        databaseUsername = databaseUserName,
-        jira = jiraNumber,
         skipToAzureField = skipToAzureField,
         resourceIds = if (source.resourceIds == null) emptyList() else resourceIds,
       )
