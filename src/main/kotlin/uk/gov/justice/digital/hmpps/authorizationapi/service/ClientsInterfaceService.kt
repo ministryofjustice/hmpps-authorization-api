@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import org.springframework.core.convert.ConversionService
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationapi.adapter.AuthService
@@ -37,7 +35,6 @@ class ClientsInterfaceService(
   private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val clientIdService: ClientIdService,
   private val clientDeploymentRepository: ClientDeploymentRepository,
-  private val registeredClientRepository: JdbcRegisteredClientRepository,
   private val oAuthClientSecret: OAuthClientSecret,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val conversionService: ConversionService,
@@ -148,18 +145,17 @@ class ClientsInterfaceService(
     }
 
     val client = clientsByBaseClientId.last()
-    val registeredClient = registeredClientRepository.findByClientId(client.clientId)
-    val registeredClientBuilder = RegisteredClient.from(registeredClient)
 
     val externalClientSecret = oAuthClientSecret.generate()
-    val duplicatedRegisteredClient = registeredClientBuilder
-      .id(java.util.UUID.randomUUID().toString())
-      .clientId(clientIdService.incrementClientId(client.clientId))
-      .clientIdIssuedAt(Instant.now())
-      .clientSecret(oAuthClientSecret.encode(externalClientSecret))
-      .build()
 
-    registeredClientRepository.save(duplicatedRegisteredClient)
+    val duplicatedRegisteredClient = client.copy(
+      id = java.util.UUID.randomUUID().toString(),
+      clientId = clientIdService.incrementClientId(client.clientId),
+      clientIdIssuedAt = Instant.now(),
+      clientSecret = oAuthClientSecret.encode(externalClientSecret),
+    )
+
+    clientRepository.save(duplicatedRegisteredClient)
     val authorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsentId(client.id, client.clientId))
     authorizationConsent?.let {
       authorizationConsentRepository.save(AuthorizationConsent(duplicatedRegisteredClient.id, duplicatedRegisteredClient.clientId, it.authorities))
