@@ -181,8 +181,7 @@ class ClientsInterfaceService(
         it.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
           accessTokenValiditySeconds,
         )
-        it.jira = jiraNumber
-        it.databaseUsername = databaseUserName
+        it.clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber)
         it.redirectUris = redirectUris
         it.jwtFields = jwtFields
         it.mfaRememberMe = mfaRememberMe
