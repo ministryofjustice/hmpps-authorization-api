@@ -311,7 +311,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
       assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-9999")
       assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testz-mctest")
-      assertThat(client.jwtFields).isEqualTo("-name")
+      assertThat(registeredClientAdditionalInformation.getJwtFields(client.clientSettings)).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue
       assertThat(client.mfa).isEqualTo(MfaAccess.ALL)
       assertThat(client.redirectUris).isEqualTo("http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback")

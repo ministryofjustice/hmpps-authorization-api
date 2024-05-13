@@ -181,12 +181,11 @@ class ClientsInterfaceService(
         it.tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
           accessTokenValiditySeconds,
         )
-        it.clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber)
+        it.clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber, jwtFields)
         it.redirectUris = redirectUris
-        it.jwtFields = jwtFields
         it.mfaRememberMe = mfaRememberMe
         it.mfa = mfa
-        it.skipToAzureField = skipToAzureField
+        it.skipToAzure = skipToAzure
         it.resourceIds = resourceIds ?: emptyList()
         updateClientConfig(clientId, clientConfig, this)
         updateAuthorizationConsent(it, clientDetails)

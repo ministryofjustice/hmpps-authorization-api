@@ -32,7 +32,7 @@ class ClientDataService(
         mfaRememberMe = mfaRememberMe,
         mfa = mfa,
         authorities = retrieveAuthorizationConsent(client)?.authorities,
-        skipToAzureField = skipToAzureField,
+        skipToAzure = skipToAzure,
         ips = clientConfigsMap[clientIdService.toBase(clientId)]?.ips,
       )
     }

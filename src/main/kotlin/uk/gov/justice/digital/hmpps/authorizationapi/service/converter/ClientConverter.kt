@@ -24,14 +24,13 @@ class ClientConverter(
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
         authorizationGrantTypes = grantType.name,
         scopes = scopes ?: listOf("read"),
-        clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber),
+        clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber, jwtFields),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValiditySeconds),
         latestClientAuthorization = mutableSetOf(),
-        jwtFields = jwtFields,
         mfa = mfa,
         mfaRememberMe = mfaRememberMe,
         redirectUris = redirectUris,
-        skipToAzureField = skipToAzureField,
+        skipToAzure = skipToAzure,
         resourceIds = if (source.resourceIds == null) emptyList() else resourceIds,
       )
     }

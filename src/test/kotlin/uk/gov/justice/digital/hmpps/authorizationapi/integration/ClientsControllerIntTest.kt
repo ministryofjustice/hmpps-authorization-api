@@ -690,7 +690,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "jiraNumber" to "HAAR-9999",
               "validDays" to 5,
               "accessTokenValiditySeconds" to 20,
-              "skipToAzureField" to true,
+              "skipToAzure" to true,
               "resourceIds" to listOf("resource-id1", "resource-id2"),
             ),
           ),
@@ -714,7 +714,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
       assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).contains("testy-mctest")
       assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-9999")
-      assertThat(client.skipToAzureField).isTrue
+      assertThat(client.skipToAzure).isTrue
       assertThat(client.resourceIds).contains("resource-id1")
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
@@ -781,7 +781,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
       assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-9999")
       assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testy-mctest")
-      assertThat(client.jwtFields).isEqualTo("-name")
+      assertThat(registeredClientAdditionalInformation.getJwtFields(client.clientSettings)).isEqualTo("-name")
       assertThat(client.mfaRememberMe).isTrue
       assertThat(client.mfa).isEqualTo(MfaAccess.ALL)
       assertThat(client.redirectUris).isEqualTo("http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback")
@@ -883,7 +883,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "jiraNumber" to "HAAR-9999",
                 "validDays" to 5,
                 "accessTokenValiditySeconds" to 20,
-                "skipToAzureField" to true,
+                "skipToAzure" to true,
                 "resourceIds" to listOf("resource-id1", "resource-id2"),
               ),
             ),
@@ -993,7 +993,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
                 "jiraNumber" to "HAAR-8888",
                 "validDays" to 3,
                 "accessTokenValiditySeconds" to 10,
-                "skipToAzureField" to true,
+                "skipToAzure" to true,
                 "resourceIds" to listOf("resource-id1", "resource-id2"),
               ),
             ),
@@ -1006,7 +1006,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
         assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-8888")
         assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testy-mctest-2")
-        assertThat(client.skipToAzureField).isEqualTo(true)
+        assertThat(client.skipToAzure).isEqualTo(true)
         assertThat(client.resourceIds).isEqualTo(listOf("resource-id1", "resource-id2"))
 
         val clientConfig = clientConfigRepository.findById(client.clientId).get()
@@ -1176,7 +1176,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "jiraNumber" to "HAAR-7777",
               "validDays" to 5,
               "accessTokenValiditySeconds" to 20,
-              "skipToAzureField" to true,
+              "skipToAzure" to true,
               "resourceIds" to listOf("resource-id1", "resource-id2"),
             ),
           ),
@@ -1202,7 +1202,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .jsonPath("accessTokenValiditySeconds").isEqualTo(20)
         .jsonPath("grantType").isEqualTo("client_credentials")
         .jsonPath("deployment").isEmpty
-        .jsonPath("skipToAzureField").isEqualTo(true)
+        .jsonPath("skipToAzure").isEqualTo(true)
         .jsonPath("resourceIds[0]").isEqualTo("resource-id1")
         .jsonPath("resourceIds[1]").isEqualTo("resource-id2")
 

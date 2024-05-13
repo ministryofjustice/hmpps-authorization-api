@@ -13,6 +13,7 @@ class RegisteredClientAdditionalInformation {
     private const val CLIENT_ADDITIONAL_DATA = "settings.client.additional-data."
     const val JIRA_NUMBER_KEY = CLIENT_ADDITIONAL_DATA + "jira-number"
     const val DATABASE_USER_NAME_KEY = CLIENT_ADDITIONAL_DATA + "database-user-name"
+    const val JWT_FIELDS_NAME_KEY = CLIENT_ADDITIONAL_DATA + "jwtFields"
     const val CLAIMS_JIRA_NUMBER = "jira_number"
   }
 
@@ -25,7 +26,7 @@ class RegisteredClientAdditionalInformation {
     return tokenSettingsBuilder.build()
   }
 
-  fun buildClientSettings(databaseUserName: String?, jiraNumber: String?): ClientSettings {
+  fun buildClientSettings(databaseUserName: String?, jiraNumber: String?, jwtFields: String?): ClientSettings {
     val clientSettingsBuilder = ClientSettings.builder().requireProofKey(false)
       .requireAuthorizationConsent(false)
 
@@ -36,6 +37,10 @@ class RegisteredClientAdditionalInformation {
     jiraNumber?.let {
       clientSettingsBuilder.settings { it[JIRA_NUMBER_KEY] = jiraNumber }
     }
+
+    jwtFields?.let {
+      clientSettingsBuilder.settings { it[JWT_FIELDS_NAME_KEY] = jwtFields }
+    }
     return clientSettingsBuilder.build()
   }
 
@@ -45,6 +50,10 @@ class RegisteredClientAdditionalInformation {
 
   fun getJiraNumber(clientSettings: ClientSettings?): String? {
     return clientSettings?.let { it.settings[JIRA_NUMBER_KEY] as String? }
+  }
+
+  fun getJwtFields(clientSettings: ClientSettings?): String? {
+    return clientSettings?.let { it.settings[JWT_FIELDS_NAME_KEY] as String? }
   }
 
   fun mapFrom(claims: Map<String, Any>): Map<String, Any> {

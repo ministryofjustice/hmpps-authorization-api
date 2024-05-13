@@ -56,13 +56,11 @@ data class Client(
   @JoinColumn(name = "registeredClientId")
   val latestClientAuthorization: MutableSet<Authorization>?,
 
-  var jwtFields: String?,
-
   var mfaRememberMe: Boolean,
 
   var mfa: MfaAccess?,
 
-  var skipToAzureField: Boolean?,
+  var skipToAzure: Boolean?,
 
   @Column(length = 1000)
   @Convert(converter = StringListConverter::class)

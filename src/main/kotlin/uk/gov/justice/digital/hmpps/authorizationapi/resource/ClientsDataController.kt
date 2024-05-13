@@ -25,6 +25,6 @@ data class ClientDetailsResponse(
   val mfa: MfaAccess?,
   val scopes: List<String>?,
   val authorities: List<String>?,
-  val skipToAzureField: Boolean?,
+  val skipToAzure: Boolean?,
   val ips: List<String>?,
 )

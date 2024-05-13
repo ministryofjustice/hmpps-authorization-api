@@ -77,7 +77,7 @@ class MigrateClientService(
         mfaRememberMe = mfaRememberMe,
         mfa = mfa,
         redirectUris = redirectUris,
-        skipToAzureField = skipToAzureField,
+        skipToAzure = skipToAzureField,
         resourceIds = resourceIds,
         ips = ips ?: emptyList(),
         validDays = validDays,
