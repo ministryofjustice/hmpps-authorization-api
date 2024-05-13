@@ -25,7 +25,7 @@ class MigrationClientConverter(
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
         authorizationGrantTypes = grantType,
         scopes = scopes ?: listOf("read"),
-        clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber),
+        clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber, jwtFields),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(
           accessTokenValiditySeconds,
         ),
@@ -35,12 +35,11 @@ class MigrationClientConverter(
         } else {
           "{bcrypt}$clientSecret"
         },
-        jwtFields = jwtFields,
         mfa = mfa,
         mfaRememberMe = mfaRememberMe,
         redirectUris = redirectUris,
         resourceIds = if (source.resourceIds == null) emptyList() else resourceIds,
-        skipToAzureField = skipToAzureField,
+        skipToAzure = skipToAzureField,
       )
     }
   }

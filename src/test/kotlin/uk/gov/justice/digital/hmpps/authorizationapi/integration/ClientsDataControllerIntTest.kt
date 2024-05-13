@@ -45,7 +45,7 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[0].clientId").isEqualTo("test-client-id")
         .jsonPath("\$.[0].scopes[0]").isEqualTo("read")
         .jsonPath("\$.[0].scopes[1]").isEqualTo("write")
-        .jsonPath("\$.[0].skipToAzureField").isBoolean
+        .jsonPath("\$.[0].skipToAzure").isBoolean
         .jsonPath("\$.[0].mfaRememberMe").isBoolean
         .jsonPath("\$.[0].ips").doesNotExist()
         .jsonPath("\$.[0].authorities[*]").value<List<String>> {

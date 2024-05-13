@@ -167,7 +167,7 @@ data class ClientViewResponse(
   val redirectUris: Set<String>?,
   val grantType: GrantType,
   val service: ServiceDetails?,
-  val skipToAzureField: Boolean?,
+  val skipToAzure: Boolean?,
   val resourceIds: List<String>?,
 )
 
@@ -183,7 +183,7 @@ data class ClientUpdateRequest(
   val mfaRememberMe: Boolean,
   val mfa: MfaAccess?,
   val redirectUris: String?,
-  val skipToAzureField: Boolean?,
+  val skipToAzure: Boolean?,
   val resourceIds: List<String>?,
 )
 
@@ -216,7 +216,7 @@ data class ClientRegistrationRequest(
   val redirectUris: String?,
   val jwtFields: String?,
   val mfaRememberMe: Boolean,
-  val skipToAzureField: Boolean?,
+  val skipToAzure: Boolean?,
   val resourceIds: List<String>?,
   val mfa: MfaAccess?,
 )

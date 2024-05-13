@@ -22,13 +22,13 @@ class ClientCredentialsViewResponseConverter : Converter<ClientComposite, Client
         clientConfig?.validDays,
         latestClient.tokenSettings.accessTokenTimeToLive.seconds,
         deployment,
-        latestClient.jwtFields,
+        latestClient.clientSettings.getSetting(RegisteredClientAdditionalInformation.JWT_FIELDS_NAME_KEY),
         latestClient.mfaRememberMe,
         latestClient.mfa,
         latestClient.getRegisteredRedirectUriWithNewlines(),
         GrantType.valueOf(latestClient.authorizationGrantTypes),
         service,
-        latestClient.skipToAzureField,
+        latestClient.skipToAzure,
         latestClient.resourceIds,
       )
     }
