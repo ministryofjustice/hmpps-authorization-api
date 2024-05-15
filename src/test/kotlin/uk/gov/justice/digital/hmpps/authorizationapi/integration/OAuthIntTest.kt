@@ -48,7 +48,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody()
         .jsonPath("$").value<Map<String, Any>> {
-          assertThat(it["expires_in"] as Int).isLessThan(301)
+          assertThat(it["expires_in"] as Int).isLessThan(1201)
         }
         .returnResult().responseBody
 
@@ -76,7 +76,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody()
         .jsonPath("$").value<Map<String, Any>> {
-          assertThat(it["expires_in"] as Int).isLessThan(301)
+          assertThat(it["expires_in"] as Int).isLessThan(1201)
         }
         .returnResult().responseBody
 

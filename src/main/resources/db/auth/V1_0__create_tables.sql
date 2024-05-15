@@ -59,6 +59,10 @@ CREATE TABLE oauth2_registered_client
     client_settings               varchar(2000)                           NOT NULL,
     token_settings                varchar(2000)                           NOT NULL,
     post_logout_redirect_uris     varchar(1000) DEFAULT NULL,
+    mfa                           varchar(10) DEFAULT NULL,
+    mfa_remember_me               boolean DEFAULT false,
+    resource_ids                  varchar(255) DEFAULT NULL,
+    skip_to_azure                 boolean DEFAULT false,
     PRIMARY KEY (id)
 );
 
@@ -86,21 +90,3 @@ CREATE TABLE oauth2_client_deployment_details
     deployment_info               varchar(1000) DEFAULT NULL,
     PRIMARY KEY (base_client_id)
 );
-
--- NOTE, the users and authorities tables below can be restructured as necessary
--- Doing so requires exposing a bean implementing UserDetailsService interface
-CREATE TABLE users
-(
-    username varchar(50) NOT NULL PRIMARY KEY,
-    password varchar(200) NOT NULL,
-    enabled  boolean NOT NULL
-);
-
-CREATE TABLE authorities
-(
-    username  varchar(50) NOT NULL,
-    authority varchar(50) NOT NULL,
-    CONSTRAINT fk_authorities_users FOREIGN KEY (username) REFERENCES users (username)
-);
-
-CREATE UNIQUE INDEX ix_auth_username ON authorities (username, authority);
