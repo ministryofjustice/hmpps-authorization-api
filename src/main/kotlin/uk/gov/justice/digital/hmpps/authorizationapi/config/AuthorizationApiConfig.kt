@@ -50,7 +50,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingAuthenticati
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientDataService
-import uk.gov.justice.digital.hmpps.authorizationapi.utils.IpAddressHelper
+import uk.gov.justice.digital.hmpps.authorizationapi.service.UserAuthenticationService
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 
@@ -62,7 +62,6 @@ class AuthorizationApiConfig(
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
   private val clientConfigRepository: ClientConfigRepository,
-  private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
 ) {
@@ -161,7 +160,7 @@ class AuthorizationApiConfig(
 
   @Bean
   fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository): OAuth2AuthorizationService {
-    return JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository)
+    return UserAuthenticationService(JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository))
   }
 
   @Bean

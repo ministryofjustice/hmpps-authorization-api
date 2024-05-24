@@ -26,8 +26,9 @@ class AuthenticatedUserDetails(
   @JsonProperty("jwtId")
   val jwtId: String,
 
-  @JsonProperty("passedMfa")
-  val passedMfa: Boolean = false,
+  @JsonProperty("uuid")
+  val uuid: String,
+
 ) : User(username, "", authorities) {
 
   companion object {
