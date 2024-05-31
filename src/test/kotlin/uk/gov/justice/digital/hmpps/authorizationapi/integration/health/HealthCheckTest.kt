@@ -2,12 +2,19 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.whenever
+import org.springframework.boot.actuate.health.Health
+import org.springframework.boot.test.mock.mockito.MockBean
+import uk.gov.justice.digital.hmpps.authorizationapi.health.AuthHealthInfo
 import uk.gov.justice.digital.hmpps.authorizationapi.integration.IntegrationTestBase
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
 
 class HealthCheckTest : IntegrationTestBase() {
+
+  @MockBean
+  lateinit var authHealthInfo: AuthHealthInfo
 
   @Test
   fun `Health page reports ok`() {
@@ -22,6 +29,7 @@ class HealthCheckTest : IntegrationTestBase() {
 
   @Test
   fun `Health info reports version`() {
+    whenever(authHealthInfo.getHealth(true)).thenReturn(Health.up().build())
     webTestClient.get().uri("/health")
       .exchange()
       .expectStatus().isOk
