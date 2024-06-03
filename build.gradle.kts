@@ -32,8 +32,8 @@ dependencies {
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("io.jsonwebtoken:jjwt-impl:0.12.5")
-  implementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
   implementation(kotlin("stdlib"))
 }
 
