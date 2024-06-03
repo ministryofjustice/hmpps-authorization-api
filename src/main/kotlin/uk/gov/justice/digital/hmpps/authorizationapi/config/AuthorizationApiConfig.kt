@@ -82,9 +82,10 @@ class AuthorizationApiConfig(
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
+
+        tokenEndpointConfigurer.accessTokenResponseHandler(CustomTokenResponseHandler())
       }
     }
-
     http
       .addFilterAfter(jwtCookieAuthenticationFilter, LogoutFilter::class.java)
       .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }

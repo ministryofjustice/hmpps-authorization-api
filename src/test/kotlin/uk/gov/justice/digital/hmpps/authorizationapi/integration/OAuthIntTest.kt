@@ -49,6 +49,12 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("$").value<Map<String, Any>> {
           assertThat(it["expires_in"] as Int).isLessThan(1201)
+          assertThat(it["sub"] as String).isEqualTo("test-client-id")
+          assertThat(it["auth_source"] as String).isEqualTo("none")
+          assertThat(it["token_type"] as String).isEqualTo("Bearer")
+          assertThat(it["iss"] as String).isEqualTo("http://localhost/")
+          assertThat(it["jti"]).isNotNull
+          assertThat(it["scope"] as String).isEqualTo("[\"read\",\"write\"]")
         }
         .returnResult().responseBody
 
@@ -57,7 +63,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")))
+      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")).toString())
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertTrue(token.isNull("user_name"))
@@ -115,7 +121,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")))
+      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")).toString())
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertThat(token.get("user_name")).isEqualTo("testy")
@@ -357,7 +363,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(tokenResponse!!))
-      assertThat(token.get("authorities")).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
+      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
       assertThat(token.get("sub")).isEqualTo("username")
       assertThat(token.get("aud")).isEqualTo(validClientId)
     }

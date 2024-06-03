@@ -19,6 +19,7 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+  implementation("org.json:json:20240303")
 
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.12.0")
@@ -31,8 +32,8 @@ dependencies {
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
+  implementation("io.jsonwebtoken:jjwt-impl:0.12.5")
+  implementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
   implementation(kotlin("stdlib"))
 }
 
