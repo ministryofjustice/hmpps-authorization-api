@@ -32,6 +32,26 @@ class WebClientConfiguration(
   }
 
   @Bean
+  fun authorizedAnonymousClientManagerAppScope(
+    clientRegistrationRepository: ClientRegistrationRepository,
+    oAuth2AuthorizedClientService: OAuth2AuthorizedClientService,
+  ): OAuth2AuthorizedClientManager {
+    val authorizedClientManager = AuthorizedClientServiceOAuth2AuthorizedClientManager(
+      clientRegistrationRepository,
+      oAuth2AuthorizedClientService,
+    )
+    return authorizedClientManager
+  }
+
+  @Bean
+  fun authHealthWebClient(
+    @Qualifier(value = "authorizedAnonymousClientManagerAppScope") authorizedClientManager: OAuth2AuthorizedClientManager,
+    builder: WebClient.Builder,
+  ): WebClient {
+    return getOAuthWebClient(authorizedClientManager, builder, hmppsAuthUri, "hmpps-auth")
+  }
+
+  @Bean
   fun authWebClient(
     @Qualifier(value = "authorizedClientManagerAppScope") authorizedClientManager: OAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
