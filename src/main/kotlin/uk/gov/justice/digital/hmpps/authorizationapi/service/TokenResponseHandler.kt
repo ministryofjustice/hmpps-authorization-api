@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.authorizationapi.config
+package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Base64
 import kotlin.collections.HashMap
 
-class CustomTokenResponseHandler : AuthenticationSuccessHandler {
+class TokenResponseHandler : AuthenticationSuccessHandler {
 
   override fun onAuthenticationSuccess(
     request: HttpServletRequest?,

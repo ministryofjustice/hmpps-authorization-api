@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingAuthenticati
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientDataService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -83,7 +84,7 @@ class AuthorizationApiConfig(
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
 
-        tokenEndpointConfigurer.accessTokenResponseHandler(CustomTokenResponseHandler())
+        tokenEndpointConfigurer.accessTokenResponseHandler(TokenResponseHandler())
       }
     }
     http
