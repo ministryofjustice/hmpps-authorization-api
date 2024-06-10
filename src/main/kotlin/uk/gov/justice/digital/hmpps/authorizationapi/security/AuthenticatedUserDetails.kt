@@ -21,13 +21,13 @@ class AuthenticatedUserDetails(
   val authSource: String = AuthSource.None.source,
 
   @JsonProperty("userId")
-  val userId: String,
+  val userId: String?,
 
   @JsonProperty("jwtId")
   val jwtId: String,
 
   @JsonProperty("uuid")
-  val uuid: String,
+  val uuid: String?,
 
 ) : User(username, "", authorities) {
 

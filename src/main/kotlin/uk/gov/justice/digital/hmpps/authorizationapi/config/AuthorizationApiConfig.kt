@@ -40,6 +40,7 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorizationCodeFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
@@ -159,8 +160,8 @@ class AuthorizationApiConfig(
   fun registeredClientRepository(jdbcTemplate: JdbcTemplate) = JdbcRegisteredClientRepository(jdbcTemplate)
 
   @Bean
-  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository): OAuth2AuthorizationService {
-    return UserAuthenticationService(JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository))
+  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository, userAuthorizationCodeRepository: UserAuthorizationCodeRepository): OAuth2AuthorizationService {
+    return UserAuthenticationService(JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository), userAuthorizationCodeRepository)
   }
 
   @Bean
