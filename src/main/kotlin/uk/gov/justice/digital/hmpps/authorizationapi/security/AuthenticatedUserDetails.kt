@@ -21,13 +21,14 @@ class AuthenticatedUserDetails(
   val authSource: String = AuthSource.None.source,
 
   @JsonProperty("userId")
-  val userId: String,
+  val userId: String?,
 
   @JsonProperty("jwtId")
   val jwtId: String,
 
-  @JsonProperty("passedMfa")
-  val passedMfa: Boolean = false,
+  @JsonProperty("uuid")
+  val uuid: String?,
+
 ) : User(username, "", authorities) {
 
   companion object {

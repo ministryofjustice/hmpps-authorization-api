@@ -26,10 +26,10 @@ class JwtAuthenticationHelper(
     val authorities: Collection<GrantedAuthority> = authoritiesString.split(",").filterNot { it.isEmpty() }
       .map { SimpleGrantedAuthority(it) }
     val authSource = body.get("auth_source", String::class.java) ?: AuthSource.None.source
-    val passedMfa = body.get("passed_mfa", java.lang.Boolean::class.java) ?.booleanValue() ?: false
+    val uuid = body.get("uuid", String::class.java)
 
     log.debug("Set authentication for {} with jwt id of {}", username, body.id)
-    Optional.of(AuthenticatedUserDetails(username, name, authorities, authSource, userId, body.id, passedMfa))
+    Optional.of(AuthenticatedUserDetails(username, name, authorities, authSource, userId, body.id, uuid))
   } catch (eje: ExpiredJwtException) {
     log.info("Expired JWT found for user {}", eje.claims.subject)
     Optional.empty()

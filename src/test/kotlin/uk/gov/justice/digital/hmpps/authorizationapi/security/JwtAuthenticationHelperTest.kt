@@ -63,7 +63,6 @@ class JwtAuthenticationHelperTest : IntegrationTestBase() {
     assertThat(actualUserDetails.name).isEqualTo(username)
     assertThat(actualUserDetails.authSource).isEqualTo(AuthSource.None.source)
     assertThat(actualUserDetails.userId).isEqualTo(username)
-    assertThat(actualUserDetails.passedMfa).isEqualTo(false)
     assertThat(actualUserDetails.jwtId).isEqualTo(jwtId)
   }
 
@@ -72,7 +71,6 @@ class JwtAuthenticationHelperTest : IntegrationTestBase() {
     assertThat(expectedClaims["name"]).isEqualTo(actualUserDetails.name)
     assertThat(expectedClaims["auth_source"]).isEqualTo(actualUserDetails.authSource)
     assertThat(expectedClaims["user_id"]).isEqualTo(actualUserDetails.userId)
-    assertThat(expectedClaims["passed_mfa"]).isEqualTo(actualUserDetails.passedMfa)
     assertThat(actualUserDetails.jwtId).isEqualTo(jwtId)
   }
 
