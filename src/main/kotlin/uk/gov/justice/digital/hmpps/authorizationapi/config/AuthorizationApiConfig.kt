@@ -40,6 +40,7 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorizationCodeFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
@@ -51,7 +52,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2Authenticatio
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientDataService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
-import uk.gov.justice.digital.hmpps.authorizationapi.utils.IpAddressHelper
+import uk.gov.justice.digital.hmpps.authorizationapi.service.UserAuthenticationService
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 
@@ -63,7 +64,6 @@ class AuthorizationApiConfig(
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
   private val clientConfigRepository: ClientConfigRepository,
-  private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
 ) {
@@ -162,8 +162,8 @@ class AuthorizationApiConfig(
   fun registeredClientRepository(jdbcTemplate: JdbcTemplate) = JdbcRegisteredClientRepository(jdbcTemplate)
 
   @Bean
-  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository): OAuth2AuthorizationService {
-    return JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository)
+  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository, userAuthorizationCodeRepository: UserAuthorizationCodeRepository): OAuth2AuthorizationService {
+    return UserAuthenticationService(JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository), userAuthorizationCodeRepository)
   }
 
   @Bean

@@ -18,6 +18,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters.fromFormData
+import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
 import java.time.Duration
@@ -366,6 +367,13 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
       assertThat(token.get("sub")).isEqualTo("username")
       assertThat(token.get("aud")).isEqualTo(validClientId)
+
+      assertThat(token.get("client_id")).isEqualTo(validClientId)
+      assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
+      assertThat(token.get("scope")).isEqualTo(JSONArray(listOf("read")))
+      assertThat(token.get("user_id")).isEqualTo("9999")
+      assertThat(token.get("name")).isEqualTo("name")
+      assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
     }
 
     private fun createClientCredentialsTokenHeader(vararg roles: String): String {
@@ -386,7 +394,6 @@ class OAuthIntTest : IntegrationTestBase() {
 
     private fun createAuthenticationJwt(username: String, vararg roles: String): String {
       val authoritiesAsString = roles.asList().joinToString(",")
-
       return Jwts.builder()
         .id("1234")
         .subject(username)
@@ -396,7 +403,7 @@ class OAuthIntTest : IntegrationTestBase() {
             "name" to "name",
             "auth_source" to AuthSource.Auth.name,
             "user_id" to "9999",
-            "passed_mfa" to true,
+            "uuid" to "1234-5678-9999-1111",
           ),
         )
         .expiration(Date(System.currentTimeMillis() + Duration.ofSeconds(5).toMillis()))

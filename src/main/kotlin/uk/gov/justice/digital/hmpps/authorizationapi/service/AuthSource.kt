@@ -21,6 +21,10 @@ enum class AuthSource(val description: String) {
         return None
       }
 
+      if (source.lowercase() == "azuread") {
+        return AzureAd
+      }
+
       return try {
         valueOf(source.lowercase().replaceFirstChar { it.titlecase() })
       } catch (e: IllegalArgumentException) {

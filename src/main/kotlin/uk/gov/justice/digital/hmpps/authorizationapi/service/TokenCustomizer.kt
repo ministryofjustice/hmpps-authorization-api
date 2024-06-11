@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import org.apache.commons.lang3.StringUtils.isNotEmpty
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
@@ -10,6 +11,8 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource.Companion.fromNullableString
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthJtiGenerator
 import java.util.stream.Collectors
@@ -17,6 +20,7 @@ import java.util.stream.Collectors
 @Component
 class TokenCustomizer(
   private val authorizationConsentService: OAuth2AuthorizationConsentService,
+  private val userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oauthJtiGenerator: OAuthJtiGenerator,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
@@ -35,13 +39,29 @@ class TokenCustomizer(
         addClientAuthorities(jwtEncodingContext, principal)
         customizeClientCredentials(jwtEncodingContext, principal)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
-        addEndUserAuthorities(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
+        addUserClaims(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
       }
     }
   }
 
-  private fun addEndUserAuthorities(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
+  private fun addUserClaims(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
     addAuthorities(context, principal.authorities)
+    with(context.claims) {
+      claim("client_id", context.registeredClient.clientId)
+      claim("grant_type", GrantType.authorization_code)
+      claim("scope", context.registeredClient.scopes)
+
+      context.authorization?.let {
+        userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
+          claim("user_id", userAuthorizationCode.userId)
+          claim("name", userAuthorizationCode.name)
+
+          userAuthorizationCode.userUuid?.let { userUuid ->
+            claim("user_uuid", userUuid)
+          }
+        }
+      }
+    }
   }
 
   private fun addClientAuthorities(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
