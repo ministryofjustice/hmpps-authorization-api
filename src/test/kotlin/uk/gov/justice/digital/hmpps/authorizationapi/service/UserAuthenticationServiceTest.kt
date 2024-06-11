@@ -68,7 +68,7 @@ class UserAuthenticationServiceTest {
     verify(userAuthorizationCodeRepository).save(userAuthorizationCodeArgument.capture())
 
     assertThat(userAuthorizationCodeArgument.value.id).isEqualTo("12345")
-    assertThat(userAuthorizationCodeArgument.value.userName).isEqualTo(usernamePasswordAuthenticationToken.name)
+    assertThat(userAuthorizationCodeArgument.value.username).isEqualTo(usernamePasswordAuthenticationToken.name)
     assertThat(userAuthorizationCodeArgument.value.userId).isEqualTo("123456")
     assertThat(userAuthorizationCodeArgument.value.name).isEqualTo("Mr I Test")
     assertThat(userAuthorizationCodeArgument.value.source).isEqualTo(AuthSource.Auth)

@@ -23,7 +23,7 @@ class UserAuthenticationService(
       val authenticatedUserDetails = authentication.principal as AuthenticatedUserDetails
       val userAuthorizationCode = UserAuthorizationCode(
         id = authorization.id,
-        userName = authentication.name,
+        username = authentication.name,
         userId = Objects.toString(authenticatedUserDetails.userId, authentication.name),
         userUuid = authenticatedUserDetails.uuid,
         name = authenticatedUserDetails.name,

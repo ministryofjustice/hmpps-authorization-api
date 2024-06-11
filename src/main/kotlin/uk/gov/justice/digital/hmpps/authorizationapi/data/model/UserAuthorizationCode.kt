@@ -15,7 +15,9 @@ data class UserAuthorizationCode(
   @Id
   val id: String,
 
-  val userName: String,
+  @Column(name = "user_name")
+  val username: String,
+
   val userId: String,
   val userUuid: String?,
   val name: String,
