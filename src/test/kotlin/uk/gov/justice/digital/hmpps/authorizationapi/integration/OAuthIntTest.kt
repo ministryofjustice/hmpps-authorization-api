@@ -363,16 +363,30 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectBody()
         .returnResult().responseBody
 
-      val token = getTokenPayload(String(tokenResponse!!))
+      val fullJsonResponse = JSONObject(String(tokenResponse!!))
+      assertThat(fullJsonResponse.get("sub")).isEqualTo("username")
+      assertThat(fullJsonResponse.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
+      assertThat(fullJsonResponse.get("user_id")).isEqualTo("9999")
+      assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
+      assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.source)
+      assertThat(fullJsonResponse.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
+      assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost/")
+      assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
+      assertThat(fullJsonResponse.get("expires_in")).isNotNull
+      assertThat(fullJsonResponse.get("jti")).isNotNull
+
+      val token = getTokenPayload(String(tokenResponse))
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
       assertThat(token.get("sub")).isEqualTo("username")
       assertThat(token.get("aud")).isEqualTo(validClientId)
 
       assertThat(token.get("client_id")).isEqualTo(validClientId)
       assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
+      assertThat(token.get("auth_source")).isEqualTo(AuthSource.Auth.source)
       assertThat(token.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
       assertThat(token.get("user_id")).isEqualTo("9999")
       assertThat(token.get("name")).isEqualTo("name")
+      assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
     }
 
