@@ -370,7 +370,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       assertThat(token.get("client_id")).isEqualTo(validClientId)
       assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
-      assertThat(token.get("scope")).isEqualTo(JSONArray(listOf("read")))
+      assertThat(token.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
       assertThat(token.get("user_id")).isEqualTo("9999")
       assertThat(token.get("name")).isEqualTo("name")
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
