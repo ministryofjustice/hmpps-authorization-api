@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource.Companion.fromNullableString
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthJtiGenerator
 import java.util.stream.Collectors
+import org.apache.commons.lang3.StringUtils
 
 @Component
 class TokenCustomizer(
@@ -28,6 +29,12 @@ class TokenCustomizer(
   companion object {
     private const val REQUEST_PARAM_USER_NAME = "username"
     private const val REQUEST_PARAM_AUTH_SOURCE = "auth_source"
+    private const val ADD_INFO_AUTH_SOURCE = "auth_source"
+    private const val ADD_INFO_NAME = "name"
+    private const val ADD_INFO_USER_NAME = "user_name"
+    private const val ADD_INFO_USER_ID = "user_id"
+    private const val ADD_INFO_USER_UUID = "user_uuid"
+    private const val SUBJECT = "sub"
   }
 
   override fun customize(context: JwtEncodingContext?) {
@@ -40,8 +47,36 @@ class TokenCustomizer(
         customizeClientCredentials(jwtEncodingContext, principal)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
         addUserClaims(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
+        filterAdditionalInfo(
+          mapOf<String, Any>(
+            SUBJECT to "TODO",
+            ADD_INFO_AUTH_SOURCE to "TODO",
+            ADD_INFO_USER_NAME to "TODO",
+            ADD_INFO_USER_ID to "TODO",
+            ADD_INFO_USER_UUID to "TODO",
+            ADD_INFO_NAME to "TODO",
+          ),
+          context,
+        )
       }
     }
+  }
+
+
+  private fun filterAdditionalInfo(info: Map<String, Any>, context: JwtEncodingContext) : Map<String, Any>{
+    val jwtFields = registeredClientAdditionalInformation.getJwtFields(context.registeredClient.clientSettings)
+    val entries = if (StringUtils.isBlank(jwtFields)) {
+      emptySet()
+    } else {
+      jwtFields!!.split(",").associateBy({ it.substring(1) }, { it[0] == '+' }).entries
+    }
+
+    val fieldsToKeep = entries.filter { it.value }.map { it.key }.toSet()
+    val fieldsToRemove = entries.filterNot { it.value }.map { it.key }.toMutableSet()
+
+    // for field addition, just remove from deprecated fields
+    fieldsToRemove.removeAll(fieldsToKeep)
+    return info.entries.filterNot { fieldsToRemove.contains(it.key) }.associateBy({ it.key }, { it.value })
   }
 
   private fun addUserClaims(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
