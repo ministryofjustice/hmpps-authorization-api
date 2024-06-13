@@ -12,28 +12,41 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
 
   @Scheduled(cron = "\${application.authentication.cc-token.cron}", zone = "Europe/London")
-  fun removeClientCredentialsAccessToken() {
+  fun removeAllButLatestAccessToken() {
     try {
-      service.removeAccessTokens()
-      log.trace("Authorization API client credentials access-tokens removed")
+      val numberOfRecordsDeleted = service.removeAllButLatestAccessToken()
+      log.trace("Authorization API client,{} all but latest access tokens are removed", numberOfRecordsDeleted)
 
-      telemetryClient.trackEvent("AuthorizationApiCCAccessTokensRemoved", null, null)
+      telemetryClient.trackEvent("AuthorizationApiAccessTokensRemoved", null, null)
+    } catch (e: Exception) {
+      // have to catch the exception here otherwise scheduling will stop
+      log.error("Caught exception {} during removal of all but latest access tokens", e.javaClass.simpleName, e)
+    }
+  }
+
+  @Scheduled(cron = "\${application.authentication.ac-token.cron}", zone = "Europe/London")
+  fun removeAllAuthorizationCodeRecordsWithoutAccessTokens() {
+    try {
+      val numberOfRecordsDeleted = service.removeAuthCodeAccessTokens()
+      log.trace("Authorization API,{} records removed without access tokens", numberOfRecordsDeleted)
+
+      telemetryClient.trackEvent("AuthorizationApiAccessTokensRemoved", null, null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
       log.error("Caught exception {} during access token removal", e.javaClass.simpleName, e)
     }
   }
 
-  @Scheduled(cron = "\${application.authentication.ac-token.cron}", zone = "Europe/London")
-  fun removeClientAuthorizationCodeAccessToken() {
+  @Scheduled(cron = "\${application.authentication.user-token.cron}", zone = "Europe/London")
+  fun removeRecordsOlderThan20Minutes() {
     try {
-      service.removeAuthCodeAccessTokens()
-      log.trace("Authorization API authorization-code access-tokens removed")
+      val numberOfRecordsDeleted = service.deleteRecordsOlderThan20Minutes()
+      log.trace("Authorization API, {} records older than 20 minutes from table:oauth2_user_authorization_code removed", numberOfRecordsDeleted)
 
-      telemetryClient.trackEvent("AuthorizationApiACAccessTokensRemoved", null, null)
+      telemetryClient.trackEvent("AuthorizationApiUserAccessTokensRemoved", null, null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
-      log.error("Caught exception {} during access token removal", e.javaClass.simpleName, e)
+      log.error("Caught exception {} during access token removal from oauth2_user_authorization_code", e.javaClass.simpleName, e)
     }
   }
 
@@ -45,12 +58,11 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
 @Service
 class RemoveAccessTokensService(private val repository: AuthorizationRepository) {
   @Transactional
-  fun removeAccessTokens() {
-    repository.deleteAllButLatestClientCredentialsAccessToken()
-  }
+  fun removeAllButLatestAccessToken() = repository.deleteAllButLatestAccessToken()
 
   @Transactional
-  fun removeAuthCodeAccessTokens() {
-    repository.deleteAllButLatestAuthorizationCodeAccessToken()
-  }
+  fun removeAuthCodeAccessTokens() = repository.deleteAllAuthorizationCodeRecordsWithoutAccessTokens()
+
+  @Transactional
+  fun deleteRecordsOlderThan20Minutes() = repository.deleteRecordsOlderThan20Minutes()
 }

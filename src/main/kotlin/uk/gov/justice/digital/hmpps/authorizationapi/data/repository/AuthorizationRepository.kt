@@ -9,9 +9,16 @@ interface AuthorizationRepository : CrudRepository<Authorization, String> {
 
   @Modifying
   @Query("delete from Authorization where accessTokenIssuedAt not in(select max(accessTokenIssuedAt) from Authorization group by principalName)")
-  fun deleteAllButLatestClientCredentialsAccessToken()
+  fun deleteAllButLatestAccessToken(): Int
 
   @Modifying
-  @Query("delete from Authorization where authorizationCodeIssuedAt not in(select max(authorizationCodeIssuedAt) from Authorization group by principalName)")
-  fun deleteAllButLatestAuthorizationCodeAccessToken()
+  @Query("delete from Authorization where accessTokenIssuedAt is null and  authorizationCodeExpiresAt < cast(current_timestamp as instant)")
+  fun deleteAllAuthorizationCodeRecordsWithoutAccessTokens(): Int
+
+  @Modifying
+  @Query(
+    value = "select authorization_code_issued_at from oauth2_user_authorization_code where current_timestamp + INTERVAL '20 minutes' > authorization_code_issued_at;",
+    nativeQuery = true,
+  )
+  fun deleteRecordsOlderThan20Minutes(): Int
 }

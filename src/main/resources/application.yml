@@ -103,6 +103,9 @@ management:
 application:
   authentication:
     cc-token:
-      cron: 0 00 20 * * *
+      cron: 0 0 23 * * * # daily at 23:00 hours
     ac-token:
-      cron: 0 00 21 * * *
+      cron: 0 0 0 * * 0  # once a week
+    user-token:
+      cron: 0 0/30 23 * * * # daily at 23:30 hours
+
