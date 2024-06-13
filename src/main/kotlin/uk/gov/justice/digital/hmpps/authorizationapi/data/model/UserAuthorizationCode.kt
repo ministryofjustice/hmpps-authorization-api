@@ -23,7 +23,7 @@ data class UserAuthorizationCode(
   val name: String,
 
   @Column(name = "source")
-  var source: AuthSource,
+  var authSource: AuthSource,
 
   @Column(name = "authorization_code_issued_at")
   var authorizationCodeIssuedAt: Instant,
