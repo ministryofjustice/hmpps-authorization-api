@@ -15,7 +15,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   fun removeAllButLatestAccessToken() {
     try {
       val numberOfRecordsDeleted = service.removeAllButLatestAccessToken()
-      println("numberOfRecordsDeleted removeAllButLatestAccessToken--> $numberOfRecordsDeleted")
+
       log.trace("Authorization API client,{} all but latest access tokens are removed", numberOfRecordsDeleted)
 
       telemetryClient.trackEvent("AuthorizationApiAccessTokensRemoved", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
@@ -29,7 +29,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   fun removeAllAuthorizationCodeRecordsWithoutAccessTokens() {
     try {
       val numberOfRecordsDeleted = service.removeAuthCodeAccessTokens()
-      println("numberOfRecordsDeleted removeAllAuthorizationCodeRecordsWithoutAccessTokens--> $numberOfRecordsDeleted")
+
       log.trace("Authorization API,{} records removed without access tokens", numberOfRecordsDeleted)
 
       telemetryClient.trackEvent("AuthorizationApiAccessTokensRemoved", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
@@ -43,7 +43,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   fun removeRecordsOlderThan20Minutes() {
     try {
       val numberOfRecordsDeleted = service.deleteRecordsOlderThan20Minutes()
-      println("removeRecordsOlderThan20Minutes numberOfRecordsDeleted--> $numberOfRecordsDeleted")
+
       log.trace("Authorization API, {} records older than 20 minutes from table:oauth2_user_authorization_code removed", numberOfRecordsDeleted)
 
       telemetryClient.trackEvent("AuthorizationApiUserAccessTokensRemoved", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
