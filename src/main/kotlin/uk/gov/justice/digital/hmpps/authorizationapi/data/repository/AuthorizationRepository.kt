@@ -13,12 +13,12 @@ interface AuthorizationRepository : CrudRepository<Authorization, String> {
 
   @Modifying
   @Query("delete from Authorization where accessTokenIssuedAt is null and  authorizationCodeExpiresAt < cast(current_timestamp as instant)")
-  fun deleteAllAuthorizationCodeRecordsWithoutAccessTokens(): Int
+  fun deleteAllExpiredAuthorizationCodeRecordsWithoutAccessTokens(): Int
 
   @Modifying
   @Query(
-    value = "delete from oauth2_user_authorization_code where current_timestamp + INTERVAL '20 minutes' > authorization_code_issued_at",
+    value = "delete from oauth2_user_authorization_code where current_timestamp - INTERVAL '20 minutes' > authorization_code_issued_at",
     nativeQuery = true,
   )
-  fun deleteRecordsOlderThan20Minutes(): Int
+  fun deleteExpiredAuthorizationCodeUsers(): Int
 }

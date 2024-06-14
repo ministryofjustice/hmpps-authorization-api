@@ -9,44 +9,44 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationRepository
 
 @Component
+@Transactional
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
 
-  @Scheduled(cron = "\${application.authentication.cc-token.cron}", zone = "Europe/London")
+  @Scheduled(cron = "\${application.authentication.cron.remove-access-tokens}", zone = "Europe/London")
   fun removeAllButLatestAccessToken() {
     try {
       val numberOfRecordsDeleted = service.removeAllButLatestAccessToken()
 
-      log.trace("Authorization API client,{} all but latest access tokens are removed", numberOfRecordsDeleted)
+      log.trace("Authorization API removed {} access token records", numberOfRecordsDeleted)
 
-      telemetryClient.trackEvent("AuthorizationApiAccessTokensRemoved", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
+      telemetryClient.trackEvent("AuthorizationApiAllButLatestAccessToken", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
       log.error("Caught exception {} during removal of all but latest access tokens", e.javaClass.simpleName, e)
     }
   }
 
-  @Scheduled(cron = "\${application.authentication.ac-token.cron}", zone = "Europe/London")
-  fun removeAllAuthorizationCodeRecordsWithoutAccessTokens() {
+  @Scheduled(cron = "\${application.authentication.cron.remove-expired-auth-codes}", zone = "Europe/London")
+  fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() {
     try {
-      val numberOfRecordsDeleted = service.removeAuthCodeAccessTokens()
+      val numberOfRecordsDeleted = service.removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens()
 
-      log.trace("Authorization API,{} records removed without access tokens", numberOfRecordsDeleted)
-
-      telemetryClient.trackEvent("AuthorizationApiAccessTokensRemoved", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
+      log.trace("Authorization API removed {} expired authorisation code records without access tokens", numberOfRecordsDeleted)
+      telemetryClient.trackEvent("AuthorizationApiAllExpiredAuthCodeRecordsWithoutAccessTokens", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
       log.error("Caught exception {} during access token removal", e.javaClass.simpleName, e)
     }
   }
 
-  @Scheduled(cron = "\${application.authentication.user-token.cron}", zone = "Europe/London")
-  fun removeRecordsOlderThan20Minutes() {
+  @Scheduled(cron = "\${application.authentication.cron.remove-expired-user-details}", zone = "Europe/London")
+  fun removeExpiredAuthorizationCodeUsers() {
     try {
-      val numberOfRecordsDeleted = service.deleteRecordsOlderThan20Minutes()
+      val numberOfRecordsDeleted = service.deleteExpiredAuthorizationCodeUsers()
 
-      log.trace("Authorization API, {} records older than 20 minutes from table:oauth2_user_authorization_code removed", numberOfRecordsDeleted)
+      log.trace("Authorization API removed {} expired authorisation code user records", numberOfRecordsDeleted)
 
-      telemetryClient.trackEvent("AuthorizationApiUserAccessTokensRemoved", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
+      telemetryClient.trackEvent("AuthorizationApiExpiredAuthCodeUsers", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
       log.error("Caught exception {} during access token removal from oauth2_user_authorization_code", e.javaClass.simpleName, e)
@@ -64,8 +64,8 @@ class RemoveAccessTokensService(private val repository: AuthorizationRepository)
   fun removeAllButLatestAccessToken() = repository.deleteAllButLatestAccessToken()
 
   @Transactional
-  fun removeAuthCodeAccessTokens() = repository.deleteAllAuthorizationCodeRecordsWithoutAccessTokens()
+  fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() = repository.deleteAllExpiredAuthorizationCodeRecordsWithoutAccessTokens()
 
   @Transactional
-  fun deleteRecordsOlderThan20Minutes() = repository.deleteRecordsOlderThan20Minutes()
+  fun deleteExpiredAuthorizationCodeUsers() = repository.deleteExpiredAuthorizationCodeUsers()
 }
