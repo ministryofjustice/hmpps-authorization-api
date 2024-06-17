@@ -24,4 +24,7 @@ data class Authorization(
 
   @Column(name = "authorization_code_issued_at")
   var authorizationCodeIssuedAt: Instant?,
+
+  @Column(name = "authorization_code_expires_at")
+  var authorizationCodeExpiresAt: Instant?,
 )

@@ -102,7 +102,7 @@ management:
 
 application:
   authentication:
-    cc-token:
-      cron: 0 00 20 * * *
-    ac-token:
-      cron: 0 00 21 * * *
+    cron:
+      remove-access-tokens: 8 * * * * * # daily at 23:00 hours
+      remove-expired-auth-codes: 5 * * * * *  # once a week
+      remove-expired-user-details: 2 * * * * * # daily at 23:30 hours
