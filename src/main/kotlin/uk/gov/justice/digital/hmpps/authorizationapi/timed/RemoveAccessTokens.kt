@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationRepository
 
 @Component
-@Transactional
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
 
   @Scheduled(cron = "\${application.authentication.cron.remove-access-tokens}", zone = "Europe/London")
@@ -59,13 +58,11 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
 }
 
 @Service
+@Transactional
 class RemoveAccessTokensService(private val repository: AuthorizationRepository) {
-  @Transactional
   fun removeAllButLatestAccessToken() = repository.deleteAllButLatestAccessToken()
 
-  @Transactional
   fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() = repository.deleteAllExpiredAuthorizationCodeRecordsWithoutAccessTokens()
 
-  @Transactional
   fun deleteExpiredAuthorizationCodeUsers() = repository.deleteExpiredAuthorizationCodeUsers()
 }
