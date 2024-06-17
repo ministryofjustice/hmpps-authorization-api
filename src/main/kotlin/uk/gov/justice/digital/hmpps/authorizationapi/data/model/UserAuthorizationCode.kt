@@ -7,6 +7,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
+import java.sql.Timestamp
 import java.time.Instant
 
 @Entity
@@ -36,4 +37,11 @@ class AuthSourceConverter : AttributeConverter<AuthSource, String> {
   override fun convertToEntityAttribute(persistedValue: String?): AuthSource {
     return AuthSource.fromNullableString(persistedValue)
   }
+}
+
+@Converter(autoApply = true)
+class InstantConverter : AttributeConverter<Instant, Timestamp> {
+  override fun convertToDatabaseColumn(source: Instant): Timestamp = Timestamp.from(source)
+
+  override fun convertToEntityAttribute(persistedValue: Timestamp): Instant = persistedValue.toInstant()
 }
