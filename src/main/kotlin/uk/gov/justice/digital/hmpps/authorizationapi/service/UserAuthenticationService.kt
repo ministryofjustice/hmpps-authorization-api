@@ -27,7 +27,7 @@ class UserAuthenticationService(
         userId = Objects.toString(authenticatedUserDetails.userId, authentication.name),
         userUuid = authenticatedUserDetails.uuid,
         name = authenticatedUserDetails.name,
-        source = AuthSource.fromNullableString(authenticatedUserDetails.authSource),
+        authSource = AuthSource.fromNullableString(authenticatedUserDetails.authSource),
         authorizationCodeIssuedAt = Instant.now(),
       )
       userAuthorizationCodeRepository.save(userAuthorizationCode)

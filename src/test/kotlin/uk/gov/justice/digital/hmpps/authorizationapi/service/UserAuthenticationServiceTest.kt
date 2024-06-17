@@ -71,7 +71,7 @@ class UserAuthenticationServiceTest {
     assertThat(userAuthorizationCodeArgument.value.username).isEqualTo(usernamePasswordAuthenticationToken.name)
     assertThat(userAuthorizationCodeArgument.value.userId).isEqualTo("123456")
     assertThat(userAuthorizationCodeArgument.value.name).isEqualTo("Mr I Test")
-    assertThat(userAuthorizationCodeArgument.value.source).isEqualTo(AuthSource.Auth)
+    assertThat(userAuthorizationCodeArgument.value.authSource).isEqualTo(AuthSource.Auth)
     assertThat(userAuthorizationCodeArgument.value.userUuid).isEqualTo(authenticatedUserDetails.uuid)
   }
 

@@ -19,6 +19,7 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+  implementation("org.json:json:20240303")
 
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.12.0")

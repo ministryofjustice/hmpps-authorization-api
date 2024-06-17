@@ -93,6 +93,8 @@ class TokenCustomizer(
         userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
           claim("user_id", userAuthorizationCode.userId)
           claim("name", userAuthorizationCode.name)
+          claim("user_name", userAuthorizationCode.username)
+          claim("auth_source", userAuthorizationCode.authSource.source)
 
           userAuthorizationCode.userUuid?.let { userUuid ->
             claim("user_uuid", userUuid)

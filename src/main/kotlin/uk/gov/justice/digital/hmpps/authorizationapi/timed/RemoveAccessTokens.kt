@@ -11,29 +11,44 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 @Component
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
 
-  @Scheduled(cron = "\${application.authentication.cc-token.cron}", zone = "Europe/London")
-  fun removeClientCredentialsAccessToken() {
+  @Scheduled(cron = "\${application.authentication.cron.remove-access-tokens}", zone = "Europe/London")
+  fun removeAllButLatestAccessToken() {
     try {
-      service.removeAccessTokens()
-      log.trace("Authorization API client credentials access-tokens removed")
+      val numberOfRecordsDeleted = service.removeAllButLatestAccessToken()
 
-      telemetryClient.trackEvent("AuthorizationApiCCAccessTokensRemoved", null, null)
+      log.trace("Authorization API removed {} access token records", numberOfRecordsDeleted)
+
+      telemetryClient.trackEvent("AuthorizationApiAllButLatestAccessToken", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
+    } catch (e: Exception) {
+      // have to catch the exception here otherwise scheduling will stop
+      log.error("Caught exception {} during removal of all but latest access tokens", e.javaClass.simpleName, e)
+    }
+  }
+
+  @Scheduled(cron = "\${application.authentication.cron.remove-expired-auth-codes}", zone = "Europe/London")
+  fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() {
+    try {
+      val numberOfRecordsDeleted = service.removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens()
+
+      log.trace("Authorization API removed {} expired authorisation code records without access tokens", numberOfRecordsDeleted)
+      telemetryClient.trackEvent("AuthorizationApiAllExpiredAuthCodeRecordsWithoutAccessTokens", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
       log.error("Caught exception {} during access token removal", e.javaClass.simpleName, e)
     }
   }
 
-  @Scheduled(cron = "\${application.authentication.ac-token.cron}", zone = "Europe/London")
-  fun removeClientAuthorizationCodeAccessToken() {
+  @Scheduled(cron = "\${application.authentication.cron.remove-expired-user-details}", zone = "Europe/London")
+  fun removeExpiredAuthorizationCodeUsers() {
     try {
-      service.removeAuthCodeAccessTokens()
-      log.trace("Authorization API authorization-code access-tokens removed")
+      val numberOfRecordsDeleted = service.deleteExpiredAuthorizationCodeUsers()
 
-      telemetryClient.trackEvent("AuthorizationApiACAccessTokensRemoved", null, null)
+      log.trace("Authorization API removed {} expired authorisation code user records", numberOfRecordsDeleted)
+
+      telemetryClient.trackEvent("AuthorizationApiExpiredAuthCodeUsers", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
-      log.error("Caught exception {} during access token removal", e.javaClass.simpleName, e)
+      log.error("Caught exception {} during access token removal from oauth2_user_authorization_code", e.javaClass.simpleName, e)
     }
   }
 
@@ -43,14 +58,11 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
 }
 
 @Service
+@Transactional
 class RemoveAccessTokensService(private val repository: AuthorizationRepository) {
-  @Transactional
-  fun removeAccessTokens() {
-    repository.deleteAllButLatestClientCredentialsAccessToken()
-  }
+  fun removeAllButLatestAccessToken() = repository.deleteAllButLatestAccessToken()
 
-  @Transactional
-  fun removeAuthCodeAccessTokens() {
-    repository.deleteAllButLatestAuthorizationCodeAccessToken()
-  }
+  fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() = repository.deleteAllExpiredAuthorizationCodeRecordsWithoutAccessTokens()
+
+  fun deleteExpiredAuthorizationCodeUsers() = repository.deleteExpiredAuthorizationCodeUsers()
 }
