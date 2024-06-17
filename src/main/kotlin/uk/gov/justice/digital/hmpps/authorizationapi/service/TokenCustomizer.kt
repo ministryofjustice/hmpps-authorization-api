@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -16,7 +17,6 @@ import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource.Companion.fromNullableString
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthJtiGenerator
 import java.util.stream.Collectors
-import org.apache.commons.lang3.StringUtils
 
 @Component
 class TokenCustomizer(
@@ -47,23 +47,26 @@ class TokenCustomizer(
         customizeClientCredentials(jwtEncodingContext, principal)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
         addUserClaims(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
+        var additionalInfo: MutableMap<String, Any> = mutableMapOf()
+        context.authorization?.let {
+          userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
+            additionalInfo[ADD_INFO_USER_ID] = userAuthorizationCode.userId
+            additionalInfo[ADD_INFO_NAME] = userAuthorizationCode.name
+            additionalInfo[ADD_INFO_USER_NAME] = userAuthorizationCode.username
+            additionalInfo[SUBJECT] = userAuthorizationCode.name
+            additionalInfo[ADD_INFO_USER_UUID] = userAuthorizationCode.userUuid.toString()
+            additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.source.name, "none")
+          }
+        }
         filterAdditionalInfo(
-          mapOf<String, Any>(
-            SUBJECT to "TODO",
-            ADD_INFO_AUTH_SOURCE to "TODO",
-            ADD_INFO_USER_NAME to "TODO",
-            ADD_INFO_USER_ID to "TODO",
-            ADD_INFO_USER_UUID to "TODO",
-            ADD_INFO_NAME to "TODO",
-          ),
+          additionalInfo,
           context,
         )
       }
     }
   }
 
-
-  private fun filterAdditionalInfo(info: Map<String, Any>, context: JwtEncodingContext) : Map<String, Any>{
+  private fun filterAdditionalInfo(info: Map<String, Any>, context: JwtEncodingContext): Map<String, Any> {
     val jwtFields = registeredClientAdditionalInformation.getJwtFields(context.registeredClient.clientSettings)
     val entries = if (StringUtils.isBlank(jwtFields)) {
       emptySet()
