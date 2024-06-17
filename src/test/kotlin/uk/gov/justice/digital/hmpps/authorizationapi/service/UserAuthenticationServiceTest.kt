@@ -15,11 +15,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.UserAuthorizationCode
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthenticatedUserDetails
+import java.time.Instant
 import java.util.UUID
 
 class UserAuthenticationServiceTest {
@@ -27,6 +29,8 @@ class UserAuthenticationServiceTest {
   private val delegateOAuth2AuthorizationService: OAuth2AuthorizationService = mock()
   private val userAuthorizationCodeRepository: UserAuthorizationCodeRepository = mock()
   private val oAuth2Authorization: OAuth2Authorization = mock()
+  private val tokenWrapper: OAuth2Authorization.Token<OAuth2AuthorizationCode> = mock()
+  private val token: OAuth2AuthorizationCode = mock()
 
   private lateinit var userAuthenticationService: UserAuthenticationService
 
@@ -59,7 +63,11 @@ class UserAuthenticationServiceTest {
 
     val usernamePasswordAuthenticationToken = UsernamePasswordAuthenticationToken(authenticatedUserDetails, null)
     SecurityContextHolder.getContext().authentication = usernamePasswordAuthenticationToken
+    val now = Instant.now()
     whenever(oAuth2Authorization.id).thenReturn("12345")
+    whenever(oAuth2Authorization.getToken(OAuth2AuthorizationCode::class.java)).thenReturn(tokenWrapper)
+    whenever(tokenWrapper.token).thenReturn(token)
+    whenever(token.issuedAt).thenReturn(now)
 
     userAuthenticationService.save(oAuth2Authorization)
 
@@ -67,12 +75,15 @@ class UserAuthenticationServiceTest {
     val userAuthorizationCodeArgument = ArgumentCaptor.forClass(UserAuthorizationCode::class.java)
     verify(userAuthorizationCodeRepository).save(userAuthorizationCodeArgument.capture())
 
-    assertThat(userAuthorizationCodeArgument.value.id).isEqualTo("12345")
-    assertThat(userAuthorizationCodeArgument.value.username).isEqualTo(usernamePasswordAuthenticationToken.name)
-    assertThat(userAuthorizationCodeArgument.value.userId).isEqualTo("123456")
-    assertThat(userAuthorizationCodeArgument.value.name).isEqualTo("Mr I Test")
-    assertThat(userAuthorizationCodeArgument.value.authSource).isEqualTo(AuthSource.Auth)
-    assertThat(userAuthorizationCodeArgument.value.userUuid).isEqualTo(authenticatedUserDetails.uuid)
+    with(userAuthorizationCodeArgument.value) {
+      assertThat(id).isEqualTo("12345")
+      assertThat(username).isEqualTo(usernamePasswordAuthenticationToken.name)
+      assertThat(userId).isEqualTo("123456")
+      assertThat(name).isEqualTo("Mr I Test")
+      assertThat(authSource).isEqualTo(AuthSource.Auth)
+      assertThat(userUuid).isEqualTo(authenticatedUserDetails.uuid)
+      assertThat(authorizationCodeIssuedAt).isEqualTo(now)
+    }
   }
 
   @Test
