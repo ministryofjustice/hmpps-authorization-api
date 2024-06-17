@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.authorizationapi.data.model
 
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -26,6 +27,7 @@ data class UserAuthorizationCode(
   @Column(name = "source")
   var authSource: AuthSource,
 
+  @Convert(converter = AuthSourceConverter::class)
   @Column(name = "authorization_code_issued_at")
   var authorizationCodeIssuedAt: Instant,
 )
@@ -39,7 +41,7 @@ class AuthSourceConverter : AttributeConverter<AuthSource, String> {
   }
 }
 
-@Converter(autoApply = true)
+@Converter
 class InstantConverter : AttributeConverter<Instant, Timestamp> {
   override fun convertToDatabaseColumn(source: Instant): Timestamp = Timestamp.from(source)
 
