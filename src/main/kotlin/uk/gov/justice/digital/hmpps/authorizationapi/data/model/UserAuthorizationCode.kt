@@ -27,7 +27,7 @@ data class UserAuthorizationCode(
   @Column(name = "source")
   var authSource: AuthSource,
 
-  @Convert(converter = AuthSourceConverter::class)
+  @Convert(converter = InstantConverter::class)
   @Column(name = "authorization_code_issued_at")
   var authorizationCodeIssuedAt: Instant,
 )
