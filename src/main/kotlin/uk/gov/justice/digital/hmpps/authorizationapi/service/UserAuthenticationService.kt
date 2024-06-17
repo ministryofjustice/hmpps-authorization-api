@@ -3,12 +3,12 @@ package uk.gov.justice.digital.hmpps.authorizationapi.service
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.UserAuthorizationCode
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthenticatedUserDetails
-import java.time.Instant
 import java.util.Objects
 
 class UserAuthenticationService(
@@ -20,6 +20,7 @@ class UserAuthenticationService(
     delegateOAuth2AuthorizationService.save(authorization)
     if (SecurityContextHolder.getContext().authentication is UsernamePasswordAuthenticationToken) {
       val authentication = SecurityContextHolder.getContext().authentication as UsernamePasswordAuthenticationToken
+      val oAuth2TokenHolder = authorization.getToken(OAuth2AuthorizationCode::class.java) as OAuth2Authorization.Token
       val authenticatedUserDetails = authentication.principal as AuthenticatedUserDetails
       val userAuthorizationCode = UserAuthorizationCode(
         id = authorization.id,
@@ -28,7 +29,7 @@ class UserAuthenticationService(
         userUuid = authenticatedUserDetails.uuid,
         name = authenticatedUserDetails.name,
         authSource = AuthSource.fromNullableString(authenticatedUserDetails.authSource),
-        authorizationCodeIssuedAt = Instant.now(),
+        authorizationCodeIssuedAt = oAuth2TokenHolder.token.issuedAt!!,
       )
       userAuthorizationCodeRepository.save(userAuthorizationCode)
     }
