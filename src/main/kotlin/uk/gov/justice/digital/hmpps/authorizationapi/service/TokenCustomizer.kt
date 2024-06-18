@@ -55,13 +55,10 @@ class TokenCustomizer(
             additionalInfo[ADD_INFO_USER_NAME] = userAuthorizationCode.username
             additionalInfo[SUBJECT] = userAuthorizationCode.name
             additionalInfo[ADD_INFO_USER_UUID] = userAuthorizationCode.userUuid.toString()
-            additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.source.name, "none")
+            additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.authSource.name, "none")
           }
         }
-        filterAdditionalInfo(
-          additionalInfo,
-          context,
-        )
+        filterAdditionalInfo(additionalInfo, context)
       }
     }
   }
@@ -71,15 +68,9 @@ class TokenCustomizer(
     val entries = if (StringUtils.isBlank(jwtFields)) {
       emptySet()
     } else {
-      jwtFields!!.split(",").associateBy({ it.substring(1) }, { it[0] == '+' }).entries
+      jwtFields!!.split(",")
     }
-
-    val fieldsToKeep = entries.filter { it.value }.map { it.key }.toSet()
-    val fieldsToRemove = entries.filterNot { it.value }.map { it.key }.toMutableSet()
-
-    // for field addition, just remove from deprecated fields
-    fieldsToRemove.removeAll(fieldsToKeep)
-    return info.entries.filterNot { fieldsToRemove.contains(it.key) }.associateBy({ it.key }, { it.value })
+    return info.entries.filterNot { entries.contains(it.key) }.associateBy({ it.key }, { it.value })
   }
 
   private fun addUserClaims(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
