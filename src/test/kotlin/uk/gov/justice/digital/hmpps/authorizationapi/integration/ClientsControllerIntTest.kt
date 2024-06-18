@@ -101,7 +101,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.clients[6].baseClientId").isEqualTo("test-client-id")
+        .jsonPath("$.clients[6].baseClientId").isEqualTo("test-client-create-id")
         .jsonPath("$.clients[6].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[6].teamName").isEqualTo("HAAR")
         .jsonPath("$.clients[6].grantType").isEqualTo("client_credentials")
@@ -111,7 +111,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         )
         .jsonPath("$.clients[6].count").isEqualTo(1)
         .jsonPath("$.clients[6].expired").isEmpty
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(9) }
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(10) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
@@ -120,6 +120,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "ip-allow-b-client",
               "ip-allow-c-client",
               "test-auth-code-client",
+              "test-auth-code-client-with-jwt-settings",
               "test-client-create-id",
               "test-client-id",
               "test-complete-details-id",
@@ -137,7 +138,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.clients[0].baseClientId").isEqualTo("test-client-id")
+        .jsonPath("$.clients[0].baseClientId").isEqualTo("test-client-create-id")
         .jsonPath("$.clients[0].clientType").isEqualTo("PERSONAL")
         .jsonPath("$.clients[0].teamName").isEqualTo("HAAR")
         .jsonPath("$.clients[0].grantType").isEqualTo("client_credentials")
@@ -147,11 +148,12 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         )
         .jsonPath("$.clients[0].count").isEqualTo(1)
         .jsonPath("$.clients[0].expired").isEmpty
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(1) }
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(2) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
               "test-client-id",
+              "test-client-create-id",
             ),
           )
         }
@@ -771,6 +773,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       val client = clientRepository.findClientByClientId(clientId)
 
+      // client.clientSettings.settings.put(JWT_FIELDS_NAME_KEY,"")
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo(clientId)
       assertThat(client.clientName).isEqualTo(clientId)

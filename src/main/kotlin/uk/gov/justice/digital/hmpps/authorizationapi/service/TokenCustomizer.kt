@@ -47,7 +47,7 @@ class TokenCustomizer(
         customizeClientCredentials(jwtEncodingContext, principal)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
         addUserClaims(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
-        var additionalInfo: MutableMap<String, Any> = mutableMapOf()
+        val additionalInfo: MutableMap<String, Any> = mutableMapOf()
         context.authorization?.let {
           userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
             additionalInfo[ADD_INFO_USER_ID] = userAuthorizationCode.userId
@@ -58,19 +58,19 @@ class TokenCustomizer(
             additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.authSource.name, "none")
           }
         }
-        filterAdditionalInfo(additionalInfo, context)
+        filterJwtFields(additionalInfo, context)
       }
     }
   }
 
-  private fun filterAdditionalInfo(info: Map<String, Any>, context: JwtEncodingContext): Map<String, Any> {
+  private fun filterJwtFields(info: Map<String, Any>, context: JwtEncodingContext) {
     val jwtFields = registeredClientAdditionalInformation.getJwtFields(context.registeredClient.clientSettings)
     val entries = if (StringUtils.isBlank(jwtFields)) {
       emptySet()
     } else {
       jwtFields!!.split(",")
     }
-    return info.entries.filterNot { entries.contains(it.key) }.associateBy({ it.key }, { it.value })
+    info.entries.filterNot { entries.contains(it.key) }.map { it -> context.claims.claim(it.key, it.value) }
   }
 
   private fun addUserClaims(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
@@ -79,19 +79,6 @@ class TokenCustomizer(
       claim("client_id", context.registeredClient.clientId)
       claim("grant_type", GrantType.authorization_code)
       claim("scope", context.registeredClient.scopes)
-
-      context.authorization?.let {
-        userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
-          claim("user_id", userAuthorizationCode.userId)
-          claim("name", userAuthorizationCode.name)
-          claim("user_name", userAuthorizationCode.username)
-          claim("auth_source", userAuthorizationCode.authSource.source)
-
-          userAuthorizationCode.userUuid?.let { userUuid ->
-            claim("user_uuid", userUuid)
-          }
-        }
-      }
     }
   }
 
