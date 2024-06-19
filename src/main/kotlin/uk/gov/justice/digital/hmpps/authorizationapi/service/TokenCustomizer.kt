@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -28,6 +29,12 @@ class TokenCustomizer(
   companion object {
     private const val REQUEST_PARAM_USER_NAME = "username"
     private const val REQUEST_PARAM_AUTH_SOURCE = "auth_source"
+    private const val ADD_INFO_AUTH_SOURCE = "auth_source"
+    private const val ADD_INFO_NAME = "name"
+    private const val ADD_INFO_USER_NAME = "user_name"
+    private const val ADD_INFO_USER_ID = "user_id"
+    private const val ADD_INFO_USER_UUID = "user_uuid"
+    private const val SUBJECT = "sub"
   }
 
   override fun customize(context: JwtEncodingContext?) {
@@ -40,8 +47,30 @@ class TokenCustomizer(
         customizeClientCredentials(jwtEncodingContext, principal)
       } else if (jwtEncodingContext.getPrincipal<Authentication>() is UsernamePasswordAuthenticationToken) {
         addUserClaims(jwtEncodingContext, jwtEncodingContext.getPrincipal<Authentication>() as UsernamePasswordAuthenticationToken)
+        val additionalInfo: MutableMap<String, Any> = mutableMapOf()
+        context.authorization?.let {
+          userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
+            additionalInfo[ADD_INFO_USER_ID] = userAuthorizationCode.userId
+            additionalInfo[ADD_INFO_NAME] = userAuthorizationCode.name
+            additionalInfo[ADD_INFO_USER_NAME] = userAuthorizationCode.username
+            additionalInfo[SUBJECT] = userAuthorizationCode.name
+            additionalInfo[ADD_INFO_USER_UUID] = userAuthorizationCode.userUuid.toString()
+            additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.authSource.name, "none")
+          }
+        }
+        filterJwtFields(additionalInfo, context)
       }
     }
+  }
+
+  private fun filterJwtFields(info: Map<String, Any>, context: JwtEncodingContext) {
+    val jwtFields = registeredClientAdditionalInformation.getJwtFields(context.registeredClient.clientSettings)
+    val entries = if (StringUtils.isBlank(jwtFields)) {
+      emptySet()
+    } else {
+      jwtFields!!.split(",")
+    }
+    info.entries.filterNot { entries.contains(it.key) }.map { it -> context.claims.claim(it.key, it.value) }
   }
 
   private fun addUserClaims(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
@@ -50,19 +79,6 @@ class TokenCustomizer(
       claim("client_id", context.registeredClient.clientId)
       claim("grant_type", GrantType.authorization_code)
       claim("scope", context.registeredClient.scopes)
-
-      context.authorization?.let {
-        userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
-          claim("user_id", userAuthorizationCode.userId)
-          claim("name", userAuthorizationCode.name)
-          claim("user_name", userAuthorizationCode.username)
-          claim("auth_source", userAuthorizationCode.authSource.source)
-
-          userAuthorizationCode.userUuid?.let { userUuid ->
-            claim("user_uuid", userUuid)
-          }
-        }
-      }
     }
   }
 

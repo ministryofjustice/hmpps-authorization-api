@@ -41,7 +41,7 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(10) }
+        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(11) }
         .jsonPath("\$.[0].clientId").isEqualTo("test-client-id")
         .jsonPath("\$.[0].scopes[0]").isEqualTo("read")
         .jsonPath("\$.[0].scopes[1]").isEqualTo("write")

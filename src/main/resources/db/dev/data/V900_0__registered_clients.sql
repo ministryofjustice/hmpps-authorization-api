@@ -49,6 +49,12 @@ VALUES
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.authorization-code-time-to-live":["java.time.Duration",1200.000000000],"settings.token.additional-data.jira-number":"HAAR-9999","settings.token.access-token-time-to-live":["java.time.Duration",300.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"}}',
      null, false,'http://127.0.0.1:8089/'),
 
+    ('05ac35b9-ef9d-47c3-9409-cbcf334acd74', 'test-auth-code-client-with-jwt-settings', current_timestamp, '{bcrypt}$2a$10$iItP8qu7ocHyw92687SKAehZQb7MhCjU6g37OGUt1I0guEE7B.4ba', null, 'test-auth-code-client-with-jwt-settings',
+     'client_secret_basic', 'authorization_code', 'http://127.0.0.1:8089/login/oauth2/code/oidc-client,https://oauth.pstmn.io/v1/callback', 'read',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false,"settings.client.additional-data.jwtFields":"user_name,user_id"}',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.authorization-code-time-to-live":["java.time.Duration",1200.000000000],"settings.token.additional-data.jira-number":"HAAR-9999","settings.token.access-token-time-to-live":["java.time.Duration",300.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"}}',
+     null, false,'http://127.0.0.1:8089/'),
+
     ('ceab6c18-081b-44e9-8130-3b37a2541089', 'hmpps-auth-authorization-api-client', current_timestamp, '{bcrypt}$2a$10$KeuHCVZ4DmBiaM6zvy9OzO2Ze/zFkCc9DrHSHq9Y8LiP0o3ZIHk9S', null, 'hmpps-auth-authorization-api-client',
      'client_secret_basic', 'client_credentials', 'http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback', 'read,write',
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false,"settings.client.additional-data.jira-number":"HAAR-9999","settings.client.additional-data.database-user-name":"testy-db"}',

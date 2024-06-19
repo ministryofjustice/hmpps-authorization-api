@@ -364,11 +364,11 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val fullJsonResponse = JSONObject(String(tokenResponse!!))
-      assertThat(fullJsonResponse.get("sub")).isEqualTo("username")
+      assertThat(fullJsonResponse.get("sub")).isEqualTo("name")
       assertThat(fullJsonResponse.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(fullJsonResponse.get("user_id")).isEqualTo("9999")
       assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
-      assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.source)
+      assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.name)
       assertThat(fullJsonResponse.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
       assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost/")
       assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
@@ -377,17 +377,81 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(tokenResponse))
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
-      assertThat(token.get("sub")).isEqualTo("username")
+      assertThat(token.get("sub")).isEqualTo("name")
       assertThat(token.get("aud")).isEqualTo(validClientId)
 
       assertThat(token.get("client_id")).isEqualTo(validClientId)
       assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
-      assertThat(token.get("auth_source")).isEqualTo(AuthSource.Auth.source)
+      assertThat(token.get("auth_source")).isEqualTo(AuthSource.Auth.name)
       assertThat(token.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
       assertThat(token.get("user_id")).isEqualTo("9999")
       assertThat(token.get("name")).isEqualTo("name")
       assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
+    }
+
+    @Test
+    fun `confirm jwt fields are removed from claims and access token in authorization-code flow`() {
+      val validClientId = "test-auth-code-client-with-jwt-settings"
+      var header: String? = null
+      webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectHeader()
+        .value("Location") { h: String -> header = h }
+
+      val authorisationCode =
+        header!!.substringAfter("?").split("&").first { it.startsWith("code=") }.substringAfter("code=")
+
+      val formData = LinkedMultiValueMap<String, String>().apply {
+        add("grant_type", "authorization_code")
+        add("code", authorisationCode)
+        add("state", state)
+        add("redirect_uri", validRedirectUri)
+      }
+
+      val tokenResponse = webTestClient
+        .post().uri("/oauth2/token")
+        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()))
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .bodyValue(
+          formData,
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .returnResult().responseBody
+
+      val fullJsonResponse = JSONObject(String(tokenResponse!!))
+
+      assertThat(fullJsonResponse.get("sub")).isEqualTo("name")
+      assertThat(fullJsonResponse.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
+      assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.name)
+      assertThat(fullJsonResponse.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
+      assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost/")
+      assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
+      assertThat(fullJsonResponse.get("expires_in")).isNotNull
+      assertThat(fullJsonResponse.get("jti")).isNotNull
+
+      assertThat(fullJsonResponse.optString("user_id", null)).isNull()
+      assertThat(fullJsonResponse.optString("user_name", null)).isNull()
+
+      val token = getTokenPayload(String(tokenResponse))
+      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
+      assertThat(token.get("sub")).isEqualTo("name")
+      assertThat(token.get("aud")).isEqualTo(validClientId)
+
+      assertThat(token.get("client_id")).isEqualTo(validClientId)
+      assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
+      assertThat(token.get("auth_source")).isEqualTo(AuthSource.Auth.name)
+      assertThat(token.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
+      assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
+      assertThat(token.get("name")).isEqualTo("name")
+
+      assertThat(token.optString("user_name", null)).isNull()
+      assertThat(token.optString("user_id", null)).isNull()
     }
 
     private fun createClientCredentialsTokenHeader(vararg roles: String): String {
