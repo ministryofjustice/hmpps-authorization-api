@@ -773,7 +773,6 @@ class ClientsControllerIntTest : IntegrationTestBase() {
 
       val client = clientRepository.findClientByClientId(clientId)
 
-      // client.clientSettings.settings.put(JWT_FIELDS_NAME_KEY,"")
       assertNotNull(client)
       assertThat(client!!.clientId).isEqualTo(clientId)
       assertThat(client.clientName).isEqualTo(clientId)
