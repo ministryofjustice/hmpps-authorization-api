@@ -246,7 +246,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
     private val validRedirectUri = "http://127.0.0.1:8089/login/oauth2/code/oidc-client"
     private val invalidRedirectUri = "http://127.0.0.1:8089/login/oauth2/code/oidc-client-x"
-    private var validClientId = "test-auth-code-client"
+    private val validClientId = "test-auth-code-client"
     private val invalidClientId = "test-auth-code-client-x"
     private val state = "1234"
 
@@ -391,8 +391,8 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `test jwt fields in authorization-code flow`() {
-      validClientId = "test-auth-code-client-with-jwt-settings"
+    fun `confirm jwt fields are removed from claims and access token in authorization-code flow`() {
+      val validClientId = "test-auth-code-client-with-jwt-settings"
       var header: String? = null
       webTestClient
         .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
@@ -426,7 +426,6 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val fullJsonResponse = JSONObject(String(tokenResponse!!))
 
-      print(fullJsonResponse)
       assertThat(fullJsonResponse.get("sub")).isEqualTo("name")
       assertThat(fullJsonResponse.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.name)
@@ -435,7 +434,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
       assertThat(fullJsonResponse.get("expires_in")).isNotNull
       assertThat(fullJsonResponse.get("jti")).isNotNull
-      // user_id and user_name not available in claims
+
       assertThat(fullJsonResponse.optString("user_id", null)).isNull()
       assertThat(fullJsonResponse.optString("user_name", null)).isNull()
 
@@ -450,7 +449,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(token.get("name")).isEqualTo("name")
-      // user_id and user_name not available in access token
+
       assertThat(token.optString("user_name", null)).isNull()
       assertThat(token.optString("user_id", null)).isNull()
     }
