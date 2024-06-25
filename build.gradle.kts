@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
-  kotlin("plugin.spring") version "1.9.23"
-  kotlin("plugin.jpa") version "1.9.23"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.0"
+  kotlin("plugin.spring") version "2.0.0"
+  kotlin("plugin.jpa") version "2.0.0"
 }
 
 configurations {
@@ -25,15 +25,16 @@ dependencies {
   implementation("org.apache.commons:commons-text:1.12.0")
   implementation("io.opentelemetry:opentelemetry-api")
 
-  implementation("io.jsonwebtoken:jjwt:0.12.5")
+  implementation("io.jsonwebtoken:jjwt:0.12.6")
 
   runtimeOnly("com.h2database:h2:2.2.224")
   runtimeOnly("org.postgresql:postgresql:42.7.3")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
   implementation(kotlin("stdlib"))
 }
 
@@ -44,7 +45,7 @@ java {
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "21"
+      compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
     }
   }
 }
