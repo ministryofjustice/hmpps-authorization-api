@@ -4,6 +4,9 @@ import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
+import net.javacrumbs.shedlock.core.LockProvider
+import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider
+import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.security.SecurityProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean
@@ -13,6 +16,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.authentication.AuthenticationEventPublisher
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher
@@ -58,6 +62,8 @@ import java.security.interfaces.RSAPublicKey
 
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
+@EnableScheduling
+@EnableSchedulerLock(defaultLockAtMostFor = "30m")
 @Configuration(proxyBeanMethods = false)
 class AuthorizationApiConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
@@ -179,6 +185,17 @@ class AuthorizationApiConfig(
     val userDetailsService = JdbcDaoImpl()
     userDetailsService.jdbcTemplate = jdbcTemplate
     return userDetailsService
+  }
+
+  @Bean
+  fun lockProvider(jdbcTemplate: JdbcTemplate): LockProvider {
+    return JdbcTemplateLockProvider(
+      JdbcTemplateLockProvider.Configuration.builder()
+        .withTableName("scheduled_job_lock")
+        .withJdbcTemplate(jdbcTemplate)
+        .usingDbTime()
+        .build(),
+    )
   }
 
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {

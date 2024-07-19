@@ -20,12 +20,12 @@ dependencies {
   implementation("org.flywaydb:flyway-core")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
   implementation("org.json:json:20240303")
-
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.12.0")
   implementation("io.opentelemetry:opentelemetry-api")
-
   implementation("io.jsonwebtoken:jjwt:0.12.6")
+  implementation("net.javacrumbs.shedlock:shedlock-spring:5.13.0")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.13.0")
 
   runtimeOnly("com.h2database:h2:2.2.224")
   runtimeOnly("org.postgresql:postgresql:42.7.3")
