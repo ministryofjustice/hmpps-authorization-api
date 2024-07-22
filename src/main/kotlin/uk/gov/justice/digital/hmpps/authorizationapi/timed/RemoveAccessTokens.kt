@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.timed
 
 import com.microsoft.applicationinsights.TelemetryClient
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -12,11 +13,13 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
 
   @Scheduled(cron = "\${application.authentication.cron.remove-access-tokens}", zone = "Europe/London")
+  @SchedulerLock(name = "removeAllButLatestAccessToken")
   fun removeAllButLatestAccessToken() {
     try {
+      log.trace("removeAllButLatestAccessToken scheduled task started")
       val numberOfRecordsDeleted = service.removeAllButLatestAccessToken()
 
-      log.trace("Authorization API removed {} access token records", numberOfRecordsDeleted)
+      log.trace("removeAllButLatestAccessToken scheduled task removed {} access token records", numberOfRecordsDeleted)
 
       telemetryClient.trackEvent("AuthorizationApiAllButLatestAccessToken", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
@@ -26,11 +29,13 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   }
 
   @Scheduled(cron = "\${application.authentication.cron.remove-expired-auth-codes}", zone = "Europe/London")
+  @SchedulerLock(name = "removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens")
   fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() {
     try {
+      log.trace("removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens scheduled task started")
       val numberOfRecordsDeleted = service.removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens()
 
-      log.trace("Authorization API removed {} expired authorisation code records without access tokens", numberOfRecordsDeleted)
+      log.trace("removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens scheduled task removed {} expired authorisation code records without access tokens", numberOfRecordsDeleted)
       telemetryClient.trackEvent("AuthorizationApiAllExpiredAuthCodeRecordsWithoutAccessTokens", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
       // have to catch the exception here otherwise scheduling will stop
@@ -39,11 +44,13 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   }
 
   @Scheduled(cron = "\${application.authentication.cron.remove-expired-user-details}", zone = "Europe/London")
+  @SchedulerLock(name = "removeExpiredAuthorizationCodeUsers")
   fun removeExpiredAuthorizationCodeUsers() {
     try {
+      log.trace("removeExpiredAuthorizationCodeUsers scheduled task started")
       val numberOfRecordsDeleted = service.deleteExpiredAuthorizationCodeUsers()
 
-      log.trace("Authorization API removed {} expired authorisation code user records", numberOfRecordsDeleted)
+      log.trace("removeExpiredAuthorizationCodeUsers scheduled task removed {} expired authorisation code user records", numberOfRecordsDeleted)
 
       telemetryClient.trackEvent("AuthorizationApiExpiredAuthCodeUsers", mapOf("numberOfRecordsDeleted" to numberOfRecordsDeleted.toString()), null)
     } catch (e: Exception) {
