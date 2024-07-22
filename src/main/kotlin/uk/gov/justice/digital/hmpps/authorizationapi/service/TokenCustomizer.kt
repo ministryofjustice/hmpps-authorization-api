@@ -53,9 +53,9 @@ class TokenCustomizer(
             additionalInfo[ADD_INFO_USER_ID] = userAuthorizationCode.userId
             additionalInfo[ADD_INFO_NAME] = userAuthorizationCode.name
             additionalInfo[ADD_INFO_USER_NAME] = userAuthorizationCode.username
-            additionalInfo[SUBJECT] = userAuthorizationCode.name
+            additionalInfo[SUBJECT] = userAuthorizationCode.username
             additionalInfo[ADD_INFO_USER_UUID] = userAuthorizationCode.userUuid.toString()
-            additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.authSource.name, "none")
+            additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.authSource.name.lowercase(), "none")
           }
         }
         filterJwtFields(additionalInfo, context)
