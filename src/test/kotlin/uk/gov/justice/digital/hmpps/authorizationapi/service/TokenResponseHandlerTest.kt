@@ -92,24 +92,17 @@ class TokenResponseHandlerTest {
 
     tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
-    verify(oAuth2AccessTokenResponseHttpMessageConverter, times(1))
-      .write(tokenResponseMessageConverterCaptor.capture(), isNull(), any())
-
-    assertThat(tokenResponseMessageConverterCaptor.allValues).hasSize(1)
-
-    val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
-    assertThat(capturedAccessToken).isNotNull
-
-    assertTokenResponseContainsExpectedValues(
-      capturedAccessToken,
-      testJWT,
-    ) { additionalParams -> assertThat(additionalParams["scope"]).isEqualTo("read write") }
+    assertTokenResponseContainsExpectedValues(testJWT) { additionalParams ->
+      assertThat(additionalParams["scope"]).isEqualTo(
+        "read write",
+      )
+    }
   }
 
   @Nested
   inner class ScopeClaim {
     @Test
-    fun `additional property scope is not added when it does not exist is in the source access token`() {
+    fun `additional property scope is not added when it does not exist in the source access token`() {
       // Remove scope from the claims
       val claims = HashMap(ALL_CLAIMS)
       claims.remove("scope")
@@ -124,16 +117,7 @@ class TokenResponseHandlerTest {
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
-      verify(oAuth2AccessTokenResponseHttpMessageConverter, times(1))
-        .write(tokenResponseMessageConverterCaptor.capture(), isNull(), any())
-
-      assertThat(tokenResponseMessageConverterCaptor.allValues).hasSize(1)
-
-      val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
-      assertThat(capturedAccessToken).isNotNull
-
       assertTokenResponseContainsExpectedValues(
-        capturedAccessToken,
         testJWT,
       ) { additionalParams -> assertThat(additionalParams).doesNotContainKey("scope") }
     }
@@ -154,16 +138,7 @@ class TokenResponseHandlerTest {
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
-      verify(oAuth2AccessTokenResponseHttpMessageConverter, times(1))
-        .write(tokenResponseMessageConverterCaptor.capture(), isNull(), any())
-
-      assertThat(tokenResponseMessageConverterCaptor.allValues).hasSize(1)
-
-      val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
-      assertThat(capturedAccessToken).isNotNull
-
       assertTokenResponseContainsExpectedValues(
-        capturedAccessToken,
         testJWT,
       ) { additionalParams -> assertThat(additionalParams).doesNotContainKey("scope") }
     }
@@ -184,16 +159,7 @@ class TokenResponseHandlerTest {
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
-      verify(oAuth2AccessTokenResponseHttpMessageConverter, times(1))
-        .write(tokenResponseMessageConverterCaptor.capture(), isNull(), any())
-
-      assertThat(tokenResponseMessageConverterCaptor.allValues).hasSize(1)
-
-      val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
-      assertThat(capturedAccessToken).isNotNull
-
       assertTokenResponseContainsExpectedValues(
-        capturedAccessToken,
         testJWT,
       ) { additionalParams -> assertThat(additionalParams).doesNotContainKey("scope") }
     }
@@ -221,27 +187,25 @@ class TokenResponseHandlerTest {
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
-      verify(oAuth2AccessTokenResponseHttpMessageConverter, times(1))
-        .write(tokenResponseMessageConverterCaptor.capture(), isNull(), any())
-
-      assertThat(tokenResponseMessageConverterCaptor.allValues).hasSize(1)
-
-      val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
-      assertThat(capturedAccessToken).isNotNull
-
       assertTokenResponseContainsExpectedValues(
-        capturedAccessToken,
         testJWT,
-      ) { assertThat(capturedAccessToken.additionalParameters).doesNotContainKey("scope") }
+      ) { additionalParams -> assertThat(additionalParams).doesNotContainKey("scope") }
     }
   }
 
   private fun assertTokenResponseContainsExpectedValues(
-    actual: OAuth2AccessTokenResponse,
     expectedJWT: String,
-    assertThatScopeContainsExpectedValue: (additionalParameters: Map<String, Any>) -> Unit,
+    assertThatScopeClaimContainsExpectedValue: (additionalParameters: Map<String, Any>) -> Unit,
   ) {
-    assertThatScopeContainsExpectedValue(actual.additionalParameters)
+    verify(oAuth2AccessTokenResponseHttpMessageConverter, times(1))
+      .write(tokenResponseMessageConverterCaptor.capture(), isNull(), any())
+
+    assertThat(tokenResponseMessageConverterCaptor.allValues).hasSize(1)
+
+    val actual = tokenResponseMessageConverterCaptor.allValues[0]
+    assertThat(actual).isNotNull
+
+    assertThatScopeClaimContainsExpectedValue(actual.additionalParameters)
 
     assertThat(actual.accessToken.tokenValue).isEqualTo(expectedJWT)
     assertThat(actual.accessToken.tokenType).isEqualTo(TokenType.BEARER)
