@@ -53,35 +53,22 @@ class TokenResponseHandlerTest {
   private lateinit var tokenResponseMessageConverterCaptor: ArgumentCaptor<OAuth2AccessTokenResponse>
 
   companion object {
-    const val USERNAME = "AUTH_MFA_PREF_EMAIL4"
-    const val SUBJECT = "AUTH_MFA_PREF_EMAIL4" // Subject intentionally set to user_name value
-    const val AUTH_SOURCE = "auth"
-    const val ISSUER = "http://localhost:51315/auth/issuer"
-    const val CLIENT_ID = "some-client-id"
-    const val USER_ID = "2e285ccd-dcfd-4497-9e22-d6e8e10a2d63"
-    const val USER_UUID = "3e285ccd-dcfd-4495-9e22-i6e8e10a2d63"
-    const val GRANT_TYPE_AUTH_CODE = "authorization_code"
-    const val NAME = "Auth Mfa"
-    const val EXPIRY = 1721752178
-    const val JTI = "OvQBycPwvHpv3MYEOtnrn6P55F0"
-
     val SCOPE_RW = setOf("read", "write")
-    val AUTHORITIES = listOf("ROLE_MFA")
 
     val ALL_CLAIMS = mapOf(
-      "sub" to SUBJECT,
-      "user_name" to USERNAME,
-      "auth_source" to AUTH_SOURCE,
-      "iss" to ISSUER,
-      "authorities" to AUTHORITIES,
-      "client_id" to CLIENT_ID,
-      "user_uuid" to USER_UUID,
-      "grant_type" to GRANT_TYPE_AUTH_CODE,
-      "user_id" to USER_ID,
+      "sub" to "AUTH_MFA_PREF_EMAIL4",
+      "user_name" to "AUTH_MFA_PREF_EMAIL4",
+      "auth_source" to "auth",
+      "authorities" to listOf("ROLE_MFA"),
+      "client_id" to "some-client-id",
+      "iss" to "http://localhost/",
+      "user_uuid" to "2e285ccd-dcfd-4497-9e22-d6e8e10a2d63",
+      "grant_type" to "authorization_code",
+      "user_id" to "3e285ccd-dcfd-4495-9e22-i6e8e10a2d63",
       "scope" to SCOPE_RW,
-      "name" to NAME,
-      "exp" to EXPIRY,
-      "jti" to JTI,
+      "name" to "Auth Mfa",
+      "exp" to 1721752178,
+      "jti" to "OvQBycPwvHpv3MYEOtnrn6P55F0",
     )
   }
 
@@ -97,7 +84,6 @@ class TokenResponseHandlerTest {
   fun `TokenResponseHandler adds the expected additional properties to the token response`() {
     val testJWT = createTestJwt(
       jwtId = UUID.randomUUID().toString(),
-      subject = SUBJECT,
       claims = ALL_CLAIMS,
     )
 
@@ -114,20 +100,10 @@ class TokenResponseHandlerTest {
     val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
     assertThat(capturedAccessToken).isNotNull
 
-    assertThat(capturedAccessToken.accessToken.tokenValue).isEqualTo(testJWT)
-    assertThat(capturedAccessToken.accessToken.tokenType).isEqualTo(TokenType.BEARER)
-    assertThat(capturedAccessToken.accessToken.scopes).containsExactlyInAnyOrder("read", "write")
-    assertThat(capturedAccessToken.accessToken.issuedAt).isCloseTo(issuedAt, within(1, SECONDS))
-    assertThat(capturedAccessToken.accessToken.expiresAt).isCloseTo(expiresAt, within(1, SECONDS))
-    assertThat(capturedAccessToken.additionalParameters["sub"]).isEqualTo(SUBJECT)
-    assertThat(capturedAccessToken.additionalParameters["jti"]).isEqualTo(JTI)
-    assertThat(capturedAccessToken.additionalParameters["auth_source"]).isEqualTo(AUTH_SOURCE)
-    assertThat(capturedAccessToken.additionalParameters["iss"]).isEqualTo(ISSUER)
-    assertThat(capturedAccessToken.additionalParameters["user_uuid"]).isEqualTo(USER_UUID)
-    assertThat(capturedAccessToken.additionalParameters["user_id"]).isEqualTo(USER_ID)
-    assertThat(capturedAccessToken.additionalParameters["user_name"]).isEqualTo(USERNAME)
-    assertThat(capturedAccessToken.additionalParameters["scope"]).isEqualTo("read write")
-    assertThat(capturedAccessToken.additionalParameters["name"]).isEqualTo(NAME)
+    assertTokenResponseContainsExpectedValues(
+      capturedAccessToken,
+      testJWT,
+    ) { additionalParams -> assertThat(additionalParams["scope"]).isEqualTo("read write") }
   }
 
   @Nested
@@ -140,7 +116,6 @@ class TokenResponseHandlerTest {
 
       val testJWT = createTestJwt(
         jwtId = UUID.randomUUID().toString(),
-        subject = SUBJECT,
         claims = claims,
       )
 
@@ -157,21 +132,10 @@ class TokenResponseHandlerTest {
       val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
       assertThat(capturedAccessToken).isNotNull
 
-      assertThat(capturedAccessToken.additionalParameters).doesNotContainKey("scope")
-
-      assertThat(capturedAccessToken.accessToken.tokenValue).isEqualTo(testJWT)
-      assertThat(capturedAccessToken.accessToken.tokenType).isEqualTo(TokenType.BEARER)
-      assertThat(capturedAccessToken.accessToken.scopes).containsExactlyInAnyOrder("read", "write")
-      assertThat(capturedAccessToken.accessToken.issuedAt).isCloseTo(issuedAt, within(1, SECONDS))
-      assertThat(capturedAccessToken.accessToken.expiresAt).isCloseTo(expiresAt, within(1, SECONDS))
-      assertThat(capturedAccessToken.additionalParameters["sub"]).isEqualTo(SUBJECT)
-      assertThat(capturedAccessToken.additionalParameters["jti"]).isEqualTo(JTI)
-      assertThat(capturedAccessToken.additionalParameters["auth_source"]).isEqualTo(AUTH_SOURCE)
-      assertThat(capturedAccessToken.additionalParameters["iss"]).isEqualTo(ISSUER)
-      assertThat(capturedAccessToken.additionalParameters["user_uuid"]).isEqualTo(USER_UUID)
-      assertThat(capturedAccessToken.additionalParameters["user_id"]).isEqualTo(USER_ID)
-      assertThat(capturedAccessToken.additionalParameters["user_name"]).isEqualTo(USERNAME)
-      assertThat(capturedAccessToken.additionalParameters["name"]).isEqualTo(NAME)
+      assertTokenResponseContainsExpectedValues(
+        capturedAccessToken,
+        testJWT,
+      ) { additionalParams -> assertThat(additionalParams).doesNotContainKey("scope") }
     }
 
     @Test
@@ -182,7 +146,6 @@ class TokenResponseHandlerTest {
 
       val testJWT = createTestJwt(
         jwtId = UUID.randomUUID().toString(),
-        subject = SUBJECT,
         claims = claims,
       )
 
@@ -199,32 +162,20 @@ class TokenResponseHandlerTest {
       val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
       assertThat(capturedAccessToken).isNotNull
 
-      assertThat(capturedAccessToken.additionalParameters).doesNotContainKey("scope")
-
-      assertThat(capturedAccessToken.accessToken.tokenValue).isEqualTo(testJWT)
-      assertThat(capturedAccessToken.accessToken.tokenType).isEqualTo(TokenType.BEARER)
-      assertThat(capturedAccessToken.accessToken.scopes).containsExactlyInAnyOrder("read", "write")
-      assertThat(capturedAccessToken.accessToken.issuedAt).isCloseTo(issuedAt, within(1, SECONDS))
-      assertThat(capturedAccessToken.accessToken.expiresAt).isCloseTo(expiresAt, within(1, SECONDS))
-      assertThat(capturedAccessToken.additionalParameters["sub"]).isEqualTo(SUBJECT)
-      assertThat(capturedAccessToken.additionalParameters["jti"]).isEqualTo(JTI)
-      assertThat(capturedAccessToken.additionalParameters["auth_source"]).isEqualTo(AUTH_SOURCE)
-      assertThat(capturedAccessToken.additionalParameters["iss"]).isEqualTo(ISSUER)
-      assertThat(capturedAccessToken.additionalParameters["user_uuid"]).isEqualTo(USER_UUID)
-      assertThat(capturedAccessToken.additionalParameters["user_id"]).isEqualTo(USER_ID)
-      assertThat(capturedAccessToken.additionalParameters["user_name"]).isEqualTo(USERNAME)
-      assertThat(capturedAccessToken.additionalParameters["name"]).isEqualTo(NAME)
+      assertTokenResponseContainsExpectedValues(
+        capturedAccessToken,
+        testJWT,
+      ) { additionalParams -> assertThat(additionalParams).doesNotContainKey("scope") }
     }
 
     @Test
-    fun `additional property scope is empty when scope is present with empty value in the source access token`() {
+    fun `additional property scope is not present when scope is present with empty value in the source access token`() {
       // Update scope to have empty value
       val claims = HashMap(ALL_CLAIMS)
       claims["scope"] = emptyList<String>()
 
       val testJWT = createTestJwt(
         jwtId = UUID.randomUUID().toString(),
-        subject = SUBJECT,
         claims = claims,
       )
 
@@ -241,28 +192,76 @@ class TokenResponseHandlerTest {
       val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
       assertThat(capturedAccessToken).isNotNull
 
-      assertThat(capturedAccessToken.additionalParameters["scope"]).isEqualTo("")
+      assertTokenResponseContainsExpectedValues(
+        capturedAccessToken,
+        testJWT,
+      ) { additionalParams -> assertThat(additionalParams).doesNotContainKey("scope") }
+    }
 
-      assertThat(capturedAccessToken.accessToken.tokenValue).isEqualTo(testJWT)
-      assertThat(capturedAccessToken.accessToken.tokenType).isEqualTo(TokenType.BEARER)
-      assertThat(capturedAccessToken.accessToken.scopes).containsExactlyInAnyOrder("read", "write")
-      assertThat(capturedAccessToken.accessToken.issuedAt).isCloseTo(issuedAt, within(1, SECONDS))
-      assertThat(capturedAccessToken.accessToken.expiresAt).isCloseTo(expiresAt, within(1, SECONDS))
-      assertThat(capturedAccessToken.additionalParameters["sub"]).isEqualTo(SUBJECT)
-      assertThat(capturedAccessToken.additionalParameters["jti"]).isEqualTo(JTI)
-      assertThat(capturedAccessToken.additionalParameters["auth_source"]).isEqualTo(AUTH_SOURCE)
-      assertThat(capturedAccessToken.additionalParameters["iss"]).isEqualTo(ISSUER)
-      assertThat(capturedAccessToken.additionalParameters["user_uuid"]).isEqualTo(USER_UUID)
-      assertThat(capturedAccessToken.additionalParameters["user_id"]).isEqualTo(USER_ID)
-      assertThat(capturedAccessToken.additionalParameters["user_name"]).isEqualTo(USERNAME)
-      assertThat(capturedAccessToken.additionalParameters["name"]).isEqualTo(NAME)
+    @Test
+    fun `additional property scope is not present when scope in the source access token is not a list of strings`() {
+      // Update scope to be list of objects
+      val claims = HashMap(ALL_CLAIMS)
+      claims["scope"] = listOf(
+        object {
+          val value = "read"
+        },
+        object {
+          val value = "write"
+        },
+      )
+
+      val testJWT = createTestJwt(
+        jwtId = UUID.randomUUID().toString(),
+        claims = claims,
+      )
+
+      whenever(authentication.accessToken)
+        .thenReturn(OAuth2AccessToken(TokenType.BEARER, testJWT, issuedAt, expiresAt, SCOPE_RW))
+
+      tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
+
+      verify(oAuth2AccessTokenResponseHttpMessageConverter, times(1))
+        .write(tokenResponseMessageConverterCaptor.capture(), isNull(), any())
+
+      assertThat(tokenResponseMessageConverterCaptor.allValues).hasSize(1)
+
+      val capturedAccessToken = tokenResponseMessageConverterCaptor.allValues[0]
+      assertThat(capturedAccessToken).isNotNull
+
+      assertTokenResponseContainsExpectedValues(
+        capturedAccessToken,
+        testJWT,
+      ) { assertThat(capturedAccessToken.additionalParameters).doesNotContainKey("scope") }
     }
   }
 
-  internal fun createTestJwt(jwtId: String, subject: String, claims: Map<String, Any>): String {
+  private fun assertTokenResponseContainsExpectedValues(
+    actual: OAuth2AccessTokenResponse,
+    expectedJWT: String,
+    assertThatScopeContainsExpectedValue: (additionalParameters: Map<String, Any>) -> Unit,
+  ) {
+    assertThatScopeContainsExpectedValue(actual.additionalParameters)
+
+    assertThat(actual.accessToken.tokenValue).isEqualTo(expectedJWT)
+    assertThat(actual.accessToken.tokenType).isEqualTo(TokenType.BEARER)
+    assertThat(actual.accessToken.scopes).containsExactlyInAnyOrder("read", "write")
+    assertThat(actual.accessToken.issuedAt).isCloseTo(issuedAt, within(1, SECONDS))
+    assertThat(actual.accessToken.expiresAt).isCloseTo(expiresAt, within(1, SECONDS))
+    assertThat(actual.additionalParameters["sub"]).isEqualTo("AUTH_MFA_PREF_EMAIL4")
+    assertThat(actual.additionalParameters["jti"]).isEqualTo("OvQBycPwvHpv3MYEOtnrn6P55F0")
+    assertThat(actual.additionalParameters["auth_source"]).isEqualTo("auth")
+    assertThat(actual.additionalParameters["iss"]).isEqualTo("http://localhost/")
+    assertThat(actual.additionalParameters["user_uuid"]).isEqualTo("2e285ccd-dcfd-4497-9e22-d6e8e10a2d63")
+    assertThat(actual.additionalParameters["user_id"]).isEqualTo("3e285ccd-dcfd-4495-9e22-i6e8e10a2d63")
+    assertThat(actual.additionalParameters["user_name"]).isEqualTo("AUTH_MFA_PREF_EMAIL4")
+    assertThat(actual.additionalParameters["name"]).isEqualTo("Auth Mfa")
+  }
+
+  private fun createTestJwt(jwtId: String, claims: Map<String, Any>): String {
     return Jwts.builder()
       .id(jwtId)
-      .subject(subject)
+      .subject("AUTH_MFA_PREF_EMAIL4")
       .claims(claims)
       .signWith(
         SignatureAlgorithm.HS256,

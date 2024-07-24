@@ -37,7 +37,11 @@ class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConve
     tokenObj.optString("sub", null)?.let { otherParams["sub"] = tokenObj.get("sub").toString() }
 
     tokenObj.optJSONArray("scope", null)?.let { scopesArray ->
-      otherParams["scope"] = scopesArray.map { it as String }.toCollection(mutableSetOf()).joinToString(" ")
+      val result = scopesArray.filterIsInstance<String>().toCollection(mutableSetOf())
+
+      if (result.isNotEmpty()) {
+        otherParams["scope"] = result.joinToString(" ")
+      }
     }
 
     tokenObj.optString("jti", null)?.let { otherParams["jti"] = tokenObj.get("jti").toString() }
