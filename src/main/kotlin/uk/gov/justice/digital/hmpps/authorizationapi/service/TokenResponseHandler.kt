@@ -11,9 +11,10 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import java.time.temporal.ChronoUnit
 import java.util.Base64
-import kotlin.collections.HashMap
 
-class TokenResponseHandler : AuthenticationSuccessHandler {
+class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConverter: OAuth2AccessTokenResponseHttpMessageConverter) :
+  AuthenticationSuccessHandler {
+  constructor() : this(OAuth2AccessTokenResponseHttpMessageConverter())
 
   override fun onAuthenticationSuccess(
     request: HttpServletRequest?,
@@ -34,13 +35,22 @@ class TokenResponseHandler : AuthenticationSuccessHandler {
     val otherParams = HashMap<String, Any>()
 
     tokenObj.optString("sub", null)?.let { otherParams["sub"] = tokenObj.get("sub").toString() }
-    tokenObj.optString("scope", null)?.let { otherParams["scope"] = tokenObj.get("scope").toString() }
+
+    tokenObj.optJSONArray("scope", null)?.let { scopesArray ->
+      val result = scopesArray.filterIsInstance<String>().toCollection(mutableSetOf())
+
+      if (result.isNotEmpty()) {
+        otherParams["scope"] = result.joinToString(" ")
+      }
+    }
+
     tokenObj.optString("jti", null)?.let { otherParams["jti"] = tokenObj.get("jti").toString() }
     tokenObj.optString("auth_source", null)?.let { otherParams["auth_source"] = tokenObj.get("auth_source").toString() }
     tokenObj.optString("iss", null)?.let { otherParams["iss"] = tokenObj.get("iss").toString() }
     tokenObj.optString("user_uuid", null)?.let { otherParams["user_uuid"] = tokenObj.get("user_uuid").toString() }
     tokenObj.optString("user_id", null)?.let { otherParams["user_id"] = tokenObj.get("user_id").toString() }
     tokenObj.optString("user_name", null)?.let { otherParams["user_name"] = tokenObj.get("user_name").toString() }
+    tokenObj.optString("name", null)?.let { otherParams["name"] = tokenObj.get("name").toString() }
 
     val additionalParameters = accessTokenAuthentication.additionalParameters
     if (additionalParameters.isNotEmpty()) {
@@ -50,7 +60,7 @@ class TokenResponseHandler : AuthenticationSuccessHandler {
 
     val accessTokenResponse = builder.build()
     val httpResponse = ServletServerHttpResponse(response)
-    OAuth2AccessTokenResponseHttpMessageConverter().write(accessTokenResponse, null, httpResponse)
+    oAuth2AccessTokenResponseHttpMessageConverter.write(accessTokenResponse, null, httpResponse)
   }
 
   private fun getTokenPayload(accessToken: String): JSONObject {

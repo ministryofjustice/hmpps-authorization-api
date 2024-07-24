@@ -55,7 +55,7 @@ class OAuthIntTest : IntegrationTestBase() {
           assertThat(it["token_type"] as String).isEqualTo("Bearer")
           assertThat(it["iss"] as String).isEqualTo("http://localhost/")
           assertThat(it["jti"]).isNotNull
-          assertThat(it["scope"] as String).isEqualTo("[\"read\",\"write\"]")
+          assertThat(it["scope"] as String).isEqualTo("read write")
         }
         .returnResult().responseBody
 
@@ -369,7 +369,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("user_id")).isEqualTo("9999")
       assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
       assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.name.lowercase())
-      assertThat(fullJsonResponse.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
+      assertThat(fullJsonResponse.get("scope")).isEqualTo("read")
       assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost/")
       assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
       assertThat(fullJsonResponse.get("expires_in")).isNotNull
@@ -429,7 +429,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("sub")).isEqualTo("username")
       assertThat(fullJsonResponse.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.name.lowercase())
-      assertThat(fullJsonResponse.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
+      assertThat(fullJsonResponse.get("scope").toString()).isEqualTo("read")
       assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost/")
       assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
       assertThat(fullJsonResponse.get("expires_in")).isNotNull
