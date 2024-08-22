@@ -20,7 +20,7 @@ data class Authorization(
   private val authorizationGrantType: String,
 
   @Column(name = "access_token_issued_at")
-  var accessTokenIssuedAt: Instant,
+  var accessTokenIssuedAt: Instant?,
 
   @Column(name = "authorization_code_issued_at")
   var authorizationCodeIssuedAt: Instant?,

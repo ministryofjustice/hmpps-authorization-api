@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.apache.commons.lang3.StringUtils
-import org.hibernate.annotations.FilterJoinTable
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthJson
@@ -55,7 +54,6 @@ data class Client(
 
   @OneToMany
   @JoinColumn(name = "registeredClientId")
-  @FilterJoinTable(name = "accessTokensIssued", condition = "accessTokenIssuedAt is not null")
   val latestClientAuthorization: MutableSet<Authorization>?,
 
   var mfaRememberMe: Boolean,
@@ -70,7 +68,10 @@ data class Client(
 ) {
 
   fun getLastAccessedDate(): Instant {
-    return this.latestClientAuthorization?.maxOfOrNull { it.accessTokenIssuedAt } ?: clientIdIssuedAt
+    return latestClientAuthorization
+      ?.filter { it.accessTokenIssuedAt != null || it.authorizationCodeIssuedAt != null }
+      ?.map { (it.accessTokenIssuedAt ?: it.authorizationCodeIssuedAt)!! }
+      ?.maxOfOrNull { it } ?: clientIdIssuedAt
   }
 
   fun getRegisteredRedirectUriWithNewlines(): Set<String>? {
