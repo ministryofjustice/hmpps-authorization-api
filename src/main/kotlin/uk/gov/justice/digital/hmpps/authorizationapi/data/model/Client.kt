@@ -68,7 +68,10 @@ data class Client(
 ) {
 
   fun getLastAccessedDate(): Instant {
-    return this.latestClientAuthorization?.maxOfOrNull { it.accessTokenIssuedAt } ?: clientIdIssuedAt
+    return latestClientAuthorization
+      ?.filter { it.accessTokenIssuedAt != null || it.authorizationCodeIssuedAt != null }
+      ?.map { (it.accessTokenIssuedAt ?: it.authorizationCodeIssuedAt)!! }
+      ?.maxOfOrNull { it } ?: clientIdIssuedAt
   }
 
   fun getRegisteredRedirectUriWithNewlines(): Set<String>? {

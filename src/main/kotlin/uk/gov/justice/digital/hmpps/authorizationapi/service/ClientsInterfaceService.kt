@@ -222,8 +222,7 @@ class ClientsInterfaceService(
     clientDeploymentRepository.save(toClientDeploymentEntity(clientDeployment, baseClientId))
   }
 
-  private fun getMostRecentAccessedDate(clientList: List<Client>) = clientList.map { it.latestClientAuthorization }
-    .flatMap { authorizations -> authorizations?.map { it.accessTokenIssuedAt }!!.toCollection(ArrayList()) }.maxOrNull()
+  private fun getMostRecentAccessedDate(clientList: List<Client>) = clientList.maxOfOrNull { it.getLastAccessedDate() }
 
   private fun getDeployment(clientId: String): ClientDeploymentDetails? {
     val baseClientId = clientIdService.toBase(clientId)
