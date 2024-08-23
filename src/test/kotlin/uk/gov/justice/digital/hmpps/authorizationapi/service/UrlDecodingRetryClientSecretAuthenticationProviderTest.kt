@@ -45,7 +45,9 @@ class UrlDecodingRetryClientSecretAuthenticationProviderTest {
     assertThat(encodedSecret).isNotEqualTo(originalSecret)
     val authenticationEncoded = givenAnAuthenticationWith("test-client-id:$encodedSecret")
     val authenticationDecoded = givenAnAuthenticationWith("test-client-id:$originalSecret")
-    whenever(delegate.authenticate(any())).thenThrow(OAuth2AuthenticationException("invalid secret")).thenReturn(authenticationDecoded)
+    // whenever(delegate.authenticate(any())).thenThrow(OAuth2AuthenticationException("invalid secret")).thenReturn(authenticationDecoded)
+    whenever(delegate.authenticate(authenticationEncoded)).thenThrow(OAuth2AuthenticationException("invalid secret"))
+    whenever(delegate.authenticate(authenticationDecoded)).thenReturn(authenticationDecoded)
 
     val authenticated = urlDecodingRetryClientSecretAuthenticationProvider.authenticate(authenticationEncoded)
 
