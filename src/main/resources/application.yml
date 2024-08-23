@@ -106,3 +106,9 @@ application:
       remove-access-tokens: 0 0 23 * * * # daily at 23:00 hours
       remove-expired-auth-codes: 0 0 0 * * 0  # once a week
       remove-expired-user-details: 0 0/30 23 * * * # daily at 23:30 hours
+
+logging:
+  level:
+    org:
+      springframework:
+        security: debug
