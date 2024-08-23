@@ -35,6 +35,7 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
+import org.springframework.security.oauth2.server.authorization.authentication.ClientSecretAuthenticationProvider
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2Authenticatio
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientDataService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
+import uk.gov.justice.digital.hmpps.authorizationapi.service.UrlDecodingRetryClientSecretAuthenticationProvider
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UserAuthenticationService
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -89,9 +91,10 @@ class AuthorizationApiConfig(
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
-
-        tokenEndpointConfigurer.accessTokenResponseHandler(TokenResponseHandler())
+        authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
       }
+
+      tokenEndpointConfigurer.accessTokenResponseHandler(TokenResponseHandler())
     }
     http
       .addFilterAfter(jwtCookieAuthenticationFilter, LogoutFilter::class.java)
@@ -196,6 +199,13 @@ class AuthorizationApiConfig(
         .usingDbTime()
         .build(),
     )
+  }
+
+  private fun withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+    if (authenticationProvider is ClientSecretAuthenticationProvider) {
+      return UrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider)
+    }
+    return authenticationProvider
   }
 
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
