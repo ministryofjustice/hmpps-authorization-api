@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.3"
-  kotlin("plugin.spring") version "2.0.10"
-  kotlin("plugin.jpa") version "2.0.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.4"
+  kotlin("plugin.spring") version "2.0.20"
+  kotlin("plugin.jpa") version "2.0.20"
 }
 
 configurations {
@@ -28,7 +28,7 @@ dependencies {
   implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.15.0")
 
   runtimeOnly("com.h2database:h2:2.3.232")
-  runtimeOnly("org.postgresql:postgresql:42.7.3")
+  runtimeOnly("org.postgresql:postgresql:42.7.4")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 
