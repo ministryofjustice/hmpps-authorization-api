@@ -87,11 +87,17 @@ class AuthorizationApiConfig(
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
     val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
 
+    authorizationServerConfigurer.clientAuthentication { clientAuthenticationCustomizer ->
+      clientAuthenticationCustomizer.authenticationProviders {
+          authenticationProviders ->
+        authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
+      }
+    }
+
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
-        authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
       }
 
       tokenEndpointConfigurer.accessTokenResponseHandler(TokenResponseHandler())
