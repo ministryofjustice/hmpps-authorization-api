@@ -31,7 +31,7 @@ class UrlDecodingRetryClientSecretAuthenticationProvider(
         )
         decodedAuthentication.details = authentication.details
 
-        delegate.authenticate(authentication)
+        delegate.authenticate(decodedAuthentication)
       }
     }
   }
