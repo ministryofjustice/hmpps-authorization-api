@@ -21,11 +21,15 @@ data class Client(
 
   @Id
   val id: String,
+
   var clientId: String,
 
   val clientIdIssuedAt: Instant,
+
   var clientSecret: String? = null,
+
   val clientSecretExpiresAt: Instant? = null,
+
   var clientName: String,
 
   @Column(length = 1000)

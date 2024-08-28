@@ -101,24 +101,27 @@ class ClientsControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.clients[6].baseClientId").isEqualTo("test-client-create-id")
-        .jsonPath("$.clients[6].clientType").isEqualTo("PERSONAL")
-        .jsonPath("$.clients[6].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[6].grantType").isEqualTo("client_credentials")
-        .jsonPath("$.clients[6].roles").isEqualTo(
+        .jsonPath("$.clients[0].baseClientId").isEqualTo("expiry-test-client")
+        .jsonPath("$.clients[0].expired").isEqualTo("EXPIRED")
+        .jsonPath("$.clients[7].baseClientId").isEqualTo("test-client-create-id")
+        .jsonPath("$.clients[7].clientType").isEqualTo("PERSONAL")
+        .jsonPath("$.clients[7].teamName").isEqualTo("HAAR")
+        .jsonPath("$.clients[7].grantType").isEqualTo("client_credentials")
+        .jsonPath("$.clients[7].roles").isEqualTo(
           "AUDIT\n" +
             "OAUTH_ADMIN\nTESTING\nVIEW_AUTH_SERVICE_DETAILS",
         )
         .jsonPath("$.clients[6].count").isEqualTo(1)
         .jsonPath("$.clients[6].expired").isEmpty
-        .jsonPath("\$.clients[7].baseClientId").isEqualTo("test-client-id")
-        .jsonPath("\$.clients[7].lastAccessed").isEqualTo("2024-08-22T11:30:30Z")
-        .jsonPath("\$.clients[4].baseClientId").isEqualTo("test-auth-code-client")
-        .jsonPath("\$.clients[4].lastAccessed").isEqualTo("2024-08-19T18:36:27Z")
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(10) }
+        .jsonPath("\$.clients[8].baseClientId").isEqualTo("test-client-id")
+        .jsonPath("\$.clients[8].lastAccessed").isEqualTo("2024-08-22T10:30:30Z")
+        .jsonPath("\$.clients[5].baseClientId").isEqualTo("test-auth-code-client")
+        .jsonPath("\$.clients[5].lastAccessed").isEqualTo("2024-08-19T17:36:27Z")
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(11) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
+              "expiry-test-client",
               "hmpps-auth-authorization-api-client",
               "ip-allow-a-client",
               "ip-allow-b-client",

@@ -12,10 +12,7 @@ management.endpoint:
 
 spring:
   datasource:
-#    url: 'jdbc:h2:mem:authorization-api-db;MODE=PostgreSQL'
-    url: jdbc:postgresql://localhost:5433/authorization-api-db
-    username: admin
-    password: admin_password
+    url: 'jdbc:h2:mem:authorization-api-db;MODE=PostgreSQL'
   h2:
     console:
       enabled: true
