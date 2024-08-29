@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorization
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientSecretBasicBase64OnlyAuthenticationConverter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
 import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
@@ -95,6 +96,10 @@ class AuthorizationApiConfig(
     }
 
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
+      tokenEndpointConfigurer.accessTokenRequestConverters { requestConverters ->
+        requestConverters.add(0, ClientSecretBasicBase64OnlyAuthenticationConverter())
+      }
+
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
