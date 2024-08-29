@@ -9,10 +9,10 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.security.authentication.AuthenticationProvider
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -45,7 +45,6 @@ class UrlDecodingRetryClientSecretAuthenticationProviderTest {
     assertThat(encodedSecret).isNotEqualTo(originalSecret)
     val authenticationEncoded = givenAnAuthenticationWith("test-client-id:$encodedSecret")
     val authenticationDecoded = givenAnAuthenticationWith("test-client-id:$originalSecret")
-    // whenever(delegate.authenticate(any())).thenThrow(OAuth2AuthenticationException("invalid secret")).thenReturn(authenticationDecoded)
     whenever(delegate.authenticate(authenticationEncoded)).thenThrow(OAuth2AuthenticationException("invalid secret"))
     whenever(delegate.authenticate(authenticationDecoded)).thenReturn(authenticationDecoded)
 
@@ -56,13 +55,11 @@ class UrlDecodingRetryClientSecretAuthenticationProviderTest {
   }
 
   private fun givenAnAuthenticationWith(credentials: String): Authentication {
-    val authentication = UsernamePasswordAuthenticationToken(
-      "principal",
+    return OAuth2ClientAuthenticationToken(
+      "client-id",
+      ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
       credentials,
-      listOf(SimpleGrantedAuthority("ROLE_TESTING"), SimpleGrantedAuthority("ROLE_MORE_TESTING")),
+      mapOf("this" to "that"),
     )
-
-    authentication.details = "test details"
-    return authentication
   }
 }

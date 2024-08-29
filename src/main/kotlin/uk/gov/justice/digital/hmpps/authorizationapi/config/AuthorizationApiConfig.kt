@@ -42,6 +42,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
+import org.springframework.security.oauth2.server.authorization.web.authentication.ClientSecretBasicAuthenticationConverter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
@@ -97,7 +98,7 @@ class AuthorizationApiConfig(
 
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
       tokenEndpointConfigurer.accessTokenRequestConverters { requestConverters ->
-        requestConverters.add(0, ClientSecretBasicBase64OnlyAuthenticationConverter())
+        requestConverters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
       }
 
       tokenEndpointConfigurer.authenticationProviders {
