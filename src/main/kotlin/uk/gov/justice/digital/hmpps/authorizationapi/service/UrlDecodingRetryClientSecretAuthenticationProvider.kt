@@ -23,11 +23,14 @@ class UrlDecodingRetryClientSecretAuthenticationProvider(
       log.info("OAuth2AuthenticationException occurred whilst validating client id and secret, attempting re-try with url decoded credentials")
 
       authentication?.credentials?.let {
+        val urlDecodedCredentials = URLDecoder.decode(it.toString(), StandardCharsets.UTF_8.toString())
+        log.info("Retrying with url decoded secret: $urlDecodedCredentials")
+
         val clientAuthentication = authentication as OAuth2ClientAuthenticationToken
         val decodedAuthentication = OAuth2ClientAuthenticationToken(
           clientAuthentication.principal.toString(),
           clientAuthentication.clientAuthenticationMethod,
-          URLDecoder.decode(it.toString(), StandardCharsets.UTF_8.toString()),
+          urlDecodedCredentials,
           clientAuthentication.additionalParameters,
         )
 
