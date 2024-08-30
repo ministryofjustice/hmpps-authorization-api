@@ -42,6 +42,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
+import org.springframework.security.oauth2.server.authorization.web.authentication.ClientSecretBasicAuthenticationConverter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
@@ -51,6 +52,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorization
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientSecretBasicBase64OnlyAuthenticationConverter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
 import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
@@ -87,11 +89,21 @@ class AuthorizationApiConfig(
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
     val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
 
+    authorizationServerConfigurer.clientAuthentication { clientAuthenticationCustomizer ->
+      clientAuthenticationCustomizer.authenticationProviders {
+          authenticationProviders ->
+        authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
+      }
+    }
+
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
+      tokenEndpointConfigurer.accessTokenRequestConverters { requestConverters ->
+        requestConverters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
+      }
+
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
-        authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
       }
 
       tokenEndpointConfigurer.accessTokenResponseHandler(TokenResponseHandler())
