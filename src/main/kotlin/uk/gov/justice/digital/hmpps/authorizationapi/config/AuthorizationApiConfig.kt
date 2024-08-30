@@ -90,6 +90,11 @@ class AuthorizationApiConfig(
     val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
 
     authorizationServerConfigurer.clientAuthentication { clientAuthenticationCustomizer ->
+
+      clientAuthenticationCustomizer.authenticationConverters { converters ->
+        converters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
+      }
+
       clientAuthenticationCustomizer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
@@ -97,10 +102,6 @@ class AuthorizationApiConfig(
     }
 
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
-      tokenEndpointConfigurer.accessTokenRequestConverters { requestConverters ->
-        requestConverters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
-      }
-
       tokenEndpointConfigurer.authenticationProviders {
           authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
