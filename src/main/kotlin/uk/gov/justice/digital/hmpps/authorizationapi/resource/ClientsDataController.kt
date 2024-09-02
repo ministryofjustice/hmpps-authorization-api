@@ -27,4 +27,5 @@ data class ClientDetailsResponse(
   val authorities: List<String>?,
   val skipToAzure: Boolean?,
   val ips: List<String>?,
+  val expired: Boolean,
 )

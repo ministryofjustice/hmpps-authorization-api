@@ -41,7 +41,7 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(11) }
+        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(12) }
         .jsonPath("\$.[0].clientId").isEqualTo("test-client-id")
         .jsonPath("\$.[0].scopes[0]").isEqualTo("read")
         .jsonPath("\$.[0].scopes[1]").isEqualTo("write")
@@ -50,7 +50,12 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[0].ips").doesNotExist()
         .jsonPath("\$.[0].authorities[*]").value<List<String>> {
           assertThat(it)
-            .containsExactlyInAnyOrder("ROLE_OAUTH_ADMIN", "ROLE_AUDIT", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")
+            .containsExactlyInAnyOrder(
+              "ROLE_OAUTH_ADMIN",
+              "ROLE_AUDIT",
+              "ROLE_TESTING",
+              "ROLE_VIEW_AUTH_SERVICE_DETAILS",
+            )
         }
         .jsonPath("\$.[2].ips[*]").value<List<String>> {
           assertThat(it)
@@ -66,6 +71,19 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .jsonPath(matchByClientId, "ip-allow-c-client").exists()
         .jsonPath(matchByClientId, "test-auth-code-client").exists()
         .jsonPath(matchByClientId, "hmpps-auth-authorization-api-client").exists()
+        .jsonPath(matchByClientId, "expiry-test-client").exists()
+        .jsonPath("\$.[0].expired").isEqualTo(false)
+        .jsonPath("\$.[1].expired").isEqualTo(false)
+        .jsonPath("\$.[2].expired").isEqualTo(false)
+        .jsonPath("\$.[3].expired").isEqualTo(false)
+        .jsonPath("\$.[4].expired").isEqualTo(false)
+        .jsonPath("\$.[5].expired").isEqualTo(false)
+        .jsonPath("\$.[6].expired").isEqualTo(false)
+        .jsonPath("\$.[7].expired").isEqualTo(false)
+        .jsonPath("\$.[8].expired").isEqualTo(false)
+        .jsonPath("\$.[9].expired").isEqualTo(false)
+        .jsonPath("\$.[10].expired").isEqualTo(false)
+        .jsonPath("\$.[11].expired").isEqualTo(true)
     }
   }
 }

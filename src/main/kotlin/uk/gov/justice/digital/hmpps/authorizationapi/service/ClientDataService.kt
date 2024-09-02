@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientDetailsResponse
+import java.time.LocalDate
 
 @Service
 class ClientDataService(
@@ -34,6 +35,7 @@ class ClientDataService(
         authorities = retrieveAuthorizationConsent(client)?.authorities,
         skipToAzure = skipToAzure,
         ips = clientConfigsMap[clientIdService.toBase(clientId)]?.ips,
+        expired = isExpired(clientId, clientConfigsMap),
       )
     }
 
@@ -44,4 +46,7 @@ class ClientDataService(
         client.clientId,
       ),
     )
+
+  private fun isExpired(clientId: String, clientConfigsMap: Map<String, ClientConfig>) =
+    clientConfigsMap[clientIdService.toBase(clientId)]?.clientEndDate?.isBefore(LocalDate.now()) ?: false
 }
