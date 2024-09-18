@@ -23,7 +23,7 @@ class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConve
   ) {
     val accessTokenAuthentication = authentication as OAuth2AccessTokenAuthenticationToken
     val accessToken = accessTokenAuthentication.accessToken
-    val tokenObj = getTokenPayload(accessToken.tokenValue)
+    val token = getToken(accessToken.tokenValue)
     val builder = OAuth2AccessTokenResponse.withToken(accessToken.tokenValue)
       .tokenType(accessToken.tokenType)
       .scopes(accessToken.scopes)
@@ -34,9 +34,9 @@ class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConve
 
     val otherParams = HashMap<String, Any>()
 
-    tokenObj.optString("sub", null)?.let { otherParams["sub"] = tokenObj.get("sub").toString() }
+    token.optString("sub", null)?.let { otherParams["sub"] = token.get("sub").toString() }
 
-    tokenObj.optJSONArray("scope", null)?.let { scopesArray ->
+    token.optJSONArray("scope", null)?.let { scopesArray ->
       val result = scopesArray.filterIsInstance<String>().toCollection(mutableSetOf())
 
       if (result.isNotEmpty()) {
@@ -44,13 +44,14 @@ class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConve
       }
     }
 
-    tokenObj.optString("jti", null)?.let { otherParams["jti"] = tokenObj.get("jti").toString() }
-    tokenObj.optString("auth_source", null)?.let { otherParams["auth_source"] = tokenObj.get("auth_source").toString() }
-    tokenObj.optString("iss", null)?.let { otherParams["iss"] = tokenObj.get("iss").toString() }
-    tokenObj.optString("user_uuid", null)?.let { otherParams["user_uuid"] = tokenObj.get("user_uuid").toString() }
-    tokenObj.optString("user_id", null)?.let { otherParams["user_id"] = tokenObj.get("user_id").toString() }
-    tokenObj.optString("user_name", null)?.let { otherParams["user_name"] = tokenObj.get("user_name").toString() }
-    tokenObj.optString("name", null)?.let { otherParams["name"] = tokenObj.get("name").toString() }
+    token.optString("jti", null)?.let { otherParams["jti"] = token.get("jti").toString() }
+    token.optString("auth_source", null)?.let { otherParams["auth_source"] = token.get("auth_source").toString() }
+    token.optString("iss", null)?.let { otherParams["iss"] = token.get("iss").toString() }
+    token.optString("user_uuid", null)?.let { otherParams["user_uuid"] = token.get("user_uuid").toString() }
+    token.optString("user_id", null)?.let { otherParams["user_id"] = token.get("user_id").toString() }
+    token.optString("user_name", null)?.let { otherParams["user_name"] = token.get("user_name").toString() }
+    token.optString("name", null)?.let { otherParams["name"] = token.get("name").toString() }
+    token.optString("jwt_id", null)?.let { otherParams["jwt_id"] = token.get("jwt_id").toString() }
 
     val additionalParameters = accessTokenAuthentication.additionalParameters
     if (additionalParameters.isNotEmpty()) {
@@ -63,7 +64,7 @@ class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConve
     oAuth2AccessTokenResponseHttpMessageConverter.write(accessTokenResponse, null, httpResponse)
   }
 
-  private fun getTokenPayload(accessToken: String): JSONObject {
+  private fun getToken(accessToken: String): JSONObject {
     val tokenParts = accessToken.split(".")
     return JSONObject(String(Base64.getDecoder().decode(tokenParts[1])))
   }

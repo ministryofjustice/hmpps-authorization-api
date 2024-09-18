@@ -23,6 +23,7 @@ data class UserAuthorizationCode(
   val userId: String,
   val userUuid: String?,
   val name: String,
+  val jwtId: String,
 
   @Column(name = "source")
   var authSource: AuthSource,

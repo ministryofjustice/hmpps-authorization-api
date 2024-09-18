@@ -35,6 +35,7 @@ class TokenCustomizer(
     private const val ADD_INFO_USER_ID = "user_id"
     private const val ADD_INFO_USER_UUID = "user_uuid"
     private const val SUBJECT = "sub"
+    private const val JWT_ID = "jwt_id"
   }
 
   override fun customize(context: JwtEncodingContext?) {
@@ -56,6 +57,7 @@ class TokenCustomizer(
             additionalInfo[SUBJECT] = userAuthorizationCode.username
             additionalInfo[ADD_INFO_USER_UUID] = userAuthorizationCode.userUuid.toString()
             additionalInfo[ADD_INFO_AUTH_SOURCE] = StringUtils.defaultIfBlank(userAuthorizationCode.authSource.name.lowercase(), "none")
+            additionalInfo[JWT_ID] = userAuthorizationCode.jwtId
           }
         }
         filterJwtFields(additionalInfo, context)
@@ -70,7 +72,7 @@ class TokenCustomizer(
     } else {
       jwtFields!!.split(",")
     }
-    info.entries.filterNot { entries.contains(it.key) }.map { it -> context.claims.claim(it.key, it.value) }
+    info.entries.filterNot { entries.contains(it.key) }.map { context.claims.claim(it.key, it.value) }
   }
 
   private fun addUserClaims(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
