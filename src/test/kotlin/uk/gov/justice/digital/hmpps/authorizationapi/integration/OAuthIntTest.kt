@@ -374,6 +374,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
       assertThat(fullJsonResponse.get("expires_in")).isNotNull
       assertThat(fullJsonResponse.get("jti")).isNotNull
+      assertThat(fullJsonResponse.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
 
       val token = getTokenPayload(String(tokenResponse))
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
@@ -388,6 +389,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("name")).isEqualTo("name")
       assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
+      assertThat(token.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
     }
 
     @Test
@@ -473,7 +475,7 @@ class OAuthIntTest : IntegrationTestBase() {
     private fun createAuthenticationJwt(username: String, vararg roles: String): String {
       val authoritiesAsString = roles.asList().joinToString(",")
       return Jwts.builder()
-        .id("1234")
+        .id("1234-5678-9876-5432")
         .subject(username)
         .claims(
           mapOf<String, Any>(

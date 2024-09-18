@@ -30,6 +30,7 @@ class UserAuthenticationService(
         name = authenticatedUserDetails.name,
         authSource = AuthSource.fromNullableString(authenticatedUserDetails.authSource),
         authorizationCodeIssuedAt = oAuth2TokenHolder.token.issuedAt!!,
+        jwtId = authenticatedUserDetails.jwtId,
       )
       userAuthorizationCodeRepository.save(userAuthorizationCode)
     }
