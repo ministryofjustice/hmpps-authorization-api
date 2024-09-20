@@ -61,13 +61,10 @@ class TokenSettingsAuthorizationCodeTimeToLiveConfigTest : IntegrationTestBase()
   @AfterEach
   fun tearDown() {
     clientRepository.findClientByClientId(CLIENT_ID)?.let {
-      println("deleting client ${it.clientId}")
       clientRepository.deleteByClientId(it.clientId)
 
-      println("deleting clientConfig ${it.clientId}")
       clientConfigRepository.deleteByBaseClientId(it.clientId)
 
-      println("deleting auth consent ${it.id}/ ${it.clientName}")
       authorizationConsentRepository.deleteById(
         AuthorizationConsent.AuthorizationConsentId(it.id, it.clientName),
       )

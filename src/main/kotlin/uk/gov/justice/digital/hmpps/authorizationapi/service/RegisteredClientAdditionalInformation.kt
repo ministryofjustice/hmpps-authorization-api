@@ -29,7 +29,7 @@ class RegisteredClientAdditionalInformation(
       tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofSeconds(it))
     }
 
-    // Spring defaults to 5 minutes if no value is explicitly set. Maintain this behaviour is no override is present
+    // Spring defaults to 5 minutes if no value is explicitly set. Maintain this behaviour if no override is present
     val authCodeTTLDuration = authorizationCodeTTL?.trim()?.ifEmpty { AUTH_CODE_TTL_DEFAULT_DURATION } ?: AUTH_CODE_TTL_DEFAULT_DURATION
     tokenSettingsBuilder.authorizationCodeTimeToLive(Duration.parse(authCodeTTLDuration))
 

@@ -352,8 +352,9 @@ class OAuthIntTest : IntegrationTestBase() {
       val groups: MatchResult? = ".*code=(.*)&state=.*".toRegex().find(location.responseHeaders.location!!.toString())
       assertThat(groups).isNotNull
       assertThat(groups!!.groupValues).hasSizeGreaterThan(1)
-      val code = groups.groups[1]?.value
+      assertThat(groups.groups[1]?.value).isNotNull
 
+      val code = groups.groups[1]!!.value
       val authCodeToken = userAuthenticationService.findByToken(code, OAuth2TokenType(OAuth2ParameterNames.CODE))?.let {
         it.getToken(OAuth2AuthorizationCode::class.java)?.token
       }
