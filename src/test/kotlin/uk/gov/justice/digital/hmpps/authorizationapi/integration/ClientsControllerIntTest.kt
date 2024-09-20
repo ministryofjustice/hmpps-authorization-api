@@ -721,6 +721,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.authorizationGrantTypes).isEqualTo(GrantType.client_credentials.name)
       assertThat(client.scopes).contains("read", "write")
       assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(20))
+      assertThat(client.tokenSettings.authorizationCodeTimeToLive).isEqualTo(Duration.ofMinutes(5))
       assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).contains("testy-mctest")
       assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-9999")
       assertThat(client.skipToAzure).isTrue

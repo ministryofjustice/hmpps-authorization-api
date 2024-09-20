@@ -16,6 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters.fromFormData
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
@@ -29,6 +33,9 @@ class OAuthIntTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var jwkKeyAccessor: JWKKeyAccessor
+
+  @Autowired
+  private lateinit var userAuthenticationService: OAuth2AuthorizationService
 
   @MockBean
   private lateinit var telemetryClient: TelemetryClient
@@ -328,6 +335,34 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectStatus().isFound
         .expectHeader()
         .value("Location", allOf(startsWith(validRedirectUri), containsString("state=$state"), containsString("code=")))
+    }
+
+    @Test
+    fun `authorization code has is valid for the default duration when no override has been defined`() {
+      val location = webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isFound
+        .expectHeader()
+        .value("Location", allOf(startsWith(validRedirectUri), containsString("state=$state"), containsString("code=")))
+        .returnResult(String::class.java)
+
+      val groups: MatchResult? = ".*code=(.*)&state=.*".toRegex().find(location.responseHeaders.location!!.toString())
+      assertThat(groups).isNotNull
+      assertThat(groups!!.groupValues).hasSizeGreaterThan(1)
+      val code = groups.groups[1]?.value
+
+      val authCodeToken = userAuthenticationService.findByToken(code, OAuth2TokenType(OAuth2ParameterNames.CODE))?.let {
+        it.getToken(OAuth2AuthorizationCode::class.java)?.token
+      }
+
+      val diff = Duration.between(authCodeToken!!.issuedAt, authCodeToken.expiresAt)
+
+      // test client is created with an auth code ttl of 20 mins. See resources/db/dev/data/V900_0__registered_clients.sql
+      val expectedAuthCodeTtlDuration = Duration.ofMinutes(20)
+      assertThat(diff).isEqualTo(expectedAuthCodeTtlDuration)
     }
 
     @Test

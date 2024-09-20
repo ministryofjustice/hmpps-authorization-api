@@ -107,3 +107,6 @@ application:
       remove-access-tokens: 0 0 23 * * * # daily at 23:00 hours
       remove-expired-auth-codes: 0 0 0 * * 0  # once a week
       remove-expired-user-details: 0 0/30 23 * * * # daily at 23:30 hours
+  oauth2:
+    authorization-code:
+      time-to-live: PT5M # Spring default to 5 minutes if no override is provided. For visibility explicitly apply default here.
