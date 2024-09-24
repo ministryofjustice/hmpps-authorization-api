@@ -25,6 +25,9 @@ import org.springframework.web.reactive.function.BodyInserters.fromFormData
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
+import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.Base64
 import java.util.Date
@@ -36,6 +39,9 @@ class OAuthIntTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var userAuthenticationService: OAuth2AuthorizationService
+
+  @Autowired
+  private lateinit var oAuthClientSecret: OAuthClientSecret
 
   @MockBean
   private lateinit var telemetryClient: TelemetryClient
@@ -246,6 +252,30 @@ class OAuthIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isUnauthorized
     }
+
+    @Test
+    fun `url encoded credentials handled`() {
+      val urlEncodedClientId = URLEncoder.encode("url-encode-client-credentials", StandardCharsets.UTF_8.toString())
+      val urlEncodedSecret = URLEncoder.encode("test>secret", StandardCharsets.UTF_8.toString())
+
+      val clientCredentialsResponse = webTestClient
+        .post().uri("/oauth2/token")
+        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$urlEncodedClientId:$urlEncodedSecret").toByteArray()))
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("$").value<Map<String, Any>> {
+          assertThat(it["expires_in"] as Int).isLessThan(1201)
+        }
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(clientCredentialsResponse!!))
+      assertThat(token.get("sub")).isEqualTo("url-encode-client-credentials")
+    }
   }
 
   @Nested
@@ -426,6 +456,46 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(token.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
+    }
+
+    @Test
+    fun `code convert to token using url encoded credentials`() {
+      val urlEncodedClientId = URLEncoder.encode("url-encode-auth-code", StandardCharsets.UTF_8.toString())
+      val urlEncodedSecret = URLEncoder.encode("test>secret", StandardCharsets.UTF_8.toString())
+
+      var header: String? = null
+      webTestClient
+        .get().uri("/oauth2/authorize?response_type=code&client_id=$urlEncodedClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectHeader()
+        .value("Location") { h: String -> header = h }
+
+      val authorisationCode =
+        header!!.substringAfter("?").split("&").first { it.startsWith("code=") }.substringAfter("code=")
+
+      val formData = LinkedMultiValueMap<String, String>().apply {
+        add("grant_type", "authorization_code")
+        add("code", authorisationCode)
+        add("state", state)
+        add("redirect_uri", validRedirectUri)
+      }
+
+      val tokenResponse = webTestClient
+        .post().uri("/oauth2/token")
+        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$urlEncodedClientId:$urlEncodedSecret").toByteArray()))
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .bodyValue(
+          formData,
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(tokenResponse))
+      assertThat(token.get("client_id")).isEqualTo(urlEncodedClientId)
     }
 
     @Test
