@@ -132,6 +132,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
               "test-client-id",
               "test-complete-details-id",
               "test-duplicate-id",
+              "url-encode-auth-code",
+              "url-encode-client-credentials",
             ),
           )
         }
