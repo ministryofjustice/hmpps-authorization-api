@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
-import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
@@ -12,19 +11,12 @@ class UrlDecodingRetryClientSecretAuthenticationProvider(
   private val delegate: AuthenticationProvider,
 ) : AuthenticationProvider {
 
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
-
   override fun authenticate(authentication: Authentication?): Authentication? {
     return try {
       delegate.authenticate(authentication)
     } catch (e: OAuth2AuthenticationException) {
-      log.info("OAuth2AuthenticationException occurred whilst validating client id and secret, attempting re-try with url decoded credentials")
-
       authentication?.credentials?.let {
         val urlDecodedCredentials = URLDecoder.decode(it.toString(), StandardCharsets.UTF_8.toString())
-        log.info("Retrying with url decoded secret: $urlDecodedCredentials")
 
         val clientAuthentication = authentication as OAuth2ClientAuthenticationToken
         val decodedAuthentication = OAuth2ClientAuthenticationToken(
