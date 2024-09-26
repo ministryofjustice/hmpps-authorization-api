@@ -39,7 +39,7 @@ import java.time.LocalDate
 import java.util.Base64.getEncoder
 import java.util.Optional
 
-class ClientsControllerIntTest : IntegrationTestBase() {
+class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var clientConfigRepository: ClientConfigRepository
@@ -680,7 +680,7 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `register client success`() {
+    fun `register client credentials client success`() {
       assertNull(clientRepository.findClientByClientId("testy"))
       whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
       whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
@@ -745,6 +745,43 @@ class ClientsControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `register client credentials client without authorities`() {
+      assertNull(clientRepository.findClientByClientId("testy"))
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testy",
+              "grantType" to "client_credentials",
+              "scopes" to listOf("read", "write"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+              "skipToAzure" to true,
+              "resourceIds" to listOf("resource-id1", "resource-id2"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val client = clientRepository.findClientByClientId("testy")
+      assertNotNull(client)
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      assertNotNull(clientConfig)
+      verifyAuthorizationConsentRecordNotPresent(client.id, client.clientId)
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+    }
+
+    @Test
     fun `register authorization code client success`() {
       val clientId = "test-auth-code-client-id"
       assertNull(clientRepository.findClientByClientId(clientId))
@@ -795,6 +832,8 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       assertThat(client.mfaRememberMe).isTrue
       assertThat(client.mfa).isEqualTo(MfaAccess.ALL)
       assertThat(client.redirectUris).isEqualTo("http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback")
+
+      verifyAuthorizationConsentRecordNotPresent(client.id, client.clientId)
 
       val clientConfig = clientConfigRepository.findById(client.clientId).get()
       assertThat(clientConfig.ips).contains("81.134.202.29/32", "35.176.93.186/32")
@@ -876,225 +915,283 @@ class ClientsControllerIntTest : IntegrationTestBase() {
           CoreMatchers.hasItems("clientId must not be blank"),
         )
     }
+  }
 
-    @Nested
-    inner class EditClient {
+  @Nested
+  inner class EditClient {
 
-      @Test
-      fun `access unauthorized when no authority`() {
-        webTestClient.put().uri("/base-clients/testy")
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "scopes" to listOf("read", "write"),
-                "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-                "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-                "databaseUserName" to "testy-mctest",
-                "jiraNumber" to "HAAR-9999",
-                "validDays" to 5,
-                "accessTokenValiditySeconds" to 20,
-                "skipToAzure" to true,
-                "resourceIds" to listOf("resource-id1", "resource-id2"),
-              ),
+    @Test
+    fun `access unauthorized when no authority`() {
+      webTestClient.put().uri("/base-clients/testy")
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+              "skipToAzure" to true,
+              "resourceIds" to listOf("resource-id1", "resource-id2"),
             ),
-          )
-          .exchange()
-          .expectStatus().isUnauthorized
-      }
-
-      @Test
-      fun `access forbidden when no role`() {
-        webTestClient.put().uri("/base-clients/testy")
-          .headers(setAuthorisation(roles = listOf()))
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "scopes" to listOf("read", "write"),
-                "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-                "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-                "databaseUserName" to "testy-mctest",
-                "jiraNumber" to "HAAR-9999",
-                "validDays" to 5,
-                "accessTokenValiditySeconds" to 20,
-              ),
-            ),
-          )
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `access forbidden when wrong role`() {
-        webTestClient.put().uri("/base-clients/testy")
-          .headers(setAuthorisation(roles = listOf("WRONG")))
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "scopes" to listOf("read", "write"),
-                "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-                "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-                "databaseUserName" to "testy-mctest",
-                "jiraNumber" to "HAAR-9999",
-                "validDays" to 5,
-                "accessTokenValiditySeconds" to 20,
-              ),
-            ),
-          )
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `not found when client not found`() {
-        webTestClient.put().uri("/base-clients/not-found")
-          .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "scopes" to listOf("read", "write"),
-                "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-                "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-                "databaseUserName" to "testy-mctest",
-                "jiraNumber" to "HAAR-9999",
-                "validDays" to 5,
-                "accessTokenValiditySeconds" to 20,
-              ),
-            ),
-          )
-          .exchange()
-          .expectStatus().isNotFound
-      }
-
-      @Test
-      fun `update complete client success`() {
-        whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
-        whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
-
-        webTestClient.post().uri("/base-clients")
-          .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "clientId" to "test-test",
-                "grantType" to "client_credentials",
-                "clientName" to "testing testing",
-                "scopes" to listOf("read", "write"),
-                "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
-                "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
-                "databaseUserName" to "testy-mctest-1",
-                "jiraNumber" to "HAAR-9999",
-                "validDays" to 5,
-                "accessTokenValiditySeconds" to 20,
-              ),
-            ),
-          )
-          .exchange()
-          .expectStatus().isOk
-
-        webTestClient.put().uri("/base-clients/test-test")
-          .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "scopes" to listOf("read"),
-                "authorities" to listOf("VIEW_PRISONER_DATA", "COMMUNITY"),
-                "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
-                "databaseUserName" to "testy-mctest-2",
-                "jiraNumber" to "HAAR-8888",
-                "validDays" to 3,
-                "accessTokenValiditySeconds" to 10,
-                "skipToAzure" to true,
-                "resourceIds" to listOf("resource-id1", "resource-id2"),
-              ),
-            ),
-          )
-          .exchange()
-          .expectStatus().isOk
-
-        val client = clientRepository.findClientByClientId("test-test")
-        assertThat(client!!.scopes).contains("read")
-        assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
-        assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-8888")
-        assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testy-mctest-2")
-        assertThat(client.skipToAzure).isEqualTo(true)
-        assertThat(client.resourceIds).isEqualTo(listOf("resource-id1", "resource-id2"))
-
-        val clientConfig = clientConfigRepository.findById(client.clientId).get()
-        assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
-        assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
-        val authorizationConsent =
-          verifyAuthorities(client.id, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
-
-        verify(telemetryClient).trackEvent(
-          "AuthorizationApiCredentialsUpdate",
-          mapOf("username" to "AUTH_ADM", "clientId" to "test-test"),
-          null,
+          ),
         )
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
 
-        clientRepository.delete(client)
-        clientConfigRepository.delete(clientConfig)
-        authorizationConsentRepository.delete(authorizationConsent)
-      }
-
-      @Test
-      fun `update incomplete client success`() {
-        whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
-        whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
-
-        webTestClient.post().uri("/base-clients")
-          .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "clientId" to "test-test",
-                "grantType" to "client_credentials",
-                "clientName" to "testing testing",
-              ),
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/base-clients/testy")
+        .headers(setAuthorisation(roles = listOf()))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
             ),
-          )
-          .exchange()
-          .expectStatus().isOk
-
-        webTestClient.put().uri("/base-clients/test-test")
-          .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
-          .body(
-            BodyInserters.fromValue(
-              mapOf(
-                "scopes" to listOf("write"),
-                "authorities" to listOf("VIEW_PRISONER_DATA", "COMMUNITY"),
-                "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
-                "databaseUserName" to "testy-mctest-2",
-                "jiraNumber" to "HAAR-8888",
-                "validDays" to 3,
-                "accessTokenValiditySeconds" to 10,
-              ),
-            ),
-          )
-          .exchange()
-          .expectStatus().isOk
-
-        val client = clientRepository.findClientByClientId("test-test")
-        assertThat(client!!.scopes).contains("write")
-        assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
-        assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-8888")
-        assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testy-mctest-2")
-
-        val clientConfig = clientConfigRepository.findById(client.clientId).get()
-        assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
-        assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
-        val authorizationConsent =
-          verifyAuthorities(client.id, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
-
-        verify(telemetryClient).trackEvent(
-          "AuthorizationApiCredentialsUpdate",
-          mapOf("username" to "AUTH_ADM", "clientId" to "test-test"),
-          null,
+          ),
         )
+        .exchange()
+        .expectStatus().isForbidden
+    }
 
-        clientRepository.delete(client)
-        clientConfigRepository.delete(clientConfig)
-        authorizationConsentRepository.delete(authorizationConsent)
-      }
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.put().uri("/base-clients/testy")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `not found when client not found`() {
+      webTestClient.put().uri("/base-clients/not-found")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `update complete client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-test",
+              "grantType" to "client_credentials",
+              "clientName" to "testing testing",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest-1",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.put().uri("/base-clients/test-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read"),
+              "authorities" to listOf("VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
+              "databaseUserName" to "testy-mctest-2",
+              "jiraNumber" to "HAAR-8888",
+              "validDays" to 3,
+              "accessTokenValiditySeconds" to 10,
+              "skipToAzure" to true,
+              "resourceIds" to listOf("resource-id1", "resource-id2"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val client = clientRepository.findClientByClientId("test-test")
+      assertThat(client!!.scopes).contains("read")
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
+      assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-8888")
+      assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testy-mctest-2")
+      assertThat(client.skipToAzure).isEqualTo(true)
+      assertThat(client.resourceIds).isEqualTo(listOf("resource-id1", "resource-id2"))
+
+      val clientConfig = clientConfigRepository.findById(client.clientId).get()
+      assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
+      assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
+      val authorizationConsent =
+        verifyAuthorities(client.id, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationApiCredentialsUpdate",
+        mapOf("username" to "AUTH_ADM", "clientId" to "test-test"),
+        null,
+      )
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
+    }
+
+    @Test
+    fun `update client credentials client remove authorities`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-test",
+              "grantType" to "client_credentials",
+              "clientName" to "testing testing",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testy-mctest-1",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 20,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      var client = clientRepository.findClientByClientId("test-test")
+      assertNotNull(client)
+      verifyAuthorities(client!!.id, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+
+      webTestClient.put().uri("/base-clients/test-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("read"),
+              "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
+              "databaseUserName" to "testy-mctest-2",
+              "jiraNumber" to "HAAR-8888",
+              "validDays" to 3,
+              "accessTokenValiditySeconds" to 10,
+              "skipToAzure" to true,
+              "resourceIds" to listOf("resource-id1", "resource-id2"),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      client = clientRepository.findClientByClientId("test-test")
+      assertNotNull(client)
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      verifyAuthorizationConsentRecordNotPresent(client.id, client.clientId)
+
+      clientConfigRepository.delete(clientConfig)
+      clientRepository.delete(client)
+    }
+
+    @Test
+    fun `update incomplete client success`() {
+      whenever(oAuthClientSecretGenerator.generate()).thenReturn("external-client-secret")
+      whenever(oAuthClientSecretGenerator.encode("external-client-secret")).thenReturn("encoded-client-secret")
+
+      webTestClient.post().uri("/base-clients")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "test-test",
+              "grantType" to "client_credentials",
+              "clientName" to "testing testing",
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      webTestClient.put().uri("/base-clients/test-test")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "scopes" to listOf("write"),
+              "authorities" to listOf("VIEW_PRISONER_DATA", "COMMUNITY"),
+              "ips" to listOf("82.135.209.29/32", "36.177.94.187/32"),
+              "databaseUserName" to "testy-mctest-2",
+              "jiraNumber" to "HAAR-8888",
+              "validDays" to 3,
+              "accessTokenValiditySeconds" to 10,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val client = clientRepository.findClientByClientId("test-test")
+      assertThat(client!!.scopes).contains("write")
+      assertThat(client.tokenSettings.accessTokenTimeToLive).isEqualTo(Duration.ofSeconds(10))
+      assertThat(registeredClientAdditionalInformation.getJiraNumber(client.clientSettings)).isEqualTo("HAAR-8888")
+      assertThat(registeredClientAdditionalInformation.getDatabaseUserName(client.clientSettings)).isEqualTo("testy-mctest-2")
+
+      val clientConfig = clientConfigRepository.findById(client.clientId).get()
+      assertThat(clientConfig.ips).contains("82.135.209.29/32", "36.177.94.187/32")
+      assertThat(clientConfig.clientEndDate).isEqualTo(LocalDate.now().plusDays(2))
+      val authorizationConsent =
+        verifyAuthorities(client.id, client.clientId, "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationApiCredentialsUpdate",
+        mapOf("username" to "AUTH_ADM", "clientId" to "test-test"),
+        null,
+      )
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      authorizationConsentRepository.delete(authorizationConsent)
     }
   }
 
@@ -1648,9 +1745,15 @@ class ClientsControllerIntTest : IntegrationTestBase() {
       )
     }
   }
+
   private fun verifyAuthorities(id: String, clientId: String, vararg authorities: String): AuthorizationConsent {
     val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsentId(id, clientId)).get()
     assertThat(authorizationConsent.authorities).containsOnly(*authorities)
     return authorizationConsent
+  }
+
+  private fun verifyAuthorizationConsentRecordNotPresent(id: String, clientId: String) {
+    val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId))
+    assertFalse(authorizationConsent.isPresent)
   }
 }

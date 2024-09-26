@@ -5,6 +5,7 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
+import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -56,4 +57,11 @@ class MigrationClientRequest(
   val redirectUris: String?,
   val skipToAzureField: Boolean?,
   val resourceIds: List<String>?,
-)
+) {
+
+  fun requiresAuthorisationConsentRecord(): Boolean {
+    return GrantType.client_credentials.name == grantType && hasAuthorities()
+  }
+
+  private fun hasAuthorities() = authorities != null && authorities.isNotEmpty() && StringUtils.hasText(authorities[0])
+}

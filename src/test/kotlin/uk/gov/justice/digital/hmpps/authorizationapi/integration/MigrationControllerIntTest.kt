@@ -259,6 +259,148 @@ class MigrationControllerIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `migrate client credentials client should not create authorization consent record when no authorities present`() {
+      assertNull(clientRepository.findClientByClientId("testx"))
+
+      webTestClient.post().uri("/migrate-client")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testx",
+              "grantType" to "client_credentials",
+              "scopes" to listOf("read", "write"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testx-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 200,
+              "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
+              "clientDeploymentDetails" to mapOf(
+                "clientType" to "PERSONAL",
+                "team" to "testing team",
+                "teamContact" to "testx lead",
+                "teamSlack" to "#testx",
+                "hosting" to "CLOUDPLATFORM",
+                "namespace" to "testx-testing-dev",
+                "deployment" to "hmpps-testing-dev",
+                "secretName" to "hmpps-testing",
+                "clientIdKey" to "SYSTEM_CLIENT_ID",
+                "secretKey" to "SYSTEM_CLIENT_SECRET",
+              ),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val client = clientRepository.findClientByClientId("testx")
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      val clientDeployment = clientDeploymentRepository.findById("testx").get()
+
+      assertNotNull(client)
+      assertNotNull(clientConfig)
+      assertNotNull(clientDeployment)
+      verifyAuthorizationConsentRecordNotPresent(client.id, client.clientId)
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      clientDeploymentRepository.delete(clientDeployment)
+    }
+
+    @Test
+    fun `update client credentials client should remove authorization consent record when no authorities present`() {
+      // 1. migrate client with authorities
+
+      assertNull(clientRepository.findClientByClientId("testz"))
+
+      webTestClient.post().uri("/migrate-client")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testzz",
+              "grantType" to "client_credentials",
+              "scopes" to listOf("read", "write"),
+              "authorities" to listOf("CURIOUS_API", "VIEW_PRISONER_DATA", "ROLE_COMMUNITY"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testzz-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 200,
+              "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
+              "clientDeploymentDetails" to mapOf(
+                "clientType" to "PERSONAL",
+                "team" to "testing team",
+                "teamContact" to "testzz lead",
+                "teamSlack" to "#testzz",
+                "hosting" to "CLOUDPLATFORM",
+                "namespace" to "testzz-testing-dev",
+                "deployment" to "hmpps-testing-dev",
+                "secretName" to "hmpps-testing",
+                "clientIdKey" to "SYSTEM_CLIENT_ID",
+                "secretKey" to "SYSTEM_CLIENT_SECRET",
+              ),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      val client = clientRepository.findClientByClientId("testzz")
+      val clientConfig = clientConfigRepository.findById(client!!.clientId).get()
+      val clientDeployment = clientDeploymentRepository.findById("testzz").get()
+
+      assertNotNull(client)
+      assertNotNull(clientConfig)
+      assertNotNull(clientDeployment)
+      verifyAuthorities(client.id, client.clientId, "ROLE_CURIOUS_API", "ROLE_VIEW_PRISONER_DATA", "ROLE_COMMUNITY")
+
+      // 2. Update client to remove authorities
+
+      webTestClient.post().uri("/migrate-client")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .body(
+          BodyInserters.fromValue(
+            mapOf(
+              "clientId" to "testzz",
+              "grantType" to "client_credentials",
+              "scopes" to listOf("read", "write"),
+              "ips" to listOf("81.134.202.29/32", "35.176.93.186/32"),
+              "databaseUserName" to "testzz-mctest",
+              "jiraNumber" to "HAAR-9999",
+              "validDays" to 5,
+              "accessTokenValiditySeconds" to 200,
+              "clientSecret" to "clientSecret",
+              "clientIdIssuedAt" to "2021-11-25T14:20:00Z",
+              "clientDeploymentDetails" to mapOf(
+                "clientType" to "PERSONAL",
+                "team" to "testing team",
+                "teamContact" to "testzz lead",
+                "teamSlack" to "#testzz",
+                "hosting" to "CLOUDPLATFORM",
+                "namespace" to "testzz-testing-dev",
+                "deployment" to "hmpps-testing-dev",
+                "secretName" to "hmpps-testing",
+                "clientIdKey" to "SYSTEM_CLIENT_ID",
+                "secretKey" to "SYSTEM_CLIENT_SECRET",
+              ),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      verifyAuthorizationConsentRecordNotPresent(client.id, client.clientId)
+
+      clientRepository.delete(client)
+      clientConfigRepository.delete(clientConfig)
+      clientDeploymentRepository.delete(clientDeployment)
+    }
+
+    @Test
     fun `migrate authorization code client success`() {
       val clientId = "migrate-auth-code-client"
       assertNull(clientRepository.findClientByClientId("testz"))
@@ -339,6 +481,8 @@ class MigrationControllerIntTest : IntegrationTestBase() {
         null,
       )
 
+      verifyAuthorizationConsentRecordNotPresent(client.id, client.clientId)
+
       clientRepository.delete(client)
       clientConfigRepository.delete(clientConfig)
     }
@@ -387,5 +531,10 @@ class MigrationControllerIntTest : IntegrationTestBase() {
     val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId)).get()
     assertThat(authorizationConsent.authorities).containsOnly(*authorities)
     return authorizationConsent
+  }
+
+  private fun verifyAuthorizationConsentRecordNotPresent(id: String, clientId: String) {
+    val authorizationConsent = authorizationConsentRepository.findById(AuthorizationConsent.AuthorizationConsentId(id, clientId))
+    assertFalse(authorizationConsent.isPresent)
   }
 }

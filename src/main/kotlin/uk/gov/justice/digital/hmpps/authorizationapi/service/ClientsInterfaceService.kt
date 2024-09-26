@@ -269,13 +269,22 @@ class ClientsInterfaceService(
   }
 
   private fun updateAuthorizationConsent(client: Client, clientDetails: ClientUpdateRequest) {
-    val authorizationConsent = retrieveAuthorizationConsent(client)
-    val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
-      existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities)
-      return@let existingAuthorizationConsent
-    } ?: AuthorizationConsent(client.id, client.clientId, withAuthoritiesPrefix(clientDetails.authorities))
+    if (GrantType.client_credentials.name == client.authorizationGrantTypes) {
+      val authorizationConsent = retrieveAuthorizationConsent(client)
+      authorizationConsent?.let {
+        if (!clientDetails.hasAuthorities()) {
+          authorizationConsentRepository.delete(it)
+          return
+        }
+      }
 
-    authorizationConsentRepository.save(authorizationConsentToPersist)
+      val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
+        existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities!!)
+        return@let existingAuthorizationConsent
+      } ?: AuthorizationConsent(client.id, client.clientId, withAuthoritiesPrefix(clientDetails.authorities!!))
+
+      authorizationConsentRepository.save(authorizationConsentToPersist)
+    }
   }
 
   private fun updateClientConfig(clientId: String, existingClientConfig: ClientConfig?, clientDetails: ClientUpdateRequest) {

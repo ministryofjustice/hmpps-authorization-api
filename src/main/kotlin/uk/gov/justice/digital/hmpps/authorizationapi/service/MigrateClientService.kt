@@ -43,8 +43,14 @@ class MigrateClientService(
   private fun saveClient(client: Client, migrationClientRequest: MigrationClientRequest) {
     client.let { clientRepository.save(it) }
 
-    migrationClientRequest.authorities?.let { authorities ->
-      authorizationConsentRepository.save(AuthorizationConsent(client.id, client.clientId, (withAuthoritiesPrefix(authorities))))
+    if (migrationClientRequest.requiresAuthorisationConsentRecord()) {
+      authorizationConsentRepository.save(
+        AuthorizationConsent(
+          client.id,
+          client.clientId,
+          (withAuthoritiesPrefix(migrationClientRequest.authorities!!)),
+        ),
+      )
     }
 
     migrationClientRequest.ips?.let { ips ->
