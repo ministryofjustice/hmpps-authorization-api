@@ -64,6 +64,19 @@ VALUES
      'client_secret_basic', 'authorization_code', 'http://127.0.0.1:8089/login/oauth2/code/oidc-client,https://oauth.pstmn.io/v1/callback', 'read',
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.authorization-code-time-to-live":["java.time.Duration",1200.000000000],"settings.token.additional-data.jira-number":"HAAR-9999","settings.token.access-token-time-to-live":["java.time.Duration",300.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"}}',
+     null, false,'http://127.0.0.1:8089/'),
+
+-- client credentials client to test url encoded secret, secret used is test>secret
+    ('36faca4b-302e-40b7-bf28-0b41bb13dd5e', 'url-encode-client-credentials', current_timestamp, '{bcrypt}$2a$10$gnJId6KBR3Tx9ZQO67up8OVQ0vGeG/gGoET320wVaE.31Df2xGz2a', null, 'url-encode-client-credentials',
+     'client_secret_basic', 'client_credentials', 'http://127.0.0.1:8089/authorized,https://oauth.pstmn.io/v1/callback', 'read,write',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false,"settings.client.additional-data.jira-number":"HAAR-9999","settings.client.additional-data.database-user-name":"testy-db"}',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.access-token-time-to-live":["java.time.Duration",1200.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"},"settings.token.refresh-token-time-to-live":["java.time.Duration",600.000000000]}',null, false, null),
+
+-- auth code client to test url encoded secret, secret used is test>secret
+    ('d9ea502b-22ad-4df2-8001-a77a8e4aa84e', 'url-encode-auth-code', current_timestamp, '{bcrypt}$2a$10$gnJId6KBR3Tx9ZQO67up8OVQ0vGeG/gGoET320wVaE.31Df2xGz2a', null, 'url-encode-auth-code',
+     'client_secret_basic', 'authorization_code', 'http://127.0.0.1:8089/login/oauth2/code/oidc-client,https://oauth.pstmn.io/v1/callback', 'read',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.authorization-code-time-to-live":["java.time.Duration",1200.000000000],"settings.token.additional-data.jira-number":"HAAR-9999","settings.token.access-token-time-to-live":["java.time.Duration",300.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"}}',
      null, false,'http://127.0.0.1:8089/');
 
 INSERT INTO oauth2_client_config (base_client_id, allowed_ips, client_end_date)
