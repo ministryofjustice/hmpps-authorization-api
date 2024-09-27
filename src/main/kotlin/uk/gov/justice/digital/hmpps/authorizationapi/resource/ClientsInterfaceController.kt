@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
+import org.springframework.util.StringUtils.hasText
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -173,7 +174,7 @@ data class ClientViewResponse(
 
 data class ClientUpdateRequest(
   val scopes: List<String>,
-  val authorities: List<String>,
+  val authorities: List<String>?,
   val ips: List<String>,
   val jiraNumber: String?,
   val databaseUserName: String?,
@@ -185,7 +186,9 @@ data class ClientUpdateRequest(
   val redirectUris: String?,
   val skipToAzure: Boolean?,
   val resourceIds: List<String>?,
-)
+) {
+  fun hasAuthorities() = authorities != null && authorities.isNotEmpty() && hasText(authorities[0])
+}
 
 data class ClientDeploymentDetails(
   val clientType: String?,
