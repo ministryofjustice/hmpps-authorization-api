@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import jakarta.servlet.http.HttpServletRequest
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.core.AuthorizationGrantType
@@ -19,10 +18,6 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConverter {
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
 
   override fun convert(request: HttpServletRequest?): Authentication? {
     val header = request!!.getHeader(HttpHeaders.AUTHORIZATION) ?: return null
@@ -50,8 +45,6 @@ class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConvert
     ) {
       throw OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST)
     }
-
-    log.info("Creating token with client id: ${credentials[0]} and client secret: ${credentials[1]}")
 
     return OAuth2ClientAuthenticationToken(
       credentials[0],
