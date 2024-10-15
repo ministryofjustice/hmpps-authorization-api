@@ -14,13 +14,6 @@ generic-service:
     BASE_URL: https://authorization-api-stage.hmpps.service.justice.gov.uk
     HMPPS_AUTH_ENDPOINT_URL: http://hmpps-auth.hmpps-auth-stage.svc.cluster.local/auth
 
-    namespace_secrets:
-      dps-rds-instance-output:
-        SPRING_DATASOURCE_NAME: "database_name"
-        SPRING_DATASOURCE_ENDPOINT: "rds_instance_endpoint"
-        SPRING_DATASOURCE_USERNAME: "database_username"
-        SPRING_DATASOURCE_PASSWORD: "database_password"
-
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
