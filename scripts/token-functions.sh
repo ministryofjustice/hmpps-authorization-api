@@ -36,7 +36,7 @@ authenticate() {
     AUTH=$(echo -n "$CLIENT" | base64)
   fi
 
-  if ! TOKEN_RESPONSE=$(curl -sS -d "" -X POST "$HOST/oauth2/token?grant_type=client_credentials&username=$USER" -H "Authorization: Basic $AUTH"); then
+  if ! TOKEN_RESPONSE=$(curl -H "Authorization: Basic $AUTH" -H "Content-Type: application/x-www-form-urlencoded" -X POST --data 'grant_type=client_credentials&username=' "$HOST/oauth2/token"); then
     echo "Failed to read token from credentials response"
     echo "$TOKEN_RESPONSE"
     exit 1
