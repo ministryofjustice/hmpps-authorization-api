@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.isNotEmpty
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -24,6 +25,7 @@ class TokenCustomizer(
   private val userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oauthJtiGenerator: OAuthJtiGenerator,
+  @Value("\${hmpps-auth.endpoint.url}") private val hmppsAuthUri: String,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
   companion object {
@@ -41,6 +43,7 @@ class TokenCustomizer(
   override fun customize(context: JwtEncodingContext?) {
     context?.let {
         jwtEncodingContext ->
+      addIssuerClaimTo(jwtEncodingContext)
 
       if (jwtEncodingContext.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
         val principal = jwtEncodingContext.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
@@ -119,6 +122,12 @@ class TokenCustomizer(
       claim("grant_type", context.authorizationGrantType.value)
       claim("jti", oauthJtiGenerator.generateTokenId())
       claim("aud", "oauth2-resource")
+    }
+  }
+
+  private fun addIssuerClaimTo(context: JwtEncodingContext) {
+    with(context.claims) {
+      claim("iss", "$hmppsAuthUri/issuer")
     }
   }
 }
