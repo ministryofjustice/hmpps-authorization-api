@@ -66,7 +66,7 @@ class OAuthIntTest : IntegrationTestBase() {
           assertThat(it["sub"] as String).isEqualTo("test-client-id")
           assertThat(it["auth_source"] as String).isEqualTo("none")
           assertThat(it["token_type"] as String).isEqualTo("Bearer")
-          assertThat(it["iss"] as String).isEqualTo("http://localhost/")
+          assertThat(it["iss"] as String).isEqualTo("http://localhost:9090/auth/issuer")
           assertThat(it["jti"]).isNotNull
           assertThat(it["scope"] as String).isEqualTo("read write")
         }
@@ -105,6 +105,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
+      assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
 
       assertTrue(token.isNull("database_username"))
       assertTrue(token.isNull("user_name"))
@@ -136,6 +137,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")).toString())
+      assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertThat(token.get("user_name")).isEqualTo("testy")
@@ -165,6 +167,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
       assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("delius")
+      assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertTrue(token.isNull("authorities"))
 
@@ -436,7 +439,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
       assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.name.lowercase())
       assertThat(fullJsonResponse.get("scope")).isEqualTo("read")
-      assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost/")
+      assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
       assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
       assertThat(fullJsonResponse.get("expires_in")).isNotNull
       assertThat(fullJsonResponse.get("jti")).isNotNull
@@ -538,7 +541,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(fullJsonResponse.get("auth_source")).isEqualTo(AuthSource.Auth.name.lowercase())
       assertThat(fullJsonResponse.get("scope").toString()).isEqualTo("read")
-      assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost/")
+      assertThat(fullJsonResponse.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
       assertThat(fullJsonResponse.get("token_type")).isEqualTo("Bearer")
       assertThat(fullJsonResponse.get("expires_in")).isNotNull
       assertThat(fullJsonResponse.get("jti")).isNotNull
