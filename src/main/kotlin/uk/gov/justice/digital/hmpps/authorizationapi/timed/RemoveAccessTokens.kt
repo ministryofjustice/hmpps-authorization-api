@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 class RemoveAccessTokens(private val service: RemoveAccessTokensService, private val telemetryClient: TelemetryClient) {
 
   @Scheduled(cron = "\${application.authentication.cron.remove-access-tokens}", zone = "Europe/London")
-  @SchedulerLock(name = "removeAllButLatestAccessToken")
+  @SchedulerLock(name = "removeAllButLatestAccessToken", lockAtLeastFor = "PT3M")
   fun removeAllButLatestAccessToken() {
     try {
       log.trace("removeAllButLatestAccessToken scheduled task started")
@@ -29,7 +29,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   }
 
   @Scheduled(cron = "\${application.authentication.cron.remove-expired-auth-codes}", zone = "Europe/London")
-  @SchedulerLock(name = "removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens")
+  @SchedulerLock(name = "removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens", lockAtLeastFor = "PT3M")
   fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() {
     try {
       log.trace("removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens scheduled task started")
@@ -44,7 +44,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   }
 
   @Scheduled(cron = "\${application.authentication.cron.remove-expired-user-details}", zone = "Europe/London")
-  @SchedulerLock(name = "removeExpiredAuthorizationCodeUsers")
+  @SchedulerLock(name = "removeExpiredAuthorizationCodeUsers", lockAtLeastFor = "PT3M")
   fun removeExpiredAuthorizationCodeUsers() {
     try {
       log.trace("removeExpiredAuthorizationCodeUsers scheduled task started")
