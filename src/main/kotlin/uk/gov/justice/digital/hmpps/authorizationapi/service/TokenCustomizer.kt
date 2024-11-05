@@ -25,7 +25,7 @@ class TokenCustomizer(
   private val userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oauthJtiGenerator: OAuthJtiGenerator,
-  @Value("\${hmpps-auth.endpoint.url}") private val hmppsAuthUri: String,
+  @Value("\${hmpps-auth.issuer.url}") private val authIssuerUrl: String,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
   companion object {
@@ -127,7 +127,7 @@ class TokenCustomizer(
 
   private fun addIssuerClaimTo(context: JwtEncodingContext) {
     with(context.claims) {
-      claim("iss", "$hmppsAuthUri/issuer")
+      claim("iss", "$authIssuerUrl/issuer")
     }
   }
 }
