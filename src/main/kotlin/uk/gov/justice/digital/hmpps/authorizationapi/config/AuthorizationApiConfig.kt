@@ -67,7 +67,7 @@ import java.security.interfaces.RSAPublicKey
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
 @EnableScheduling
-@EnableSchedulerLock(defaultLockAtMostFor = "30m")
+@EnableSchedulerLock(defaultLockAtMostFor = "PT50M", defaultLockAtLeastFor = "PT3M")
 @Configuration(proxyBeanMethods = false)
 class AuthorizationApiConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
