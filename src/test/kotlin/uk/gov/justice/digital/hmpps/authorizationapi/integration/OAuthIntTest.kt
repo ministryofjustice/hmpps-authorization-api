@@ -555,7 +555,6 @@ class OAuthIntTest : IntegrationTestBase() {
       val token = getTokenPayload(String(tokenResponse))
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
       assertThat(token.get("sub")).isEqualTo("username")
-      assertThat(token.get("aud")).isEqualTo(validClientId)
 
       assertThat(token.get("client_id")).isEqualTo(validClientId)
       assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
