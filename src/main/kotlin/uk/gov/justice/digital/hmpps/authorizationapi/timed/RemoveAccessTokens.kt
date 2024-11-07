@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.timed
 
 import com.microsoft.applicationinsights.TelemetryClient
+import net.javacrumbs.shedlock.core.LockAssert
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -17,6 +18,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   fun removeAllButLatestAccessToken() {
     try {
       log.info("removeAllButLatestAccessToken scheduled task started")
+      LockAssert.assertLocked()
       val numberOfRecordsDeleted = service.removeAllButLatestAccessToken()
 
       log.info("removeAllButLatestAccessToken scheduled task removed {} access token records", numberOfRecordsDeleted)
@@ -32,6 +34,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   fun removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens() {
     try {
       log.info("removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens scheduled task started")
+      LockAssert.assertLocked()
       val numberOfRecordsDeleted = service.removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens()
 
       log.info("removeAllExpiredAuthorizationCodeRecordsWithoutAccessTokens scheduled task removed {} expired authorisation code records without access tokens", numberOfRecordsDeleted)
@@ -46,6 +49,7 @@ class RemoveAccessTokens(private val service: RemoveAccessTokensService, private
   fun removeExpiredAuthorizationCodeUsers() {
     try {
       log.info("removeExpiredAuthorizationCodeUsers scheduled task started")
+      LockAssert.assertLocked()
       val numberOfRecordsDeleted = service.deleteExpiredAuthorizationCodeUsers()
 
       log.info("removeExpiredAuthorizationCodeUsers scheduled task removed {} expired authorisation code user records", numberOfRecordsDeleted)
