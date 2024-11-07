@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.jsonwebtoken.Jwts
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
@@ -448,8 +449,6 @@ class OAuthIntTest : IntegrationTestBase() {
       val token = getTokenPayload(String(tokenResponse))
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
       assertThat(token.get("sub")).isEqualTo("username")
-      assertThat(token.get("aud")).isEqualTo(validClientId)
-
       assertThat(token.get("client_id")).isEqualTo(validClientId)
       assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
       assertThat(token.get("auth_source")).isEqualTo(AuthSource.Auth.name.lowercase())
@@ -459,6 +458,10 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(token.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
+
+      Assertions.assertThatThrownBy {
+        token.get("aud")
+      }.hasMessage("JSONObject[\"aud\"] not found.")
     }
 
     @Test
@@ -552,7 +555,6 @@ class OAuthIntTest : IntegrationTestBase() {
       val token = getTokenPayload(String(tokenResponse))
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
       assertThat(token.get("sub")).isEqualTo("username")
-      assertThat(token.get("aud")).isEqualTo(validClientId)
 
       assertThat(token.get("client_id")).isEqualTo(validClientId)
       assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)

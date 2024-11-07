@@ -80,11 +80,14 @@ class TokenCustomizer(
 
   private fun addUserClaims(context: JwtEncodingContext, principal: UsernamePasswordAuthenticationToken) {
     addAuthorities(context, principal.authorities)
+
     with(context.claims) {
       claim("client_id", context.registeredClient.clientId)
       claim("grant_type", GrantType.authorization_code)
       claim("scope", context.registeredClient.scopes)
     }
+
+    context.claims.audience(listOf()) // suppress aud claim for user tokens
   }
 
   private fun addClientAuthorities(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
