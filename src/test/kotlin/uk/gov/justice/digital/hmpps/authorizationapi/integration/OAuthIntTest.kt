@@ -108,8 +108,13 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
 
-      assertTrue(token.isNull("database_username"))
-      assertTrue(token.isNull("user_name"))
+      Assertions.assertThatThrownBy {
+        token.get("database_username")
+      }.hasMessage("JSONObject[\"database_username\"] not found.")
+
+      Assertions.assertThatThrownBy {
+        token.get("user_name")
+      }.hasMessage("JSONObject[\"user_name\"] not found.")
     }
 
     @Test
