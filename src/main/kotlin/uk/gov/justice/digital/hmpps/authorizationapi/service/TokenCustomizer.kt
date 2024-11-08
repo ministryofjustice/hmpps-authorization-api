@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.StringUtils.isBlank
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
@@ -116,7 +117,9 @@ class TokenCustomizer(
 
         claim("auth_source", fromNullableString(it.additionalParameters[REQUEST_PARAM_AUTH_SOURCE] as String?).source)
         registeredClientAdditionalInformation.getDatabaseUserName(principal.registeredClient?.clientSettings)?.let { databaseUsername ->
-          claim("database_username", databaseUsername)
+          if (!isBlank(databaseUsername)) {
+            claim("database_username", databaseUsername)
+          }
         }
       }
 
