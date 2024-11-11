@@ -75,13 +75,13 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("test-client-id")
-      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")).toString())
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertTrue(token.isNull("user_name"))
+      verifyClaimNotPresentIn(token, "aud")
     }
 
     @Test
@@ -103,18 +103,13 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("ip-allow-a-client-1")
-      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
 
-      Assertions.assertThatThrownBy {
-        token.get("database_username")
-      }.hasMessage("JSONObject[\"database_username\"] not found.")
-
-      Assertions.assertThatThrownBy {
-        token.get("user_name")
-      }.hasMessage("JSONObject[\"user_name\"] not found.")
+      verifyClaimNotPresentIn(token, "database_username")
+      verifyClaimNotPresentIn(token, "user_name")
+      verifyClaimNotPresentIn(token, "aud")
     }
 
     @Test
@@ -139,7 +134,6 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("testy")
-      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")).toString())
@@ -147,6 +141,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertThat(token.get("user_name")).isEqualTo("testy")
+      verifyClaimNotPresentIn(token, "aud")
     }
 
     @Test
@@ -171,7 +166,6 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
-      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("delius")
       assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
@@ -179,6 +173,7 @@ class OAuthIntTest : IntegrationTestBase() {
 
       assertTrue(token.isNull("user_name"))
       assertTrue(token.isNull("database_username"))
+      verifyClaimNotPresentIn(token, "aud")
     }
 
     @Test
@@ -203,13 +198,13 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val token = getTokenPayload(String(clientCredentialsResponse))
       assertThat(token.get("sub")).isEqualTo("test-client-create-id")
-      assertThat(token.get("aud")).isEqualTo("oauth2-resource")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
       assertTrue(token.isNull("authorities"))
 
       assertTrue(token.isNull("user_name"))
       assertTrue(token.isNull("database_username"))
+      verifyClaimNotPresentIn(token, "aud")
     }
 
     @Test
@@ -464,9 +459,7 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
       assertThat(token.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
 
-      Assertions.assertThatThrownBy {
-        token.get("aud")
-      }.hasMessage("JSONObject[\"aud\"] not found.")
+      verifyClaimNotPresentIn(token, "aud")
     }
 
     @Test
@@ -606,6 +599,12 @@ class OAuthIntTest : IntegrationTestBase() {
         .signWith(jwkKeyAccessor.getPrimaryKeyPair().private)
         .compact()
     }
+  }
+
+  private fun verifyClaimNotPresentIn(token: JSONObject, claim: String) {
+    Assertions.assertThatThrownBy {
+      token.get(claim)
+    }.hasMessage("JSONObject[\"$claim\"] not found.")
   }
 
   private fun getTokenPayload(response: String): JSONObject {
