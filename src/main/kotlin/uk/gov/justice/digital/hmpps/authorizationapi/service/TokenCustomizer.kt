@@ -45,6 +45,7 @@ class TokenCustomizer(
     context?.let {
         jwtEncodingContext ->
       addIssuerClaimTo(jwtEncodingContext)
+      suppressAudienceClaim(jwtEncodingContext)
 
       if (jwtEncodingContext.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
         val principal = jwtEncodingContext.getPrincipal<Authentication>() as OAuth2ClientAuthenticationToken
@@ -87,8 +88,6 @@ class TokenCustomizer(
       claim("grant_type", GrantType.authorization_code)
       claim("scope", context.registeredClient.scopes)
     }
-
-    context.claims.audience(listOf()) // suppress aud claim for user tokens
   }
 
   private fun addClientAuthorities(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
@@ -127,8 +126,11 @@ class TokenCustomizer(
       claim("scope", principal.registeredClient?.scopes)
       claim("grant_type", context.authorizationGrantType.value)
       claim("jti", oauthJtiGenerator.generateTokenId())
-      claim("aud", "oauth2-resource")
     }
+  }
+
+  private fun suppressAudienceClaim(context: JwtEncodingContext) {
+    context.claims.audience(listOf())
   }
 
   private fun addIssuerClaimTo(context: JwtEncodingContext) {
