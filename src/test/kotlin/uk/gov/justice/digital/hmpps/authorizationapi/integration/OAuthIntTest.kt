@@ -54,7 +54,10 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `client with database username`() {
       val clientCredentialsResponse = webTestClient
         .post().uri("/oauth2/token")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secret").toByteArray()))
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secret").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .body(
           fromFormData("grant_type", "client_credentials"),
@@ -77,7 +80,16 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("test-client-id")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")).toString())
+      assertThat(token.get("authorities").toString()).isEqualTo(
+        JSONArray(
+          listOf(
+            "ROLE_AUDIT",
+            "ROLE_OAUTH_ADMIN",
+            "ROLE_TESTING",
+            "ROLE_VIEW_AUTH_SERVICE_DETAILS",
+          ),
+        ).toString(),
+      )
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertTrue(token.isNull("user_name"))
@@ -88,7 +100,10 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `client without database username`() {
       val clientCredentialsResponse = webTestClient
         .post().uri("/oauth2/token")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("ip-allow-a-client-1:test-secret").toByteArray()))
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("ip-allow-a-client-1:test-secret").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .body(
           fromFormData("grant_type", "client_credentials"),
@@ -136,7 +151,16 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("sub")).isEqualTo("testy")
       assertThat(token.get("auth_source")).isEqualTo("none")
       assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_AUDIT", "ROLE_OAUTH_ADMIN", "ROLE_TESTING", "ROLE_VIEW_AUTH_SERVICE_DETAILS")).toString())
+      assertThat(token.get("authorities").toString()).isEqualTo(
+        JSONArray(
+          listOf(
+            "ROLE_AUDIT",
+            "ROLE_OAUTH_ADMIN",
+            "ROLE_TESTING",
+            "ROLE_VIEW_AUTH_SERVICE_DETAILS",
+          ),
+        ).toString(),
+      )
       assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
 
       assertThat(token.get("database_username")).isEqualTo("testy-db")
@@ -211,7 +235,10 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `incorrect secret`() {
       webTestClient
         .post().uri("/oauth2/token")
-        .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secretx").toByteArray()))
+        .header(
+          HttpHeaders.AUTHORIZATION,
+          "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secretx").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .body(
           fromFormData("grant_type", "client_credentials"),
@@ -230,7 +257,10 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `unrecognised client id`() {
       webTestClient
         .post().uri("/oauth2/token")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("unrecognised-client-id:test-secret").toByteArray()))
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("unrecognised-client-id:test-secret").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .body(
           fromFormData("grant_type", "client_credentials"),
@@ -264,7 +294,10 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val clientCredentialsResponse = webTestClient
         .post().uri("/oauth2/token")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$urlEncodedClientId:$urlEncodedSecret").toByteArray()))
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("$urlEncodedClientId:$urlEncodedSecret").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .body(
           fromFormData("grant_type", "client_credentials"),
@@ -280,6 +313,28 @@ class OAuthIntTest : IntegrationTestBase() {
       val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.get("sub")).isEqualTo("url-encode-client-credentials")
     }
+
+    @Test
+    fun `Incorrect secret with invalid url encoded characters`() {
+      webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          HttpHeaders.AUTHORIZATION,
+          "Basic " + Base64.getEncoder().encodeToString(("test-client-id:test-secret%Y").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isUnauthorized
+
+      verify(telemetryClient).trackEvent(
+        "AuthorizationApiCreateAccessTokenFailure",
+        mapOf("clientId" to "test-client-id", "clientIpAddress" to "127.0.0.1"),
+        null,
+      )
+    }
   }
 
   @Nested
@@ -294,7 +349,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `unauthenticated user`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE", "ROLE_OAUTH_ADMIN"))
         .exchange()
         .expectStatus().isUnauthorized
@@ -303,7 +359,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `invalid client id`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$invalidClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$invalidClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE", "ROLE_OAUTH_ADMIN"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -313,7 +370,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `invalid redirect url`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$invalidRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$invalidRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -333,7 +391,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `missing client credentials token`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isUnauthorized
@@ -342,7 +401,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `client credentials token with incorrect authority`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_NOT_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -352,7 +412,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `client credentials token with no authority`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader())
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -362,7 +423,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `success redirects with code`() {
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -374,7 +436,8 @@ class OAuthIntTest : IntegrationTestBase() {
     @Test
     fun `authorization code has is valid for the default duration when no override has been defined`() {
       val location = webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -404,7 +467,8 @@ class OAuthIntTest : IntegrationTestBase() {
     fun `code convert to token`() {
       var header: String? = null
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -423,7 +487,10 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val tokenResponse = webTestClient
         .post().uri("/oauth2/token")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()))
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .bodyValue(
           formData,
@@ -447,7 +514,14 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
 
       val token = getTokenPayload(String(tokenResponse))
-      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
+      assertThat(token.get("authorities").toString()).isEqualTo(
+        JSONArray(
+          listOf(
+            "ROLE_TESTING",
+            "ROLE_MORE_TESTING",
+          ),
+        ).toString(),
+      )
       assertThat(token.get("sub")).isEqualTo("username")
       assertThat(token.get("client_id")).isEqualTo(validClientId)
       assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
@@ -469,7 +543,8 @@ class OAuthIntTest : IntegrationTestBase() {
 
       var header: String? = null
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$urlEncodedClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$urlEncodedClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -488,7 +563,10 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val tokenResponse = webTestClient
         .post().uri("/oauth2/token")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$urlEncodedClientId:$urlEncodedSecret").toByteArray()))
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("$urlEncodedClientId:$urlEncodedSecret").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .bodyValue(
           formData,
@@ -507,7 +585,8 @@ class OAuthIntTest : IntegrationTestBase() {
       val validClientId = "test-auth-code-client-with-jwt-settings"
       var header: String? = null
       webTestClient
-        .get().uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
@@ -526,7 +605,10 @@ class OAuthIntTest : IntegrationTestBase() {
 
       val tokenResponse = webTestClient
         .post().uri("/oauth2/token")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()))
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()),
+        )
         .contentType(APPLICATION_FORM_URLENCODED)
         .bodyValue(
           formData,
@@ -551,7 +633,14 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.optString("user_name", null)).isNull()
 
       val token = getTokenPayload(String(tokenResponse))
-      assertThat(token.get("authorities").toString()).isEqualTo(JSONArray(listOf("ROLE_TESTING", "ROLE_MORE_TESTING")).toString())
+      assertThat(token.get("authorities").toString()).isEqualTo(
+        JSONArray(
+          listOf(
+            "ROLE_TESTING",
+            "ROLE_MORE_TESTING",
+          ),
+        ).toString(),
+      )
       assertThat(token.get("sub")).isEqualTo("username")
 
       assertThat(token.get("client_id")).isEqualTo(validClientId)
