@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.9"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.0"
   kotlin("plugin.spring") version "2.0.21"
   kotlin("plugin.jpa") version "2.0.21"
 }
@@ -18,14 +18,14 @@ dependencies {
   implementation("org.springframework.security:spring-security-oauth2-authorization-server")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
   implementation("org.json:json:20240303")
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.12.0")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.jsonwebtoken:jjwt:0.12.6")
-  implementation("net.javacrumbs.shedlock:shedlock-spring:5.16.0")
-  implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.16.0")
+  implementation("net.javacrumbs.shedlock:shedlock-spring:6.0.2")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.0.2")
 
   runtimeOnly("com.h2database:h2:2.3.232")
   runtimeOnly("org.postgresql:postgresql:42.7.4")
