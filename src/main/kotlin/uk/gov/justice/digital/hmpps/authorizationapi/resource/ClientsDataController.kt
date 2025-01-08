@@ -28,4 +28,5 @@ data class ClientDetailsResponse(
   val skipToAzure: Boolean?,
   val ips: List<String>?,
   val expired: Boolean,
+  val redirectUris: List<String>?,
 )
