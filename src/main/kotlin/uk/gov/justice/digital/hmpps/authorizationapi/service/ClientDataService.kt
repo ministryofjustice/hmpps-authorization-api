@@ -36,6 +36,7 @@ class ClientDataService(
         skipToAzure = skipToAzure,
         ips = clientConfigsMap[clientIdService.toBase(clientId)]?.ips,
         expired = isExpired(clientId, clientConfigsMap),
+        redirectUris = getRegisteredRedirectUriWithNewlines()?.toList(),
       )
     }
 

@@ -92,7 +92,7 @@ class ClientDataServiceTest {
       assertClientDetailsResponse(actual, true)
     }
 
-    fun assertClientDetailsResponse(actual: List<ClientDetailsResponse>, expectedExpired: Boolean) {
+    private fun assertClientDetailsResponse(actual: List<ClientDetailsResponse>, expectedExpired: Boolean) {
       assertThat(actual).isNotNull
       assertThat(actual).hasSize(1)
       assertThat(actual[0].clientId).isEqualTo(CLIENT_ID)
@@ -103,6 +103,7 @@ class ClientDataServiceTest {
       assertThat(actual[0].skipToAzure).isFalse()
       assertThat(actual[0].ips).containsExactly("127.0.0.1")
       assertThat(actual[0].expired).isEqualTo(expectedExpired)
+      assertThat(actual[0].redirectUris).isEqualTo(listOf("http://localhost:8080"))
     }
 
     private fun getTestClient() = Client(

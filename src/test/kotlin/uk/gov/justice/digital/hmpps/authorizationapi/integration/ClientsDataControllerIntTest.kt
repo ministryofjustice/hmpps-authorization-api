@@ -48,6 +48,7 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[0].skipToAzure").isBoolean
         .jsonPath("\$.[0].mfaRememberMe").isBoolean
         .jsonPath("\$.[0].ips").doesNotExist()
+        .jsonPath("\$.[0].redirectUris").doesNotExist()
         .jsonPath("\$.[0].authorities[*]").value<List<String>> {
           assertThat(it)
             .containsExactlyInAnyOrder(
@@ -81,6 +82,13 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[6].expired").isEqualTo(false)
         .jsonPath("\$.[7].expired").isEqualTo(false)
         .jsonPath("\$.[8].expired").isEqualTo(false)
+        .jsonPath("\$.[8].redirectUris[*]").value<List<String>> {
+          assertThat(it)
+            .containsExactlyInAnyOrder(
+              "http://127.0.0.1:8089/login/oauth2/code/oidc-client",
+              "https://oauth.pstmn.io/v1/callback",
+            )
+        }
         .jsonPath("\$.[9].expired").isEqualTo(false)
         .jsonPath("\$.[10].expired").isEqualTo(false)
         .jsonPath("\$.[11].expired").isEqualTo(true)
