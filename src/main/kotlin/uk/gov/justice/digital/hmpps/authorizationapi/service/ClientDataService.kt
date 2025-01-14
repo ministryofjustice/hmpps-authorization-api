@@ -32,7 +32,6 @@ class ClientDataService(
       ClientLastAccessedResponse(
         it.clientId,
         it.getLastAccessedDate().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-        System.getenv("HOSTNAME") ?: "unknown",
       )
     }
 

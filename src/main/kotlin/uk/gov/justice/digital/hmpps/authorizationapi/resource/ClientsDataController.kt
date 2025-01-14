@@ -38,4 +38,4 @@ data class ClientDetailsResponse(
   val redirectUris: List<String>?,
 )
 
-data class ClientLastAccessedResponse(val clientId: String, val lastAccessed: LocalDateTime, val pod: String)
+data class ClientLastAccessedResponse(val clientId: String, val lastAccessed: LocalDateTime)
