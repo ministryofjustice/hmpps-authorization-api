@@ -114,9 +114,9 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
         .jsonPath("$.clients[6].count").isEqualTo(1)
         .jsonPath("$.clients[6].expired").isEmpty
         .jsonPath("\$.clients[8].baseClientId").isEqualTo("test-client-id")
-        .jsonPath("\$.clients[8].lastAccessed").isEqualTo("2024-08-22T10:30:30Z")
+        .jsonPath("\$.clients[8].lastAccessed").isEqualTo("2024-08-22T11:30:30Z")
         .jsonPath("\$.clients[5].baseClientId").isEqualTo("test-auth-code-client")
-        .jsonPath("\$.clients[5].lastAccessed").isEqualTo("2024-08-19T17:36:27Z")
+        .jsonPath("\$.clients[5].lastAccessed").isEqualTo("2024-08-19T18:36:27Z")
         .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(13) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
