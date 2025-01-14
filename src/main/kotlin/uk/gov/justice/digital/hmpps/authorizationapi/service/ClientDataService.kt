@@ -9,7 +9,9 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientDetailsResponse
+import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientLastAccessedResponse
 import java.time.LocalDate
+import java.time.ZoneId
 
 @Service
 class ClientDataService(
@@ -24,6 +26,15 @@ class ClientDataService(
     val allClientConfigsMap = clientConfigRepository.findAll().associateBy { it.baseClientId }
     return allClients.map { client -> mapToClientDetails(client, allClientConfigsMap) }
   }
+
+  fun getAllClientsWithLastAccessed(): List<ClientLastAccessedResponse> =
+    clientRepository.findAll().map {
+      ClientLastAccessedResponse(
+        it.clientId,
+        it.getLastAccessedDate().atZone(ZoneId.systemDefault()).toLocalDateTime(),
+        System.getenv("HOSTNAME") ?: "unknown",
+      )
+    }
 
   private fun mapToClientDetails(client: Client, clientConfigsMap: Map<String, ClientConfig>) =
     with(client) {

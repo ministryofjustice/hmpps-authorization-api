@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import java.time.LocalDateTime
 
 class ClientsDataControllerIntTest : IntegrationTestBase() {
 
@@ -92,6 +93,51 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .jsonPath("\$.[9].expired").isEqualTo(false)
         .jsonPath("\$.[10].expired").isEqualTo(false)
         .jsonPath("\$.[11].expired").isEqualTo(true)
+    }
+  }
+
+  @Nested
+  inner class GetAllClientsWithLastAccessed {
+    @Test
+    fun `access unauthorized when no authority`() {
+      webTestClient.get().uri("/client-details-last-accessed")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.get().uri("/client-details-last-accessed")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.get().uri("/client-details-last-accessed")
+        .headers(setAuthorisation(roles = listOf("WRONG")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `get clients details with last accessed success`() {
+      webTestClient.get().uri("/client-details-last-accessed")
+        .headers(setAuthorisation(roles = listOf("ROLE_OAUTH_ADMIN")))
+        .exchange()
+        .expectStatus().isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody()
+        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(14) }
+        .jsonPath("\$.[0].clientId").isEqualTo("test-client-id")
+        .jsonPath("\$.[0].lastAccessed").isEqualTo("2024-08-22T11:30:30")
+        .jsonPath("\$.[1].clientId").isEqualTo("test-client-create-id")
+        .jsonPath("\$.[1].lastAccessed").value { lastAccessed: String ->
+          val lastAccessedTime = LocalDateTime.parse(lastAccessed)
+          val now = LocalDateTime.now()
+          assertThat(lastAccessedTime).isBetween(now.minusMinutes(1), now)
+        }
     }
   }
 }

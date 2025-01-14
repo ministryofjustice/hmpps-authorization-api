@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.MfaAccess
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientDataService
+import java.time.LocalDateTime
 
 @Controller
 class ClientsDataController(
@@ -16,6 +17,12 @@ class ClientsDataController(
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun listClientDetails(): ResponseEntity<Any> {
     return ResponseEntity.ok(clientDataService.fetchClientDetails())
+  }
+
+  @GetMapping("client-details-last-accessed")
+  @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
+  fun getAllClientsAndLastAccessed(): ResponseEntity<Any> {
+    return ResponseEntity.ok(clientDataService.getAllClientsWithLastAccessed())
   }
 }
 
@@ -30,3 +37,5 @@ data class ClientDetailsResponse(
   val expired: Boolean,
   val redirectUris: List<String>?,
 )
+
+data class ClientLastAccessedResponse(val clientId: String, val lastAccessed: LocalDateTime, val pod: String)
