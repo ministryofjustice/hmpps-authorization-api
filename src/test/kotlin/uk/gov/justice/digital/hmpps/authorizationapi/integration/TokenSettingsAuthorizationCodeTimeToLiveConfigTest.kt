@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.TestPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.AuthorizationConsent
@@ -42,7 +42,7 @@ class TokenSettingsAuthorizationCodeTimeToLiveConfigTest : IntegrationTestBase()
   @Autowired
   lateinit var authorizationConsentRepository: AuthorizationConsentRepository
 
-  @MockBean
+  @MockitoBean
   lateinit var oAuthClientSecretGenerator: OAuthClientSecret
 
   companion object {

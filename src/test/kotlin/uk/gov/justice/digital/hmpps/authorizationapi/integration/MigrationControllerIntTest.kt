@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.ClientType
@@ -40,7 +40,7 @@ class MigrationControllerIntTest : IntegrationTestBase() {
   @Autowired
   lateinit var clientDeploymentRepository: ClientDeploymentRepository
 
-  @MockBean
+  @MockitoBean
   private lateinit var telemetryClient: TelemetryClient
 
   @Nested

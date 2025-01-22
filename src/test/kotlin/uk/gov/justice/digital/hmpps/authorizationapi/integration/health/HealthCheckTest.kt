@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.whenever
 import org.springframework.boot.actuate.health.Health
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.authorizationapi.health.AuthHealthInfo
 import uk.gov.justice.digital.hmpps.authorizationapi.integration.IntegrationTestBase
 import java.time.LocalDateTime
@@ -13,7 +13,7 @@ import java.util.function.Consumer
 
 class HealthCheckTest : IntegrationTestBase() {
 
-  @MockBean
+  @MockitoBean
   lateinit var authHealthInfo: AuthHealthInfo
 
   @Test

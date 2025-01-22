@@ -14,11 +14,11 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.authorizationapi.adapter.AuthService
 import uk.gov.justice.digital.hmpps.authorizationapi.adapter.ServiceDetails
@@ -56,13 +56,13 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
   @Autowired
   lateinit var clientDeploymentRepository: ClientDeploymentRepository
 
-  @MockBean
+  @MockitoBean
   lateinit var oAuthClientSecretGenerator: OAuthClientSecret
 
-  @MockBean
+  @MockitoBean
   lateinit var authService: AuthService
 
-  @MockBean
+  @MockitoBean
   private lateinit var telemetryClient: TelemetryClient
 
   @Autowired
