@@ -103,21 +103,21 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("$.clients[0].baseClientId").isEqualTo("expiry-test-client")
         .jsonPath("$.clients[0].expired").isEqualTo("EXPIRED")
-        .jsonPath("$.clients[7].baseClientId").isEqualTo("test-client-create-id")
-        .jsonPath("$.clients[7].clientType").isEqualTo("PERSONAL")
-        .jsonPath("$.clients[7].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[7].grantType").isEqualTo("client_credentials")
-        .jsonPath("$.clients[7].roles").isEqualTo(
+        .jsonPath("$.clients[8].baseClientId").isEqualTo("test-client-create-id")
+        .jsonPath("$.clients[8].clientType").isEqualTo("PERSONAL")
+        .jsonPath("$.clients[8].teamName").isEqualTo("HAAR")
+        .jsonPath("$.clients[8].grantType").isEqualTo("client_credentials")
+        .jsonPath("$.clients[8].roles").isEqualTo(
           "AUDIT\n" +
             "OAUTH_ADMIN\nTESTING\nVIEW_AUTH_SERVICE_DETAILS",
         )
         .jsonPath("$.clients[6].count").isEqualTo(1)
         .jsonPath("$.clients[6].expired").isEmpty
-        .jsonPath("\$.clients[8].baseClientId").isEqualTo("test-client-id")
-        .jsonPath("\$.clients[8].lastAccessed").isEqualTo("2024-08-22T11:30:30Z")
-        .jsonPath("\$.clients[5].baseClientId").isEqualTo("test-auth-code-client")
-        .jsonPath("\$.clients[5].lastAccessed").isEqualTo("2024-08-19T18:36:27Z")
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(13) }
+        .jsonPath("\$.clients[9].baseClientId").isEqualTo("test-client-id")
+        .jsonPath("\$.clients[9].lastAccessed").isEqualTo("2024-08-22T11:30:30Z")
+        .jsonPath("\$.clients[6].baseClientId").isEqualTo("test-auth-code-client")
+        .jsonPath("\$.clients[6].lastAccessed").isEqualTo("2024-08-19T18:36:27Z")
+        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(14) }
         .jsonPath("$.clients[*].baseClientId").value<List<String>> {
           assertThat(it).containsAll(
             listOf(
@@ -134,6 +134,7 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
               "test-duplicate-id",
               "url-encode-auth-code",
               "url-encode-client-credentials",
+              "hmpps-authorization-client",
             ),
           )
         }

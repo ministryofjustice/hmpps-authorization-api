@@ -43,8 +43,8 @@ class AuthSourceConverter : AttributeConverter<AuthSource, String> {
 }
 
 @Converter
-class InstantConverter : AttributeConverter<Instant, Timestamp> {
-  override fun convertToDatabaseColumn(source: Instant): Timestamp = Timestamp.from(source)
+object InstantConverter : AttributeConverter<Instant?, Timestamp?> {
+  override fun convertToDatabaseColumn(source: Instant?): Timestamp? = source?.let { Timestamp.from(it) }
 
-  override fun convertToEntityAttribute(persistedValue: Timestamp): Instant = persistedValue.toInstant()
+  override fun convertToEntityAttribute(persistedValue: Timestamp?): Instant? = persistedValue?.toInstant()
 }
