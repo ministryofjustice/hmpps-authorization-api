@@ -14,13 +14,13 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters.fromFormData
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
@@ -44,7 +44,7 @@ class OAuthIntTest : IntegrationTestBase() {
   @Autowired
   private lateinit var oAuthClientSecret: OAuthClientSecret
 
-  @MockBean
+  @MockitoBean
   private lateinit var telemetryClient: TelemetryClient
 
   @Nested

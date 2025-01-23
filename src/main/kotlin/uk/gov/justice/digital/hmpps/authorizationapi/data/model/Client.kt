@@ -24,10 +24,12 @@ data class Client(
 
   var clientId: String,
 
+  @Convert(converter = InstantConverter::class)
   val clientIdIssuedAt: Instant,
 
   var clientSecret: String? = null,
 
+  @Convert(converter = InstantConverter::class)
   val clientSecretExpiresAt: Instant? = null,
 
   var clientName: String,
