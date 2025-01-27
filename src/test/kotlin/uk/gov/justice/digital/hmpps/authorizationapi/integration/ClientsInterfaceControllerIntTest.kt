@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -31,10 +32,12 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientDeploymentRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.resource.AllClientsResponse
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.util.Base64.getEncoder
 import java.util.Optional
@@ -100,43 +103,28 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-        .jsonPath("$.clients[0].baseClientId").isEqualTo("expiry-test-client")
-        .jsonPath("$.clients[0].expired").isEqualTo("EXPIRED")
-        .jsonPath("$.clients[8].baseClientId").isEqualTo("test-client-create-id")
-        .jsonPath("$.clients[8].clientType").isEqualTo("PERSONAL")
-        .jsonPath("$.clients[8].teamName").isEqualTo("HAAR")
-        .jsonPath("$.clients[8].grantType").isEqualTo("client_credentials")
-        .jsonPath("$.clients[8].roles").isEqualTo(
-          "AUDIT\n" +
-            "OAUTH_ADMIN\nTESTING\nVIEW_AUTH_SERVICE_DETAILS",
-        )
-        .jsonPath("$.clients[6].count").isEqualTo(1)
-        .jsonPath("$.clients[6].expired").isEmpty
-        .jsonPath("\$.clients[9].baseClientId").isEqualTo("test-client-id")
-        .jsonPath("\$.clients[9].lastAccessed").isEqualTo("2024-08-22T11:30:30Z")
-        .jsonPath("\$.clients[6].baseClientId").isEqualTo("test-auth-code-client")
-        .jsonPath("\$.clients[6].lastAccessed").isEqualTo("2024-08-19T18:36:27Z")
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> { assertThat(it).hasSize(14) }
-        .jsonPath("$.clients[*].baseClientId").value<List<String>> {
-          assertThat(it).containsAll(
-            listOf(
-              "expiry-test-client",
-              "hmpps-auth-authorization-api-client",
-              "ip-allow-a-client",
-              "ip-allow-b-client",
-              "ip-allow-c-client",
-              "test-auth-code-client",
-              "test-auth-code-client-with-jwt-settings",
-              "test-client-create-id",
-              "test-client-id",
-              "test-complete-details-id",
-              "test-duplicate-id",
-              "url-encode-auth-code",
-              "url-encode-client-credentials",
-              "hmpps-authorization-client",
-            ),
-          )
+        .expectBody(AllClientsResponse::class.java).value { allClients ->
+          val expiryTestClient = allClients.clients.first { it.baseClientId == "expiry-test-client" }
+          assertEquals("EXPIRED", expiryTestClient.expired)
+
+          val testClientCreateIdClient = allClients.clients.first { it.baseClientId == "test-client-create-id" }
+          assertEquals(ClientType.PERSONAL, testClientCreateIdClient.clientType)
+          assertEquals("HAAR", testClientCreateIdClient.teamName)
+          assertEquals(GrantType.client_credentials, testClientCreateIdClient.grantType)
+          assertEquals("AUDIT\nOAUTH_ADMIN\nTESTING\nVIEW_AUTH_SERVICE_DETAILS", testClientCreateIdClient.roles)
+
+          val ipAllowCClient = allClients.clients.first { it.baseClientId == "ip-allow-c-client" }
+          assertEquals(1, ipAllowCClient.count)
+          assertNull(ipAllowCClient.expired)
+
+          val testClientIdClient = allClients.clients.first { it.baseClientId == "test-client-id" }
+          assertEquals(Instant.parse("2024-08-22T11:30:30Z"), testClientIdClient.lastAccessed)
+
+          val testAuthCodeClient = allClients.clients.first { it.baseClientId == "test-auth-code-client" }
+          assertEquals(Instant.parse("2024-08-19T18:36:27Z"), testAuthCodeClient.lastAccessed)
+
+          // 160 clients in total, but some are duplicates so 154 base client IDs
+          assertEquals(154, allClients.clients.size)
         }
     }
 
