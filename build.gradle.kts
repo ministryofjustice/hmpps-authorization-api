@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.2"
-  kotlin("plugin.spring") version "2.0.21"
-  kotlin("plugin.jpa") version "2.0.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.0.0-beta"
+  kotlin("plugin.spring") version "2.1.10"
+  kotlin("plugin.jpa") version "2.1.10"
 }
 
 configurations {
@@ -18,17 +18,17 @@ dependencies {
   implementation("org.springframework.security:spring-security-oauth2-authorization-server")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
-  implementation("org.json:json:20240303")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
+  implementation("org.json:json:20250107")
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.13.0")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.jsonwebtoken:jjwt:0.12.6")
-  implementation("net.javacrumbs.shedlock:shedlock-spring:6.0.2")
-  implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.0.2")
+  implementation("net.javacrumbs.shedlock:shedlock-spring:6.2.0")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.2.0")
 
   runtimeOnly("com.h2database:h2:2.3.232")
-  runtimeOnly("org.postgresql:postgresql:42.7.4")
+  runtimeOnly("org.postgresql:postgresql:42.7.5")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 

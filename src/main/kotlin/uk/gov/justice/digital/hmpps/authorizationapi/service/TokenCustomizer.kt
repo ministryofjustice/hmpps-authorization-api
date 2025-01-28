@@ -42,8 +42,7 @@ class TokenCustomizer(
   }
 
   override fun customize(context: JwtEncodingContext?) {
-    context?.let {
-        jwtEncodingContext ->
+    context?.let { jwtEncodingContext ->
       addIssuerClaimTo(jwtEncodingContext)
       suppressAudienceClaim(jwtEncodingContext)
 

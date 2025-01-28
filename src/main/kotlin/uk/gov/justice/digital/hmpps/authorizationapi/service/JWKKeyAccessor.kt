@@ -72,10 +72,8 @@ class JWKKeyAccessor(
 
   private fun initializeAuxiliaryKeyStore() = initializeKeyStore(privateKeyPairAuxiliary, keystorePasswordAuxiliary)
 
-  private fun buildRSAKey(keyPair: KeyPair, keyId: String): RSAKey {
-    return keyPair.let { RSAKey.Builder(it.public as? RSAPublicKey) }
-      .keyUse(KeyUse.SIGNATURE)
-      .algorithm(JWSAlgorithm.RS256)
-      .keyID(keyId).build()
-  }
+  private fun buildRSAKey(keyPair: KeyPair, keyId: String): RSAKey = keyPair.let { RSAKey.Builder(it.public as? RSAPublicKey) }
+    .keyUse(KeyUse.SIGNATURE)
+    .algorithm(JWSAlgorithm.RS256)
+    .keyID(keyId).build()
 }

@@ -67,9 +67,7 @@ class ClientCredentialsRequestValidatorTest {
     verify(delegate, never()).authenticate(authenticationToken)
   }
 
-  private fun givenAClientConfig(expiryDate: LocalDate?, vararg allowedIPs: String): ClientConfig {
-    return ClientConfig(clientId, allowedIPs.asList(), expiryDate)
-  }
+  private fun givenAClientConfig(expiryDate: LocalDate?, vararg allowedIPs: String): ClientConfig = ClientConfig(clientId, allowedIPs.asList(), expiryDate)
 
   private fun givenAToken(): OAuth2ClientCredentialsAuthenticationToken {
     val registeredClient = RegisteredClient.withId("1234")

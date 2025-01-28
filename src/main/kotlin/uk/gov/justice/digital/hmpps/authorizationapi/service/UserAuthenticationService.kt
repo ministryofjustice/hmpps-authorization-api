@@ -44,11 +44,7 @@ class UserAuthenticationService(
     delegateOAuth2AuthorizationService.remove(authorization)
   }
 
-  override fun findById(id: String?): OAuth2Authorization? {
-    return delegateOAuth2AuthorizationService.findById(id)
-  }
+  override fun findById(id: String?): OAuth2Authorization? = delegateOAuth2AuthorizationService.findById(id)
 
-  override fun findByToken(token: String?, tokenType: OAuth2TokenType?): OAuth2Authorization? {
-    return delegateOAuth2AuthorizationService.findByToken(token, tokenType)
-  }
+  override fun findByToken(token: String?, tokenType: OAuth2TokenType?): OAuth2Authorization? = delegateOAuth2AuthorizationService.findByToken(token, tokenType)
 }

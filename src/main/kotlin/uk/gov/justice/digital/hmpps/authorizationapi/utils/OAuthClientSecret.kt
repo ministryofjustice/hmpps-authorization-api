@@ -14,9 +14,7 @@ class OAuthClientSecret {
     ('a'..'z') + ('A'..'Z') + '!' + ('$'..'&') + ('*'..'+') + '-' + ('0'..'9') + '<' + '>'
   var randomSpecialChar: SecureRandom = SecureRandom()
 
-  fun encode(secret: String): String {
-    return passwordEncoder.encode(secret)
-  }
+  fun encode(secret: String): String = passwordEncoder.encode(secret)
   fun generate(): String = (1..60)
     .map { randomSpecialChar.nextInt(charPoolLimitSpecialChar.size) }
     .map(charPoolLimitSpecialChar::get)

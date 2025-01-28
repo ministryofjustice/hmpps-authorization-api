@@ -27,8 +27,7 @@ class PublicKeyController @Autowired constructor(
     )
   }
 
-  private fun convertNewLinesToArray(formattedKey: String): Array<String> =
-    formattedKey.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+  private fun convertNewLinesToArray(formattedKey: String): Array<String> = formattedKey.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
   private fun getFormattedKey(pk: PublicKey): String {
     val builder = StringBuilder()

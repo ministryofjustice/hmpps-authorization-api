@@ -98,15 +98,13 @@ class AuthorizationApiConfig(
         converters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
       }
 
-      clientAuthenticationCustomizer.authenticationProviders {
-          authenticationProviders ->
+      clientAuthenticationCustomizer.authenticationProviders { authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
       }
     }
 
     authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
-      tokenEndpointConfigurer.authenticationProviders {
-          authenticationProviders ->
+      tokenEndpointConfigurer.authenticationProviders { authenticationProviders ->
         authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
       }
 
@@ -153,14 +151,10 @@ class AuthorizationApiConfig(
   }
 
   @Bean
-  fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder {
-    return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
-  }
+  fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder = OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
 
   @Bean
-  fun providerSettings(): AuthorizationServerSettings {
-    return AuthorizationServerSettings.builder().issuer("$baseUrl$contextPath").build()
-  }
+  fun providerSettings(): AuthorizationServerSettings = AuthorizationServerSettings.builder().issuer("$baseUrl$contextPath").build()
 
   @Bean
   fun passwordEncoder(): PasswordEncoder {
@@ -187,17 +181,13 @@ class AuthorizationApiConfig(
   fun registeredClientRepository(jdbcTemplate: JdbcTemplate) = JdbcRegisteredClientRepository(jdbcTemplate)
 
   @Bean
-  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository, userAuthorizationCodeRepository: UserAuthorizationCodeRepository): OAuth2AuthorizationService {
-    return UserAuthenticationService(JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository), userAuthorizationCodeRepository)
-  }
+  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository, userAuthorizationCodeRepository: UserAuthorizationCodeRepository): OAuth2AuthorizationService = UserAuthenticationService(JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository), userAuthorizationCodeRepository)
 
   @Bean
   fun authorizationConsentService(
     jdbcTemplate: JdbcTemplate,
     registeredClientRepository: RegisteredClientRepository,
-  ): OAuth2AuthorizationConsentService {
-    return JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository)
-  }
+  ): OAuth2AuthorizationConsentService = JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository)
 
   @Bean
   fun userDetailsService(jdbcTemplate: JdbcTemplate): UserDetailsService {
@@ -207,18 +197,16 @@ class AuthorizationApiConfig(
   }
 
   @Bean
-  fun lockProvider(jdbcTemplate: JdbcTemplate, platformTransactionManager: PlatformTransactionManager): LockProvider {
-    return JdbcTemplateLockProvider(
-      JdbcTemplateLockProvider.Configuration.builder()
-        .withTableName("scheduled_job_lock")
-        .withJdbcTemplate(jdbcTemplate)
-        .withDatabaseProduct(DatabaseProduct.POSTGRES_SQL)
-        .withTransactionManager(platformTransactionManager)
-        .withIsolationLevel(Connection.TRANSACTION_SERIALIZABLE)
-        .usingDbTime()
-        .build(),
-    )
-  }
+  fun lockProvider(jdbcTemplate: JdbcTemplate, platformTransactionManager: PlatformTransactionManager): LockProvider = JdbcTemplateLockProvider(
+    JdbcTemplateLockProvider.Configuration.builder()
+      .withTableName("scheduled_job_lock")
+      .withJdbcTemplate(jdbcTemplate)
+      .withDatabaseProduct(DatabaseProduct.POSTGRES_SQL)
+      .withTransactionManager(platformTransactionManager)
+      .withIsolationLevel(Connection.TRANSACTION_SERIALIZABLE)
+      .usingDbTime()
+      .build(),
+  )
 
   private fun withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider is ClientSecretAuthenticationProvider) {

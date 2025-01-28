@@ -13,13 +13,12 @@ class SignedJwtParser(
   private val keyPair = jwkKeyAccessor.getPrimaryKeyPair()
   private val keyPairAuxiliary = jwkKeyAccessor.getAuxiliaryKeyPair()
 
-  fun parseSignedJwt(jwt: String): Claims =
-    try {
-      Jwts.parser().verifyWith(keyPair.public).build().parseSignedClaims(jwt).payload
-    } catch (ex: SignatureException) {
-      if (keyPairAuxiliary == null) {
-        throw ex
-      }
-      Jwts.parser().verifyWith(keyPairAuxiliary.public).build().parseSignedClaims(jwt).payload
+  fun parseSignedJwt(jwt: String): Claims = try {
+    Jwts.parser().verifyWith(keyPair.public).build().parseSignedClaims(jwt).payload
+  } catch (ex: SignatureException) {
+    if (keyPairAuxiliary == null) {
+      throw ex
     }
+    Jwts.parser().verifyWith(keyPairAuxiliary.public).build().parseSignedClaims(jwt).payload
+  }
 }

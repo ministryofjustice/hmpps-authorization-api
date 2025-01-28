@@ -39,9 +39,7 @@ class ClientCredentialsRequestValidator(
     return null
   }
 
-  override fun supports(authentication: Class<*>): Boolean {
-    return OAuth2ClientCredentialsAuthenticationToken::class.java.isAssignableFrom(authentication)
-  }
+  override fun supports(authentication: Class<*>): Boolean = OAuth2ClientCredentialsAuthenticationToken::class.java.isAssignableFrom(authentication)
 }
 
 class ClientExpiredException(clientId: String) : AuthenticationException("Client $clientId has expired")

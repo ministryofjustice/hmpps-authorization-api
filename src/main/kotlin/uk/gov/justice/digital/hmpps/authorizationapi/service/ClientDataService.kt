@@ -28,37 +28,33 @@ class ClientDataService(
     return allClients.map { client -> mapToClientDetails(client, allClientConfigsMap) }
   }
 
-  fun getAllClientsWithLastAccessed(): List<ClientLastAccessedResponse> =
-    clientRepository.findAll().map {
-      ClientLastAccessedResponse(
-        it.clientId,
-        LocalDateTime.ofInstant(it.getLastAccessedDate(), ZoneOffset.UTC),
-      )
-    }
-
-  private fun mapToClientDetails(client: Client, clientConfigsMap: Map<String, ClientConfig>) =
-    with(client) {
-      ClientDetailsResponse(
-        clientId = clientId,
-        scopes = scopes,
-        mfaRememberMe = mfaRememberMe,
-        mfa = mfa,
-        authorities = retrieveAuthorizationConsent(client)?.authorities,
-        skipToAzure = skipToAzure,
-        ips = clientConfigsMap[clientIdService.toBase(clientId)]?.ips,
-        expired = isExpired(clientId, clientConfigsMap),
-        redirectUris = getRegisteredRedirectUriWithNewlines()?.toList(),
-      )
-    }
-
-  private fun retrieveAuthorizationConsent(client: Client) =
-    authorizationConsentRepository.findByIdOrNull(
-      AuthorizationConsent.AuthorizationConsentId(
-        client.id,
-        client.clientId,
-      ),
+  fun getAllClientsWithLastAccessed(): List<ClientLastAccessedResponse> = clientRepository.findAll().map {
+    ClientLastAccessedResponse(
+      it.clientId,
+      LocalDateTime.ofInstant(it.getLastAccessedDate(), ZoneOffset.UTC),
     )
+  }
 
-  private fun isExpired(clientId: String, clientConfigsMap: Map<String, ClientConfig>) =
-    clientConfigsMap[clientIdService.toBase(clientId)]?.clientEndDate?.isBefore(LocalDate.now()) ?: false
+  private fun mapToClientDetails(client: Client, clientConfigsMap: Map<String, ClientConfig>) = with(client) {
+    ClientDetailsResponse(
+      clientId = clientId,
+      scopes = scopes,
+      mfaRememberMe = mfaRememberMe,
+      mfa = mfa,
+      authorities = retrieveAuthorizationConsent(client)?.authorities,
+      skipToAzure = skipToAzure,
+      ips = clientConfigsMap[clientIdService.toBase(clientId)]?.ips,
+      expired = isExpired(clientId, clientConfigsMap),
+      redirectUris = getRegisteredRedirectUriWithNewlines()?.toList(),
+    )
+  }
+
+  private fun retrieveAuthorizationConsent(client: Client) = authorizationConsentRepository.findByIdOrNull(
+    AuthorizationConsent.AuthorizationConsentId(
+      client.id,
+      client.clientId,
+    ),
+  )
+
+  private fun isExpired(clientId: String, clientConfigsMap: Map<String, ClientConfig>) = clientConfigsMap[clientIdService.toBase(clientId)]?.clientEndDate?.isBefore(LocalDate.now()) ?: false
 }

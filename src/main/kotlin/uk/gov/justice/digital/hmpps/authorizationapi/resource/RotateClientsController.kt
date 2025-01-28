@@ -26,14 +26,12 @@ class RotateClientsController(
   @GetMapping("rotate/base-clients/{baseClientId}")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_CLIENT_ROTATION_ADMIN')")
-  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> {
-    return ResponseEntity.ok(
-      conversionService.convert(
-        clientsService.retrieveClientFullDetails(baseClientId),
-        ClientViewResponse::class.java,
-      ),
-    )
-  }
+  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> = ResponseEntity.ok(
+    conversionService.convert(
+      clientsService.retrieveClientFullDetails(baseClientId),
+      ClientViewResponse::class.java,
+    ),
+  )
 
   @PostMapping("rotate/base-clients/{baseClientId}/clients")
   @ResponseStatus(HttpStatus.OK)

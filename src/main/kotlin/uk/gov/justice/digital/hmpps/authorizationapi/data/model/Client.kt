@@ -73,27 +73,21 @@ data class Client(
   var resourceIds: List<String>?,
 ) {
 
-  fun getLastAccessedDate(): Instant {
-    return latestClientAuthorization
-      ?.filter { it.accessTokenIssuedAt != null || it.authorizationCodeIssuedAt != null }
-      ?.map { (it.accessTokenIssuedAt ?: it.authorizationCodeIssuedAt)!! }
-      ?.maxOfOrNull { it } ?: clientIdIssuedAt
-  }
+  fun getLastAccessedDate(): Instant = latestClientAuthorization
+    ?.filter { it.accessTokenIssuedAt != null || it.authorizationCodeIssuedAt != null }
+    ?.map { (it.accessTokenIssuedAt ?: it.authorizationCodeIssuedAt)!! }
+    ?.maxOfOrNull { it } ?: clientIdIssuedAt
 
-  fun getRegisteredRedirectUriWithNewlines(): Set<String>? {
-    return redirectUris?.replace("""\s+""".toRegex(), ",")
-      ?.split(',')
-      ?.mapNotNull { StringUtils.trimToNull(it) }
-      ?.toSet()
-  }
+  fun getRegisteredRedirectUriWithNewlines(): Set<String>? = redirectUris?.replace("""\s+""".toRegex(), ",")
+    ?.split(',')
+    ?.mapNotNull { StringUtils.trimToNull(it) }
+    ?.toSet()
 }
 
 @Converter
 class TokenSettingsConverter(private val oAuthJson: OAuthJson) : AttributeConverter<TokenSettings, String> {
 
-  override fun convertToDatabaseColumn(attribute: TokenSettings): String {
-    return oAuthJson.toJsonString(attribute.settings)!!
-  }
+  override fun convertToDatabaseColumn(attribute: TokenSettings): String = oAuthJson.toJsonString(attribute.settings)!!
 
   override fun convertToEntityAttribute(dbData: String): TokenSettings {
     val settings = oAuthJson.readValueFrom(dbData, Map::class.java) as Map<String, Any>
@@ -104,9 +98,7 @@ class TokenSettingsConverter(private val oAuthJson: OAuthJson) : AttributeConver
 @Converter
 class ClientSettingsConverter(private val oAuthJson: OAuthJson) : AttributeConverter<ClientSettings, String> {
 
-  override fun convertToDatabaseColumn(attribute: ClientSettings): String {
-    return oAuthJson.toJsonString(attribute.settings)!!
-  }
+  override fun convertToDatabaseColumn(attribute: ClientSettings): String = oAuthJson.toJsonString(attribute.settings)!!
 
   override fun convertToEntityAttribute(dbData: String): ClientSettings {
     val settings = oAuthJson.readValueFrom(dbData, Map::class.java) as Map<String, Any>
@@ -116,11 +108,9 @@ class ClientSettingsConverter(private val oAuthJson: OAuthJson) : AttributeConve
 
 @Converter
 class StringListConverter : AttributeConverter<List<String>, String?> {
-  override fun convertToDatabaseColumn(stringList: List<String>): String =
-    stringList.filter { it.isNotEmpty() }.joinToString(",") { it.trim() }
+  override fun convertToDatabaseColumn(stringList: List<String>): String = stringList.filter { it.isNotEmpty() }.joinToString(",") { it.trim() }
 
-  override fun convertToEntityAttribute(string: String?): List<String> =
-    string?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
+  override fun convertToEntityAttribute(string: String?): List<String> = string?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
 }
 
 enum class MfaAccess {

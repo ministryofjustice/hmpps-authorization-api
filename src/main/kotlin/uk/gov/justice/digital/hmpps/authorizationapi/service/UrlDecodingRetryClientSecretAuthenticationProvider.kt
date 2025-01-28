@@ -13,23 +13,21 @@ class UrlDecodingRetryClientSecretAuthenticationProvider(
   private val delegate: AuthenticationProvider,
 ) : AuthenticationProvider {
 
-  override fun authenticate(authentication: Authentication?): Authentication? {
-    return try {
-      delegate.authenticate(authentication)
-    } catch (e: OAuth2AuthenticationException) {
-      authentication?.credentials?.let {
-        val urlDecodedCredentials = decodeCredentials(it.toString())
+  override fun authenticate(authentication: Authentication?): Authentication? = try {
+    delegate.authenticate(authentication)
+  } catch (e: OAuth2AuthenticationException) {
+    authentication?.credentials?.let {
+      val urlDecodedCredentials = decodeCredentials(it.toString())
 
-        val clientAuthentication = authentication as OAuth2ClientAuthenticationToken
-        val decodedAuthentication = OAuth2ClientAuthenticationToken(
-          clientAuthentication.principal.toString(),
-          clientAuthentication.clientAuthenticationMethod,
-          urlDecodedCredentials,
-          clientAuthentication.additionalParameters,
-        )
+      val clientAuthentication = authentication as OAuth2ClientAuthenticationToken
+      val decodedAuthentication = OAuth2ClientAuthenticationToken(
+        clientAuthentication.principal.toString(),
+        clientAuthentication.clientAuthenticationMethod,
+        urlDecodedCredentials,
+        clientAuthentication.additionalParameters,
+      )
 
-        delegate.authenticate(decodedAuthentication)
-      }
+      delegate.authenticate(decodedAuthentication)
     }
   }
 
@@ -39,7 +37,5 @@ class UrlDecodingRetryClientSecretAuthenticationProvider(
     throw OAuth2AuthenticationException(OAuth2Error(OAuth2ErrorCodes.INVALID_CLIENT), e)
   }
 
-  override fun supports(authentication: Class<*>): Boolean {
-    return OAuth2ClientAuthenticationToken::class.java.isAssignableFrom(authentication)
-  }
+  override fun supports(authentication: Class<*>): Boolean = OAuth2ClientAuthenticationToken::class.java.isAssignableFrom(authentication)
 }

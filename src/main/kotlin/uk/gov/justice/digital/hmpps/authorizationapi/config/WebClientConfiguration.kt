@@ -47,17 +47,13 @@ class WebClientConfiguration(
   fun authHealthWebClient(
     @Qualifier(value = "authorizedAnonymousClientManagerAppScope") authorizedClientManager: OAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
-  ): WebClient {
-    return getOAuthWebClient(authorizedClientManager, builder, hmppsAuthUri, "hmpps-auth")
-  }
+  ): WebClient = getOAuthWebClient(authorizedClientManager, builder, hmppsAuthUri, "hmpps-auth")
 
   @Bean
   fun authWebClient(
     @Qualifier(value = "authorizedClientManagerAppScope") authorizedClientManager: OAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
-  ): WebClient {
-    return getOAuthWebClient(authorizedClientManager, builder, hmppsAuthUri, "hmpps-auth")
-  }
+  ): WebClient = getOAuthWebClient(authorizedClientManager, builder, hmppsAuthUri, "hmpps-auth")
 
   private fun getOAuthWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,

@@ -109,8 +109,7 @@ class AuthorizationApiExceptionHandler {
       )
   }
 
-  private fun MethodArgumentNotValidException.asErrorList(): List<String> =
-    this.allErrors.mapNotNull { it.defaultMessage }
+  private fun MethodArgumentNotValidException.asErrorList(): List<String> = this.allErrors.mapNotNull { it.defaultMessage }
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

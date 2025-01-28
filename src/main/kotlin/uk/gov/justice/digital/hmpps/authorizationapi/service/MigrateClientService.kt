@@ -59,34 +59,30 @@ class MigrateClientService(
     migrationClientRequest.clientDeploymentDetails?.let { clientsService.saveClientDeploymentDetails(migrationClientRequest.clientId, it) }
   }
 
-  private fun withAuthoritiesPrefix(authorities: List<String>) =
-    authorities
-      .map { it.trim().uppercase() }
-      .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
+  private fun withAuthoritiesPrefix(authorities: List<String>) = authorities
+    .map { it.trim().uppercase() }
+    .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
 
-  private fun getClientEndDate(validDays: Long?): LocalDate? {
-    return validDays?.let {
-      val validDaysIncludeToday = it.minus(1)
-      LocalDate.now().plusDays(validDaysIncludeToday)
-    }
+  private fun getClientEndDate(validDays: Long?): LocalDate? = validDays?.let {
+    val validDaysIncludeToday = it.minus(1)
+    LocalDate.now().plusDays(validDaysIncludeToday)
   }
 
-  private fun mapToClientDetails(migrationClientRequest: MigrationClientRequest) =
-    with(migrationClientRequest) {
-      ClientUpdateRequest(
-        scopes = scopes ?: emptyList(),
-        authorities = authorities ?: emptyList(),
-        jiraNumber = jiraNumber,
-        databaseUserName = databaseUserName,
-        accessTokenValiditySeconds = accessTokenValiditySeconds,
-        jwtFields = jwtFields,
-        mfaRememberMe = mfaRememberMe,
-        mfa = mfa,
-        redirectUris = redirectUris,
-        skipToAzure = skipToAzureField,
-        resourceIds = resourceIds,
-        ips = ips ?: emptyList(),
-        validDays = validDays,
-      )
-    }
+  private fun mapToClientDetails(migrationClientRequest: MigrationClientRequest) = with(migrationClientRequest) {
+    ClientUpdateRequest(
+      scopes = scopes ?: emptyList(),
+      authorities = authorities ?: emptyList(),
+      jiraNumber = jiraNumber,
+      databaseUserName = databaseUserName,
+      accessTokenValiditySeconds = accessTokenValiditySeconds,
+      jwtFields = jwtFields,
+      mfaRememberMe = mfaRememberMe,
+      mfa = mfa,
+      redirectUris = redirectUris,
+      skipToAzure = skipToAzureField,
+      resourceIds = resourceIds,
+      ips = ips ?: emptyList(),
+      validDays = validDays,
+    )
+  }
 }
