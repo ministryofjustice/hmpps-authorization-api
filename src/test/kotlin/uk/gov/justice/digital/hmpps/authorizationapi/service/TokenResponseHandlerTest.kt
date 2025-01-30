@@ -222,14 +222,12 @@ class TokenResponseHandlerTest {
     assertThat(actual.additionalParameters["name"]).isEqualTo("Auth Mfa")
   }
 
-  private fun createTestJwt(jwtId: String, claims: Map<String, Any>): String {
-    return Jwts.builder()
-      .id(jwtId)
-      .subject("AUTH_MFA_PREF_EMAIL4")
-      .claims(claims)
-      .signWith(
-        SignatureAlgorithm.HS256,
-        "ItsSupercalifragilisticexpialidociousEvenThoughTheSoundOfItIsSomethingQuiteAtrocious",
-      ).compact()
-  }
+  private fun createTestJwt(jwtId: String, claims: Map<String, Any>): String = Jwts.builder()
+    .id(jwtId)
+    .subject("AUTH_MFA_PREF_EMAIL4")
+    .claims(claims)
+    .signWith(
+      SignatureAlgorithm.HS256,
+      "ItsSupercalifragilisticexpialidociousEvenThoughTheSoundOfItIsSomethingQuiteAtrocious",
+    ).compact()
 }

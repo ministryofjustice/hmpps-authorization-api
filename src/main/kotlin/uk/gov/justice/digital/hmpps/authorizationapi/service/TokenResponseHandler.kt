@@ -12,8 +12,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import java.time.temporal.ChronoUnit
 import java.util.Base64
 
-class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConverter: OAuth2AccessTokenResponseHttpMessageConverter) :
-  AuthenticationSuccessHandler {
+class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConverter: OAuth2AccessTokenResponseHttpMessageConverter) : AuthenticationSuccessHandler {
   constructor() : this(OAuth2AccessTokenResponseHttpMessageConverter())
 
   override fun onAuthenticationSuccess(

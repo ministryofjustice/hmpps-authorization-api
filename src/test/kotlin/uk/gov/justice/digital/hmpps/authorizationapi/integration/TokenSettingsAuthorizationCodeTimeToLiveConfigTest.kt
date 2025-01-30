@@ -49,13 +49,11 @@ class TokenSettingsAuthorizationCodeTimeToLiveConfigTest : IntegrationTestBase()
     private const val CLIENT_ID_CHARSET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     private val CLIENT_ID = "test-client-${randomString()}"
 
-    private fun randomString(): String {
-      return java.util.Random()
-        .ints(10, 0, CLIENT_ID_CHARSET.length)
-        .asSequence()
-        .map(CLIENT_ID_CHARSET::get)
-        .joinToString("")
-    }
+    private fun randomString(): String = java.util.Random()
+      .ints(10, 0, CLIENT_ID_CHARSET.length)
+      .asSequence()
+      .map(CLIENT_ID_CHARSET::get)
+      .joinToString("")
   }
 
   @AfterEach

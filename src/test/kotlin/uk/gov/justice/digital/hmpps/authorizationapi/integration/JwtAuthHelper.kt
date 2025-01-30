@@ -32,19 +32,18 @@ class JwtAuthHelper(private val keyPair: JWKKeyAccessor) {
     roles: List<String>? = listOf(),
     expiryTime: Duration = Duration.ofHours(1),
     jwtId: String = UUID.randomUUID().toString(),
-  ): String =
-    mutableMapOf<String, Any>()
-      .also { subject?.let { subject -> it["user_name"] = subject } }
-      .also { it["client_id"] = "hmpps-manage-users" }
-      .also { roles?.let { roles -> it["authorities"] = roles } }
-      .also { scope?.let { scope -> it["scope"] = scope } }
-      .let {
-        Jwts.builder()
-          .setId(jwtId)
-          .setSubject(subject)
-          .addClaims(it.toMap())
-          .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
-          .signWith(SignatureAlgorithm.RS256, keyPair.getPrimaryKeyPair().private)
-          .compact()
-      }
+  ): String = mutableMapOf<String, Any>()
+    .also { subject?.let { subject -> it["user_name"] = subject } }
+    .also { it["client_id"] = "hmpps-manage-users" }
+    .also { roles?.let { roles -> it["authorities"] = roles } }
+    .also { scope?.let { scope -> it["scope"] = scope } }
+    .let {
+      Jwts.builder()
+        .setId(jwtId)
+        .setSubject(subject)
+        .addClaims(it.toMap())
+        .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+        .signWith(SignatureAlgorithm.RS256, keyPair.getPrimaryKeyPair().private)
+        .compact()
+    }
 }

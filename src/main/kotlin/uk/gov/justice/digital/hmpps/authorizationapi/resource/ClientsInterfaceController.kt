@@ -46,9 +46,7 @@ class ClientsInterfaceController(
     @RequestParam role: String? = null,
     @RequestParam grantType: GrantType? = null,
     @RequestParam clientType: ClientType? = null,
-  ): ResponseEntity<Any> {
-    return ResponseEntity.ok(AllClientsResponse(clientsService.retrieveAllClients(sort, ClientFilter(grantType = grantType?.name, role = role, clientType = clientType))))
-  }
+  ): ResponseEntity<Any> = ResponseEntity.ok(AllClientsResponse(clientsService.retrieveAllClients(sort, ClientFilter(grantType = grantType?.name, role = role, clientType = clientType))))
 
   @PostMapping("base-clients")
   @ResponseStatus(HttpStatus.OK)
@@ -67,9 +65,7 @@ class ClientsInterfaceController(
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
   fun clients(
     @PathVariable baseClientId: String,
-  ): ResponseEntity<Any> {
-    return ResponseEntity.ok(conversionService.convert(clientsService.findClientWithCopies(baseClientId), ClientDuplicatesResponse::class.java))
-  }
+  ): ResponseEntity<Any> = ResponseEntity.ok(conversionService.convert(clientsService.findClientWithCopies(baseClientId), ClientDuplicatesResponse::class.java))
 
   @DeleteMapping("base-clients/{baseClientId}/clients/{clientId}")
   @ResponseStatus(HttpStatus.OK)
@@ -106,14 +102,12 @@ class ClientsInterfaceController(
   @GetMapping("base-clients/{baseClientId}")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> {
-    return ResponseEntity.ok(
-      conversionService.convert(
-        clientsService.retrieveClientFullDetails(baseClientId),
-        ClientViewResponse::class.java,
-      ),
-    )
-  }
+  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> = ResponseEntity.ok(
+    conversionService.convert(
+      clientsService.retrieveClientFullDetails(baseClientId),
+      ClientViewResponse::class.java,
+    ),
+  )
 
   @PutMapping("base-clients/{baseClientID}/deployment")
   @ResponseStatus(HttpStatus.OK)

@@ -59,9 +59,7 @@ class MigrationClientRequest(
   val resourceIds: List<String>?,
 ) {
 
-  fun requiresAuthorisationConsentRecord(): Boolean {
-    return GrantType.client_credentials.name == grantType && hasAuthorities()
-  }
+  fun requiresAuthorisationConsentRecord(): Boolean = GrantType.client_credentials.name == grantType && hasAuthorities()
 
   private fun hasAuthorities() = authorities != null && authorities.isNotEmpty() && hasText(authorities[0])
 }

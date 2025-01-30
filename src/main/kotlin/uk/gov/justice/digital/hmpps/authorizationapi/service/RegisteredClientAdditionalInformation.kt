@@ -54,17 +54,11 @@ class RegisteredClientAdditionalInformation(
     return clientSettingsBuilder.build()
   }
 
-  fun getDatabaseUserName(clientSettings: ClientSettings?): String? {
-    return clientSettings?.let { it.settings[DATABASE_USER_NAME_KEY] as String? }
-  }
+  fun getDatabaseUserName(clientSettings: ClientSettings?): String? = clientSettings?.let { it.settings[DATABASE_USER_NAME_KEY] as String? }
 
-  fun getJiraNumber(clientSettings: ClientSettings?): String? {
-    return clientSettings?.let { it.settings[JIRA_NUMBER_KEY] as String? }
-  }
+  fun getJiraNumber(clientSettings: ClientSettings?): String? = clientSettings?.let { it.settings[JIRA_NUMBER_KEY] as String? }
 
-  fun getJwtFields(clientSettings: ClientSettings?): String? {
-    return clientSettings?.let { it.settings[JWT_FIELDS_NAME_KEY] as String? }
-  }
+  fun getJwtFields(clientSettings: ClientSettings?): String? = clientSettings?.let { it.settings[JWT_FIELDS_NAME_KEY] as String? }
 
   fun mapFrom(claims: Map<String, Any>): Map<String, Any> {
     val additionalTokenSettings = HashMap<String, Any>()

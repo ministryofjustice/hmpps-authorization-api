@@ -54,12 +54,10 @@ class UrlDecodingRetryClientSecretAuthenticationProviderTest {
     verify(delegate, times(2)).authenticate(any())
   }
 
-  private fun givenAnAuthenticationWith(credentials: String): Authentication {
-    return OAuth2ClientAuthenticationToken(
-      "client-id",
-      ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
-      credentials,
-      mapOf("this" to "that"),
-    )
-  }
+  private fun givenAnAuthenticationWith(credentials: String): Authentication = OAuth2ClientAuthenticationToken(
+    "client-id",
+    ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
+    credentials,
+    mapOf("this" to "that"),
+  )
 }

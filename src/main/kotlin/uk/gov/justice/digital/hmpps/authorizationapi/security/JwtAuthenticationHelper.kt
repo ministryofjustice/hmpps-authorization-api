@@ -14,8 +14,7 @@ class JwtAuthenticationHelper(
   private val signedJwtParser: SignedJwtParser,
 ) {
 
-  fun readAuthenticationFromJwt(jwt: String): Optional<UsernamePasswordAuthenticationToken> =
-    readUserDetailsFromJwt(jwt).map { UsernamePasswordAuthenticationToken(it, null, it.authorities) }
+  fun readAuthenticationFromJwt(jwt: String): Optional<UsernamePasswordAuthenticationToken> = readUserDetailsFromJwt(jwt).map { UsernamePasswordAuthenticationToken(it, null, it.authorities) }
 
   private fun readUserDetailsFromJwt(jwt: String): Optional<AuthenticatedUserDetails> = try {
     val body = signedJwtParser.parseSignedJwt(jwt)

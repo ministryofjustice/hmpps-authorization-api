@@ -31,5 +31,4 @@ class ClientIdService(private val clientRepository: ClientRepository) {
   }
 }
 
-class MaxDuplicateClientsException(baseClientId: String) :
-  RuntimeException("Unable to create further clients for baseClientId: $baseClientId as maximum of 3 already reached")
+class MaxDuplicateClientsException(baseClientId: String) : RuntimeException("Unable to create further clients for baseClientId: $baseClientId as maximum of 3 already reached")

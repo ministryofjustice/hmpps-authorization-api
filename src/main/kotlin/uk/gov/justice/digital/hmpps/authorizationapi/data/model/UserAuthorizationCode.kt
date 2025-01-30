@@ -37,9 +37,7 @@ data class UserAuthorizationCode(
 class AuthSourceConverter : AttributeConverter<AuthSource, String> {
   override fun convertToDatabaseColumn(source: AuthSource?) = source?.let { source.source }
 
-  override fun convertToEntityAttribute(persistedValue: String?): AuthSource {
-    return AuthSource.fromNullableString(persistedValue)
-  }
+  override fun convertToEntityAttribute(persistedValue: String?): AuthSource = AuthSource.fromNullableString(persistedValue)
 }
 
 @Converter

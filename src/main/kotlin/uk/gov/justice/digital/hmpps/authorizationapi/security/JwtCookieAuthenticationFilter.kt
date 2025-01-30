@@ -46,10 +46,8 @@ class JwtCookieAuthenticationFilter(
     filterChain.doFilter(request, response)
   }
 
-  private fun readValueFromCookie(request: HttpServletRequest): Optional<String> {
-    return Stream.of(*Optional.ofNullable(request.cookies).orElse(arrayOfNulls(0)))
-      .filter { c: Cookie -> "jwtSession" == c.name }
-      .map { it.value }
-      .findFirst()
-  }
+  private fun readValueFromCookie(request: HttpServletRequest): Optional<String> = Stream.of(*Optional.ofNullable(request.cookies).orElse(arrayOfNulls(0)))
+    .filter { c: Cookie -> "jwtSession" == c.name }
+    .map { it.value }
+    .findFirst()
 }

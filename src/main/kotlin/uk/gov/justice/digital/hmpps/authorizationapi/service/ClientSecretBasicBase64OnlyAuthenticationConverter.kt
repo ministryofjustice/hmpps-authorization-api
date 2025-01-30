@@ -39,7 +39,9 @@ class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConvert
 
     val credentialsString = String(decodedCredentials, StandardCharsets.UTF_8)
     val credentials = credentialsString.split(":".toRegex(), 2).toTypedArray()
-    if (credentials.size != 2 || !StringUtils.hasText(credentials[0]) || !StringUtils.hasText(
+    if (credentials.size != 2 ||
+      !StringUtils.hasText(credentials[0]) ||
+      !StringUtils.hasText(
         credentials[1],
       )
     ) {
@@ -79,12 +81,11 @@ class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConvert
     return parameters
   }
 
-  private fun matchesAuthorizationCodeGrantRequest(request: HttpServletRequest): Boolean {
-    return (
-      AuthorizationGrantType.AUTHORIZATION_CODE.value
-        == request.getParameter(OAuth2ParameterNames.GRANT_TYPE)
-      ) && request.getParameter(OAuth2ParameterNames.CODE) != null
-  }
+  private fun matchesAuthorizationCodeGrantRequest(request: HttpServletRequest): Boolean = (
+    AuthorizationGrantType.AUTHORIZATION_CODE.value
+      == request.getParameter(OAuth2ParameterNames.GRANT_TYPE)
+    ) &&
+    request.getParameter(OAuth2ParameterNames.CODE) != null
 
   private fun getQueryParameters(request: HttpServletRequest): MultiValueMap<String, String> {
     val parameterMap = request.parameterMap

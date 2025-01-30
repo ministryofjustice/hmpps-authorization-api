@@ -299,10 +299,9 @@ class ClientsInterfaceService(
     }
   }
 
-  private fun withAuthoritiesPrefix(authorities: List<String>) =
-    authorities
-      .map { it.trim().uppercase() }
-      .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
+  private fun withAuthoritiesPrefix(authorities: List<String>) = authorities
+    .map { it.trim().uppercase() }
+    .map { if (it.startsWith("ROLE_")) it else "ROLE_$it" }
 
   private fun retrieveClientWithClientConfig(clientId: String): Pair<List<Client>, ClientConfig?> {
     val existingClients = findClientWithCopies(clientId)
@@ -320,26 +319,22 @@ class ClientsInterfaceService(
     return Pair(existingClient, existingClientConfig)
   }
 
-  private fun retrieveAuthorizationConsent(client: Client) =
-    authorizationConsentRepository.findByIdOrNull(
-      AuthorizationConsentId(
-        client.id,
-        client.clientId,
-      ),
-    )
+  private fun retrieveAuthorizationConsent(client: Client) = authorizationConsentRepository.findByIdOrNull(
+    AuthorizationConsentId(
+      client.id,
+      client.clientId,
+    ),
+  )
 
-  private fun setValidDays(clientConfig: ClientConfig?) =
-    clientConfig?.clientEndDate?.let {
-      val daysToClientExpiry = ChronoUnit.DAYS.between(LocalDate.now(), clientConfig.clientEndDate)
-      val daysToClientExpiryIncludingToday = daysToClientExpiry + 1
-      clientConfig.validDays = if (daysToClientExpiry < 0) 0 else daysToClientExpiryIncludingToday
-    }
+  private fun setValidDays(clientConfig: ClientConfig?) = clientConfig?.clientEndDate?.let {
+    val daysToClientExpiry = ChronoUnit.DAYS.between(LocalDate.now(), clientConfig.clientEndDate)
+    val daysToClientExpiryIncludingToday = daysToClientExpiry + 1
+    clientConfig.validDays = if (daysToClientExpiry < 0) 0 else daysToClientExpiryIncludingToday
+  }
 
-  private fun getClientEndDate(validDays: Long?): LocalDate? {
-    return validDays?.let {
-      val validDaysIncludeToday = it.minus(1)
-      LocalDate.now().plusDays(validDaysIncludeToday)
-    }
+  private fun getClientEndDate(validDays: Long?): LocalDate? = validDays?.let {
+    val validDaysIncludeToday = it.minus(1)
+    LocalDate.now().plusDays(validDaysIncludeToday)
   }
 }
 

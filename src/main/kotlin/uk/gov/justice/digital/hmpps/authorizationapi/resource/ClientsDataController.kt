@@ -15,15 +15,11 @@ class ClientsDataController(
 
   @GetMapping("client-details")
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun listClientDetails(): ResponseEntity<Any> {
-    return ResponseEntity.ok(clientDataService.fetchClientDetails())
-  }
+  fun listClientDetails(): ResponseEntity<Any> = ResponseEntity.ok(clientDataService.fetchClientDetails())
 
   @GetMapping("client-details-last-accessed")
   @PreAuthorize("hasRole('ROLE_OAUTH_ADMIN')")
-  fun getAllClientsAndLastAccessed(): ResponseEntity<Any> {
-    return ResponseEntity.ok(clientDataService.getAllClientsWithLastAccessed())
-  }
+  fun getAllClientsAndLastAccessed(): ResponseEntity<Any> = ResponseEntity.ok(clientDataService.getAllClientsWithLastAccessed())
 }
 
 data class ClientDetailsResponse(
