@@ -24,6 +24,7 @@ import org.springframework.security.authentication.DefaultAuthenticationEventPub
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
@@ -89,31 +90,29 @@ class AuthorizationApiConfig(
     registeredClientDataService: RegisteredClientDataService,
     loggingAuthenticationFailureHandler: LoggingAuthenticationFailureHandler,
   ): SecurityFilterChain {
-    OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
-    val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
-
-    authorizationServerConfigurer.clientAuthentication { clientAuthenticationCustomizer ->
-
-      clientAuthenticationCustomizer.authenticationConverters { converters ->
-        converters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
-      }
-
-      clientAuthenticationCustomizer.authenticationProviders { authenticationProviders ->
-        authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
+    http {
+      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
+      cors { disable() }
+      csrf { disable() }
+      addFilterAfter<LogoutFilter>(jwtCookieAuthenticationFilter)
+      with(OAuth2AuthorizationServerConfigurer.authorizationServer()
+      ) {
+        clientAuthentication {
+          it.authenticationConverters { converters ->
+            converters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
+          }
+          it.authenticationProviders { providers ->
+            providers.replaceAll { provider -> withUrlDecodingRetryClientSecretAuthenticationProvider(provider) }
+          }
+        }
+        tokenEndpoint {
+          it.authenticationProviders { providers ->
+            providers.replaceAll { provider -> withRequestValidatorForClientCredentials(provider) }
+          }
+          it.accessTokenResponseHandler(TokenResponseHandler())
+        }
       }
     }
-
-    authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
-      tokenEndpointConfigurer.authenticationProviders { authenticationProviders ->
-        authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
-      }
-
-      tokenEndpointConfigurer.accessTokenResponseHandler(TokenResponseHandler())
-    }
-    http
-      .addFilterAfter(jwtCookieAuthenticationFilter, LogoutFilter::class.java)
-      .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-      .cors { it.disable() }.csrf { it.disable() }
 
     return http.build()
   }
