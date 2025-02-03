@@ -4,6 +4,8 @@ import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import net.javacrumbs.shedlock.core.LockProvider
 import net.javacrumbs.shedlock.provider.jdbctemplate.DatabaseProduct
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider
@@ -16,6 +18,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.authentication.AuthenticationEventPublisher
@@ -24,13 +27,18 @@ import org.springframework.security.authentication.DefaultAuthenticationEventPub
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
+import org.springframework.security.oauth2.core.OAuth2Error
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
@@ -45,6 +53,8 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.oauth2.server.authorization.web.authentication.ClientSecretBasicAuthenticationConverter
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.AuthenticationConverter
+import org.springframework.security.web.authentication.AuthenticationFailureHandler
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import org.springframework.transaction.PlatformTransactionManager
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
@@ -81,39 +91,72 @@ class AuthorizationApiConfig(
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
 ) {
 
+  class ForbiddenAuthenticationConverter : AuthenticationConverter {
+    override fun convert(request: HttpServletRequest?): Authentication = throw OAuth2AuthenticationException(OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED))
+  }
+
+  class ForbiddenErrorHandler : AuthenticationFailureHandler {
+    override fun onAuthenticationFailure(
+      request: HttpServletRequest,
+      response: HttpServletResponse,
+      exception: AuthenticationException,
+    ) {
+      response.status = HttpStatus.FORBIDDEN.value()
+      exception.message?.let { response.writer.write(it) }
+    }
+  }
+
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  fun authorizationApiSecurityFilterChain(
+  fun authorizationServerSecurityFilterChain(
     http: HttpSecurity,
     registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
     registeredClientDataService: RegisteredClientDataService,
     loggingAuthenticationFailureHandler: LoggingAuthenticationFailureHandler,
   ): SecurityFilterChain {
-    OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
-    val authorizationServerConfigurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
-
-    authorizationServerConfigurer.clientAuthentication { clientAuthenticationCustomizer ->
-
-      clientAuthenticationCustomizer.authenticationConverters { converters ->
-        converters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
+    val configurer = OAuth2AuthorizationServerConfigurer.authorizationServer()
+    http {
+      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
+      cors { disable() }
+      csrf { disable() }
+      addFilterAfter<LogoutFilter>(jwtCookieAuthenticationFilter)
+      with(configurer) {
+        deviceAuthorizationEndpoint {
+          it.deviceAuthorizationRequestConverter(ForbiddenAuthenticationConverter())
+          it.errorResponseHandler(ForbiddenErrorHandler())
+        }
+        deviceVerificationEndpoint {
+          it.deviceVerificationRequestConverter(ForbiddenAuthenticationConverter())
+          it.errorResponseHandler(ForbiddenErrorHandler())
+        }
+        tokenIntrospectionEndpoint {
+          it.introspectionRequestConverter(ForbiddenAuthenticationConverter())
+          it.errorResponseHandler(ForbiddenErrorHandler())
+        }
+        tokenRevocationEndpoint {
+          it.revocationRequestConverter(ForbiddenAuthenticationConverter())
+          it.errorResponseHandler(ForbiddenErrorHandler())
+        }
+        clientAuthentication {
+          it.authenticationConverters { converters ->
+            converters.replaceAll { converter -> if (converter is ClientSecretBasicAuthenticationConverter) ClientSecretBasicBase64OnlyAuthenticationConverter() else converter }
+          }
+          it.authenticationProviders { providers ->
+            providers.replaceAll { provider -> withUrlDecodingRetryClientSecretAuthenticationProvider(provider) }
+          }
+        }
+        tokenEndpoint {
+          it.authenticationProviders { providers ->
+            providers.replaceAll { provider -> withRequestValidatorForClientCredentials(provider) }
+          }
+          it.accessTokenResponseHandler(TokenResponseHandler())
+        }
       }
-
-      clientAuthenticationCustomizer.authenticationProviders { authenticationProviders ->
-        authenticationProviders.replaceAll { authenticationProvider -> withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider) }
+      securityMatcher(configurer.endpointsMatcher)
+      authorizeHttpRequests {
+        authorize(anyRequest, authenticated)
       }
     }
-
-    authorizationServerConfigurer.tokenEndpoint { tokenEndpointConfigurer ->
-      tokenEndpointConfigurer.authenticationProviders { authenticationProviders ->
-        authenticationProviders.replaceAll { authenticationProvider -> withRequestValidatorForClientCredentials(authenticationProvider) }
-      }
-
-      tokenEndpointConfigurer.accessTokenResponseHandler(TokenResponseHandler())
-    }
-    http
-      .addFilterAfter(jwtCookieAuthenticationFilter, LogoutFilter::class.java)
-      .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-      .cors { it.disable() }.csrf { it.disable() }
 
     return http.build()
   }
@@ -181,7 +224,14 @@ class AuthorizationApiConfig(
   fun registeredClientRepository(jdbcTemplate: JdbcTemplate) = JdbcRegisteredClientRepository(jdbcTemplate)
 
   @Bean
-  fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository, userAuthorizationCodeRepository: UserAuthorizationCodeRepository): OAuth2AuthorizationService = UserAuthenticationService(JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository), userAuthorizationCodeRepository)
+  fun authorizationService(
+    jdbcTemplate: JdbcTemplate,
+    registeredClientRepository: RegisteredClientRepository,
+    userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
+  ): OAuth2AuthorizationService = UserAuthenticationService(
+    JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository),
+    userAuthorizationCodeRepository,
+  )
 
   @Bean
   fun authorizationConsentService(
