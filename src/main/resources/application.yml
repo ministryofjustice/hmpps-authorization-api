@@ -110,6 +110,7 @@ management:
 
 application:
   authentication:
+    match-subdomains: false
     cron:
       remove-access-tokens: 0 30 * * * * # hourly at 30 minutes past the hour
       remove-expired-auth-codes: 0 0 1 * * *  # once a day at 1 am

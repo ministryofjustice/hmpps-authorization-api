@@ -45,6 +45,9 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.authentication.ClientSecretAuthenticationProvider
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationContext
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationProvider
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationValidator
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
@@ -70,12 +73,14 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingAuthenticati
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientDataService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.SubDomainMatchingRedirectUriValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UrlDecodingRetryClientSecretAuthenticationProvider
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UserAuthenticationService
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.sql.Connection
+import java.util.function.Consumer
 
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
@@ -86,6 +91,7 @@ class AuthorizationApiConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${server.base-url}") private val baseUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
+  @Value("\${application.authentication.match-subdomains:false}") private val matchSubdomains: Boolean,
   private val clientConfigRepository: ClientConfigRepository,
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
@@ -151,6 +157,9 @@ class AuthorizationApiConfig(
           }
           it.accessTokenResponseHandler(TokenResponseHandler())
         }
+        authorizationEndpoint {
+          it.authenticationProviders(configureAuthenticationValidators())
+        }
       }
       securityMatcher(configurer.endpointsMatcher)
       authorizeHttpRequests {
@@ -159,6 +168,19 @@ class AuthorizationApiConfig(
     }
 
     return http.build()
+  }
+
+  private fun configureAuthenticationValidators(): Consumer<MutableList<AuthenticationProvider>> = Consumer { authenticationProviders ->
+    if (matchSubdomains) {
+      authenticationProviders.forEach { provider ->
+        if (provider is OAuth2AuthorizationCodeRequestAuthenticationProvider) {
+          val authenticationValidator: Consumer<OAuth2AuthorizationCodeRequestAuthenticationContext> =
+            SubDomainMatchingRedirectUriValidator()
+              .andThen(OAuth2AuthorizationCodeRequestAuthenticationValidator.DEFAULT_SCOPE_VALIDATOR)
+          provider.setAuthenticationValidator(authenticationValidator)
+        }
+      }
+    }
   }
 
   @Bean

@@ -14,6 +14,7 @@ generic-service:
     BASE_URL: https://authorization-api-stage.hmpps.service.justice.gov.uk
     HMPPS_AUTH_ENDPOINT_URL: http://hmpps-auth.hmpps-auth-stage.svc.cluster.local/auth
     HMPPS_AUTH_ISSUER_URL: https://sign-in-stage.hmpps.service.justice.gov.uk/auth
+    APPLICATION_AUTHENTICATION_MATCH_SUBDOMAINS: "true"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
