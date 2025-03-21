@@ -27,41 +27,25 @@ class SubDomainMatchingRedirectUriValidatorTest {
   }
 
   @Test
-  fun `should accept redirect url without subdomain`() {
-    givenRequestedRedirectUrl("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
-    givenRegisteredRedirectUrls("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+  fun `should accept redirect uri without subdomain`() {
+    givenRequestedRedirectUri("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+    givenRegisteredRedirectUris("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
 
     validator?.accept(authenticationContext)
   }
 
   @Test
-  fun `should accept redirect url with subdomain`() {
-    givenRequestedRedirectUrl("https://sub1.template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
-    givenRegisteredRedirectUrls("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+  fun `should accept redirect uri with subdomain`() {
+    givenRequestedRedirectUri("https://sub1.template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+    givenRegisteredRedirectUris("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
 
     validator?.accept(authenticationContext)
   }
 
   @Test
-  fun `should accept loop back redirect url with matching port`() {
-    givenRequestedRedirectUrl("http://127.0.0.1:9090/sign-in/callback")
-    givenRegisteredRedirectUrls("http://127.0.0.1:9090/sign-in/callback")
-
-    validator?.accept(authenticationContext)
-  }
-
-  @Test
-  fun `should accept loop back redirect url without matching port`() {
-    givenRequestedRedirectUrl("http://127.0.0.1:9090/sign-in/callback")
-    givenRegisteredRedirectUrls("http://127.0.0.1:9999/sign-in/callback")
-
-    validator?.accept(authenticationContext)
-  }
-
-  @Test
-  fun `should fail when redirect url without subdomain does not match`() {
-    givenRequestedRedirectUrl("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
-    givenRegisteredRedirectUrls("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callbackx")
+  fun `should fail when redirect uri without subdomain does not match`() {
+    givenRequestedRedirectUri("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+    givenRegisteredRedirectUris("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callbackx")
     givenExceptionDataAvailable()
 
     assertThatThrownBy { validator?.accept(authenticationContext) }.isInstanceOf(
@@ -71,9 +55,9 @@ class SubDomainMatchingRedirectUriValidatorTest {
   }
 
   @Test
-  fun `should fail when redirect url with subdomain does not match`() {
-    givenRequestedRedirectUrl("https://sub1.template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
-    givenRegisteredRedirectUrls("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callbackx")
+  fun `should fail when redirect uri with subdomain does not match`() {
+    givenRequestedRedirectUri("https://sub1.template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+    givenRegisteredRedirectUris("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callbackx")
     givenExceptionDataAvailable()
 
     assertThatThrownBy { validator?.accept(authenticationContext) }.isInstanceOf(
@@ -84,7 +68,7 @@ class SubDomainMatchingRedirectUriValidatorTest {
 
   @Test
   fun `should fail when no registered redirect urls`() {
-    givenRequestedRedirectUrl("https://sub1.template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+    givenRequestedRedirectUri("https://sub1.template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
     givenExceptionDataAvailable()
 
     assertThatThrownBy { validator?.accept(authenticationContext) }.isInstanceOf(
@@ -94,8 +78,9 @@ class SubDomainMatchingRedirectUriValidatorTest {
   }
 
   @Test
-  fun `should fail when requested redirect url is empty`() {
-    givenRequestedRedirectUrl("")
+  fun `should fail when requested redirect uri is empty and multiple registered redirects`() {
+    givenRequestedRedirectUri("")
+    givenRegisteredRedirectUris("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback", "https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback2")
     givenExceptionDataAvailable()
 
     assertThatThrownBy { validator?.accept(authenticationContext) }.isInstanceOf(
@@ -104,17 +89,49 @@ class SubDomainMatchingRedirectUriValidatorTest {
       .withFailMessage("OAuth 2.0 Parameter: redirect_uri")
   }
 
+  @Test
+  fun `should fail when requested redirect uri is empty and no registered redirects`() {
+    givenRequestedRedirectUri("")
+    givenExceptionDataAvailable()
+
+    assertThatThrownBy { validator?.accept(authenticationContext) }.isInstanceOf(
+      OAuth2AuthorizationCodeRequestAuthenticationException::class.java,
+    )
+      .withFailMessage("OAuth 2.0 Parameter: redirect_uri")
+  }
+
+  @Test
+  fun `should fail when requested redirect uri is empty and scopes contains openid`() {
+    givenRequestedRedirectUri("")
+    givenRegisteredRedirectUris("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+    whenever(authentication.scopes).thenReturn(setOf("openid"))
+    givenExceptionDataAvailable()
+
+    assertThatThrownBy { validator?.accept(authenticationContext) }.isInstanceOf(
+      OAuth2AuthorizationCodeRequestAuthenticationException::class.java,
+    )
+      .withFailMessage("OAuth 2.0 Parameter: redirect_uri")
+  }
+
+  @Test
+  fun `should pass when requested redirect uri is empty and only one registered redirect`() {
+    givenRequestedRedirectUri("")
+    givenRegisteredRedirectUris("https://template-typescript-dev.hmpps.service.justice.gov.uk/sign-in/callback")
+
+    validator?.accept(authenticationContext)
+  }
+
   private fun givenExceptionDataAvailable() {
     whenever(authentication.principal).thenReturn(principal)
     whenever(authentication.authorizationUri).thenReturn("https://testing")
     whenever(authentication.clientId).thenReturn("testClientId")
   }
 
-  private fun givenRegisteredRedirectUrls(vararg redirectUris: String) {
+  private fun givenRegisteredRedirectUris(vararg redirectUris: String) {
     whenever(registeredClient.redirectUris).thenReturn(setOf(*redirectUris))
   }
 
-  private fun givenRequestedRedirectUrl(redirectUri: String) {
+  private fun givenRequestedRedirectUri(redirectUri: String) {
     whenever(authentication.redirectUri).thenReturn(redirectUri)
   }
 }
