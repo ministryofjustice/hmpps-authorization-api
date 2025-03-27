@@ -12,6 +12,3 @@ spring:
   h2:
     console:
       enabled: false
-
-  flyway:
-    locations: classpath:db/auth
