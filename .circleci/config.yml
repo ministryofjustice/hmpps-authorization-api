@@ -49,6 +49,7 @@ workflows:
             branches:
               only:
                 - main
+                - HAAR-3771-use-auth-db
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -74,6 +75,7 @@ workflows:
             branches:
               only:
                 - main
+                - HAAR-3771-use-auth-db
           requires:
             - validate
             - build_docker
