@@ -68,9 +68,6 @@ spring:
       connection-timeout: 30000
       validation-timeout: 5000
 
-  flyway:
-    locations: classpath:db/auth
-
   profiles:
     group:
       test:
