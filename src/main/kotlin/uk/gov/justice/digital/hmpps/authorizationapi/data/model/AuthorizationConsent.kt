@@ -23,10 +23,8 @@ data class AuthorizationConsent(
   val authoritiesWithoutPrefix: List<String>
     get() = authorities.map { it.substringAfter("ROLE_") }
 
-  class AuthorizationConsentId(
-    private var registeredClientId: String?,
-    private var principalName: String?,
-  ) : Serializable {
-    constructor() : this(null, null)
-  }
+  data class AuthorizationConsentId(
+    private val registeredClientId: String? = null,
+    private val principalName: String? = null,
+  ) : Serializable
 }
