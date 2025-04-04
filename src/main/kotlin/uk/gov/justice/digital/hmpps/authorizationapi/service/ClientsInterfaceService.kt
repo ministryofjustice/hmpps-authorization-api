@@ -125,6 +125,7 @@ class ClientsInterfaceService(
       clientConfigRepository.deleteByBaseClientId(baseClientId)
     }
 
+    authorizationConsentRepository.deleteByPrincipalName(clientId)
     clientRepository.deleteByClientId(clientId)
   }
 
