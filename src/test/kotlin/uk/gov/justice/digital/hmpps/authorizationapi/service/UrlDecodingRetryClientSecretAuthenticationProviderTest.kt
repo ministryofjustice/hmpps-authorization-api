@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
+import java.lang.IllegalArgumentException
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -46,6 +47,22 @@ class UrlDecodingRetryClientSecretAuthenticationProviderTest {
     val authenticationEncoded = givenAnAuthenticationWith("test-client-id:$encodedSecret")
     val authenticationDecoded = givenAnAuthenticationWith("test-client-id:$originalSecret")
     whenever(delegate.authenticate(authenticationEncoded)).thenThrow(OAuth2AuthenticationException("invalid secret"))
+    whenever(delegate.authenticate(authenticationDecoded)).thenReturn(authenticationDecoded)
+
+    val authenticated = urlDecodingRetryClientSecretAuthenticationProvider.authenticate(authenticationEncoded)
+
+    assertThat(authenticated).isEqualTo(authenticationDecoded)
+    verify(delegate, times(2)).authenticate(any())
+  }
+
+  @Test
+  fun shouldUrlDecodeCredentialsOver72BytesAndRetryOnAuthenticationException() {
+    val originalSecret = "zK*AWM.,7QutO&hG(jp:L!&3DRyK13sjXR5aO(2x+kPjhCJ34wE&b*:mHn"
+    val encodedSecret = URLEncoder.encode(originalSecret, StandardCharsets.UTF_8.toString())
+    assertThat(encodedSecret).isNotEqualTo(originalSecret)
+    val authenticationEncoded = givenAnAuthenticationWith("test-client-id:$encodedSecret")
+    val authenticationDecoded = givenAnAuthenticationWith("test-client-id:$originalSecret")
+    whenever(delegate.authenticate(authenticationEncoded)).thenThrow(IllegalArgumentException("password cannot be more than 72 bytes"))
     whenever(delegate.authenticate(authenticationDecoded)).thenReturn(authenticationDecoded)
 
     val authenticated = urlDecodingRetryClientSecretAuthenticationProvider.authenticate(authenticationEncoded)

@@ -6,6 +6,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
+import java.lang.IllegalArgumentException
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -15,20 +16,24 @@ class UrlDecodingRetryClientSecretAuthenticationProvider(
 
   override fun authenticate(authentication: Authentication?): Authentication? = try {
     delegate.authenticate(authentication)
+  } catch (e: IllegalArgumentException) {
+    authentication.decodeAndRetry()
   } catch (e: OAuth2AuthenticationException) {
-    authentication?.credentials?.let {
-      val urlDecodedCredentials = decodeCredentials(it.toString())
+    authentication.decodeAndRetry()
+  }
 
-      val clientAuthentication = authentication as OAuth2ClientAuthenticationToken
-      val decodedAuthentication = OAuth2ClientAuthenticationToken(
-        clientAuthentication.principal.toString(),
-        clientAuthentication.clientAuthenticationMethod,
-        urlDecodedCredentials,
-        clientAuthentication.additionalParameters,
-      )
+  private fun Authentication?.decodeAndRetry(): Authentication? = this?.credentials?.let {
+    val urlDecodedCredentials = decodeCredentials(it.toString())
 
-      delegate.authenticate(decodedAuthentication)
-    }
+    val clientAuthentication = this as OAuth2ClientAuthenticationToken
+    val decodedAuthentication = OAuth2ClientAuthenticationToken(
+      clientAuthentication.principal.toString(),
+      clientAuthentication.clientAuthenticationMethod,
+      urlDecodedCredentials,
+      clientAuthentication.additionalParameters,
+    )
+
+    delegate.authenticate(decodedAuthentication)
   }
 
   private fun decodeCredentials(credentials: String): String? = try {
