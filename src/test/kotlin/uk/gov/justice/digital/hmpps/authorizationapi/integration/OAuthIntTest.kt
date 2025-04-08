@@ -315,6 +315,33 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `url encoded credentials longer than 72 bytes encoded handled`() {
+      val urlEncodedClientId = URLEncoder.encode("long-encoded-client-credentials", StandardCharsets.UTF_8.toString())
+      val urlEncodedSecret = URLEncoder.encode("zK*AWM.,7QutO&hG(jp:L!&3DRyK13sjXR5aO(2x+kPjhCJ34wE&b*:mHn", StandardCharsets.UTF_8.toString())
+
+      val clientCredentialsResponse = webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("$urlEncodedClientId:$urlEncodedSecret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("$").value<Map<String, Any>> {
+          assertThat(it["expires_in"] as Int).isLessThan(1201)
+        }
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(clientCredentialsResponse!!))
+      assertThat(token.get("sub")).isEqualTo("long-encoded-client-credentials")
+    }
+
+    @Test
     fun `Incorrect secret with invalid url encoded characters`() {
       webTestClient
         .post().uri("/oauth2/token")
