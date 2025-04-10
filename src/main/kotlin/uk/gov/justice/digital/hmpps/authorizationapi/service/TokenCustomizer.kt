@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.authorizationapi.service
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.isBlank
 import org.apache.commons.lang3.StringUtils.isNotEmpty
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -26,7 +25,6 @@ class TokenCustomizer(
   private val userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oauthJtiGenerator: OAuthJtiGenerator,
-  @Value("\${hmpps-auth.issuer.url}") private val authIssuerUrl: String,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
   companion object {
@@ -43,7 +41,6 @@ class TokenCustomizer(
 
   override fun customize(context: JwtEncodingContext?) {
     context?.let { jwtEncodingContext ->
-      addIssuerClaimTo(jwtEncodingContext)
       suppressAudienceClaim(jwtEncodingContext)
 
       if (jwtEncodingContext.getPrincipal<Authentication>() is OAuth2ClientAuthenticationToken) {
@@ -71,7 +68,7 @@ class TokenCustomizer(
 
   private fun filterJwtFields(info: Map<String, Any>, context: JwtEncodingContext) {
     val jwtFields = registeredClientAdditionalInformation.getJwtFields(context.registeredClient.clientSettings)
-    val entries = if (StringUtils.isBlank(jwtFields)) {
+    val entries = if (isBlank(jwtFields)) {
       emptySet()
     } else {
       jwtFields!!.split(",")
@@ -130,11 +127,5 @@ class TokenCustomizer(
 
   private fun suppressAudienceClaim(context: JwtEncodingContext) {
     context.claims.audience(listOf())
-  }
-
-  private fun addIssuerClaimTo(context: JwtEncodingContext) {
-    with(context.claims) {
-      claim("iss", "$authIssuerUrl/issuer")
-    }
   }
 }

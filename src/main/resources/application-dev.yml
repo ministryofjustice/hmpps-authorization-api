@@ -1,6 +1,5 @@
 server:
   port: 8089
-  base-url: http://localhost
   shutdown: immediate
 
 audit:
@@ -24,7 +23,7 @@ spring:
 
 
 hmpps-auth:
-  issuer.url: http://localhost:9090/auth
+  issuer.url: ${hmpps-auth.endpoint.url}/issuer
   endpoint:
     url: http://localhost:9090/auth
   client:

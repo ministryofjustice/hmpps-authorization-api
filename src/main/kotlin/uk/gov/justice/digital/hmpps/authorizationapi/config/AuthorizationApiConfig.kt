@@ -89,7 +89,7 @@ import java.util.function.Consumer
 @Configuration(proxyBeanMethods = false)
 class AuthorizationApiConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
-  @Value("\${server.base-url}") private val baseUrl: String,
+  @Value("\${hmpps-auth.issuer.url}") private val authIssuerUrl: String,
   @Value("\${server.servlet.context-path}") private val contextPath: String,
   @Value("\${application.authentication.match-subdomains:false}") private val matchSubdomains: Boolean,
   private val clientConfigRepository: ClientConfigRepository,
@@ -219,7 +219,7 @@ class AuthorizationApiConfig(
   fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder = OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
 
   @Bean
-  fun providerSettings(): AuthorizationServerSettings = AuthorizationServerSettings.builder().issuer("$baseUrl$contextPath").build()
+  fun providerSettings(): AuthorizationServerSettings = AuthorizationServerSettings.builder().issuer(authIssuerUrl).build()
 
   @Bean
   fun passwordEncoder(): PasswordEncoder {

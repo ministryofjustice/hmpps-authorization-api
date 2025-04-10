@@ -74,7 +74,6 @@ spring:
         - "dev"
 
 server:
-  base-url: ${BASE_URL}
   servlet:
     context-path: /
   forward-headers-strategy: native
