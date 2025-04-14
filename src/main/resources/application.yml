@@ -3,7 +3,7 @@ info.app:
   version: 1.0
 
 hmpps-auth:
-  issuer.url: ${hmpps-auth.issuer.url}
+  issuer.url: ${hmpps-auth.endpoint.url}/issuer
   endpoint:
     url: ${hmpps-auth.endpoint.url}
 
