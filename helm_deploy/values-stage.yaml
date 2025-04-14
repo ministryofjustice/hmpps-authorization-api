@@ -12,6 +12,7 @@ generic-service:
     SPRING_PROFILES_ACTIVE: "logstash, stage"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     HMPPS_AUTH_ENDPOINT_URL: http://hmpps-auth.hmpps-auth-stage.svc.cluster.local/auth
+    HMPPS_AUTH_ISSUER_URL: https://sign-in-stage.hmpps.service.justice.gov.uk/auth/issuer
     APPLICATION_AUTHENTICATION_MATCH_SUBDOMAINS: "true"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
