@@ -1,7 +1,4 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://${SPRING_DATASOURCE_ENDPOINT}/${SPRING_DATASOURCE_NAME}?sslmode=verify-full&currentSchema=authapi
-
-  flyway:
-    default-schema: authapi
+    url: jdbc:postgresql://${SPRING_DATASOURCE_ENDPOINT}/${SPRING_DATASOURCE_NAME}?sslmode=verify-full
