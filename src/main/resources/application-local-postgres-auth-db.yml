@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth-db
+    username: admin
+    password: admin_password
+
+  h2:
+    console:
+      enabled: false
+
+  # The db will be setup by hmpps-auth so no flyway is needed
+  flyway:
+    enabled: false
