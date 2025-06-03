@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.model.UserAuthorizatio
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthenticatedUserDetails
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class UserAuthenticationServiceTest {
@@ -82,7 +84,7 @@ class UserAuthenticationServiceTest {
       assertThat(name).isEqualTo("Mr I Test")
       assertThat(authSource).isEqualTo(AuthSource.Auth)
       assertThat(userUuid).isEqualTo(authenticatedUserDetails.uuid)
-      assertThat(authorizationCodeIssuedAt).isEqualTo(now)
+      assertThat(authorizationCodeIssuedAt).isEqualTo(LocalDateTime.ofInstant(now, ZoneOffset.UTC))
     }
   }
 
