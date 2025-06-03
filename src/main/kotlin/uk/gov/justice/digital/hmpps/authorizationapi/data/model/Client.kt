@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthJson
-import java.time.Instant
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "oauth2_registered_client")
@@ -24,13 +24,11 @@ data class Client(
 
   var clientId: String,
 
-  @Convert(converter = InstantConverter::class)
-  val clientIdIssuedAt: Instant,
+  val clientIdIssuedAt: LocalDateTime,
 
   var clientSecret: String? = null,
 
-  @Convert(converter = InstantConverter::class)
-  val clientSecretExpiresAt: Instant? = null,
+  val clientSecretExpiresAt: LocalDateTime? = null,
 
   var clientName: String,
 
@@ -73,7 +71,7 @@ data class Client(
   var resourceIds: List<String>?,
 ) {
 
-  fun getLastAccessedDate(): Instant = latestClientAuthorization
+  fun getLastAccessedDate(): LocalDateTime = latestClientAuthorization
     ?.filter { it.accessTokenIssuedAt != null || it.authorizationCodeIssuedAt != null }
     ?.map { (it.accessTokenIssuedAt ?: it.authorizationCodeIssuedAt)!! }
     ?.maxOfOrNull { it } ?: clientIdIssuedAt

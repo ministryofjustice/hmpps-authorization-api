@@ -30,12 +30,6 @@ spring:
   codec:
     max-in-memory-size: 10MB
 
-  jpa:
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
-
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
     serialization:

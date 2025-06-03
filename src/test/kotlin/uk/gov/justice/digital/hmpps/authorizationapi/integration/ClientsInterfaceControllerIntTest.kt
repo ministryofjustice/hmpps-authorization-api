@@ -38,8 +38,8 @@ import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
 import java.time.Duration
-import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Base64.getEncoder
 import java.util.Optional
 
@@ -119,10 +119,10 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
           assertNull(ipAllowCClient.expired)
 
           val testClientIdClient = allClients.clients.first { it.baseClientId == "test-client-id" }
-          assertEquals(Instant.parse("2024-08-22T11:30:30Z"), testClientIdClient.lastAccessed)
+          assertEquals(LocalDateTime.parse("2024-08-22T11:30:30"), testClientIdClient.lastAccessed)
 
           val testAuthCodeClient = allClients.clients.first { it.baseClientId == "test-auth-code-client" }
-          assertEquals(Instant.parse("2024-08-19T18:36:27Z"), testAuthCodeClient.lastAccessed)
+          assertEquals(LocalDateTime.parse("2024-08-19T18:36:27"), testAuthCodeClient.lastAccessed)
 
           // 161 clients in total, but some are duplicates so 155 base client IDs
           assertEquals(155, allClients.clients.size)
