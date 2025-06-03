@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsInterfaceService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.SortBy
-import java.time.Instant
+import java.time.LocalDateTime
 
 @Controller
 class ClientsInterfaceController(
@@ -133,8 +133,8 @@ data class ClientExistsResponse(
 
 data class ClientDateSummary(
   val clientId: String,
-  val created: Instant,
-  val lastAccessed: Instant?,
+  val created: LocalDateTime,
+  val lastAccessed: LocalDateTime?,
 )
 
 data class ClientDuplicatesResponse(

@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.authorizationapi.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationapi.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.MfaAccess
 import uk.gov.justice.digital.hmpps.authorizationapi.service.MigrateClientService
-import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Controller
 class MigrationController(
@@ -45,9 +45,9 @@ class MigrationClientRequest(
   val databaseUserName: String?,
   val validDays: Long?,
   val accessTokenValiditySeconds: Long?,
-  val clientIdIssuedAt: Instant,
+  val clientIdIssuedAt: LocalDateTime,
   val clientEndDate: LocalDate?,
-  var lastAccessed: Instant?,
+  var lastAccessed: LocalDateTime?,
   val clientSecret: String,
   val grantType: String,
   val clientDeploymentDetails: ClientDeploymentDetails?,

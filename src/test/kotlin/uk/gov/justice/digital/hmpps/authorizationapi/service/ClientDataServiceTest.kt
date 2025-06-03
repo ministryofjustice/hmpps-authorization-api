@@ -19,8 +19,8 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientDetailsResponse
-import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 class ClientDataServiceTest {
@@ -161,7 +161,7 @@ class ClientDataServiceTest {
   private fun getTestClient(clientId: String = CLIENT_ID) = Client(
     id = "1234567890",
     clientId = clientId,
-    clientIdIssuedAt = Instant.now().minusSeconds(TWENTY_FOUR_HOURS_IN_SECONDS),
+    clientIdIssuedAt = LocalDateTime.now().minusSeconds(TWENTY_FOUR_HOURS_IN_SECONDS),
     clientSecret = "thisIsASecret",
     clientSecretExpiresAt = null,
     clientName = "uber-client",

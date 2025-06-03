@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.MigrationClientRequest
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
-import java.time.ZoneOffset
 
 @Component
 class MigrationClientConverter(
@@ -20,7 +19,7 @@ class MigrationClientConverter(
         id = java.util.UUID.randomUUID().toString(),
         clientId = clientId,
         clientIdIssuedAt = lastAccessed ?: clientIdIssuedAt,
-        clientSecretExpiresAt = clientEndDate?.atStartOfDay()?.toInstant(ZoneOffset.UTC),
+        clientSecretExpiresAt = clientEndDate?.atStartOfDay(),
         clientName = clientIdService.toBase(clientId),
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,
         authorizationGrantTypes = grantType,

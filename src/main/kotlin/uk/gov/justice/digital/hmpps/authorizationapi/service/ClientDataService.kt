@@ -11,8 +11,6 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepos
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientDetailsResponse
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientLastAccessedResponse
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 @Service
 class ClientDataService(
@@ -31,7 +29,7 @@ class ClientDataService(
   fun getAllClientsWithLastAccessed(): List<ClientLastAccessedResponse> = clientRepository.findAll().map {
     ClientLastAccessedResponse(
       it.clientId,
-      LocalDateTime.ofInstant(it.getLastAccessedDate(), ZoneOffset.UTC),
+      it.getLastAccessedDate(),
     )
   }
 

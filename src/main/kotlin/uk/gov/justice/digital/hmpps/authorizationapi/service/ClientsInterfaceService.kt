@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientRegistration
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
-import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Base64.getEncoder
 
@@ -152,7 +152,7 @@ class ClientsInterfaceService(
     val duplicatedRegisteredClient = client.copy(
       id = java.util.UUID.randomUUID().toString(),
       clientId = clientIdService.incrementClientId(client.clientId),
-      clientIdIssuedAt = Instant.now(),
+      clientIdIssuedAt = LocalDateTime.now(),
       clientSecret = oAuthClientSecret.encode(externalClientSecret),
     )
 
@@ -347,7 +347,7 @@ data class ClientDetail(
   val roles: String?,
   val count: Int,
   val expired: String?,
-  val lastAccessed: Instant?,
+  val lastAccessed: LocalDateTime?,
 )
 
 class ClientNotFoundException(entityName: String?, clientId: String) : RuntimeException("$entityName for client id $clientId not found")

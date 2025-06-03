@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.model.Client
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientRegistrationRequest
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
+import java.time.LocalDateTime
 
 @Component
 class ClientConverter(
@@ -18,7 +19,7 @@ class ClientConverter(
       return Client(
         id = java.util.UUID.randomUUID().toString(),
         clientId = clientId!!,
-        clientIdIssuedAt = java.time.Instant.now(),
+        clientIdIssuedAt = LocalDateTime.now(),
         clientSecretExpiresAt = null,
         clientName = clientIdService.toBase(clientId),
         clientAuthenticationMethods = CLIENT_SECRET_BASIC.value,

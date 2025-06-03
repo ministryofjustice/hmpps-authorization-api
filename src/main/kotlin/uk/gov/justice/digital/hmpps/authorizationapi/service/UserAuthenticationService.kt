@@ -9,6 +9,8 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.UserAuthorizationCode
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthenticatedUserDetails
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.Objects
 
 class UserAuthenticationService(
@@ -29,7 +31,7 @@ class UserAuthenticationService(
         userUuid = authenticatedUserDetails.uuid,
         name = authenticatedUserDetails.name,
         authSource = AuthSource.fromNullableString(authenticatedUserDetails.authSource),
-        authorizationCodeIssuedAt = oAuth2TokenHolder.token.issuedAt!!,
+        authorizationCodeIssuedAt = LocalDateTime.ofInstant(oAuth2TokenHolder.token.issuedAt!!, ZoneOffset.UTC),
         jwtId = authenticatedUserDetails.jwtId,
       )
       userAuthorizationCodeRepository.save(userAuthorizationCode)
