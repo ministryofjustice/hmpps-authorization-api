@@ -279,12 +279,14 @@ class ClientsInterfaceService(
         }
       }
 
-      val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
-        existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities!!)
-        return@let existingAuthorizationConsent
-      } ?: AuthorizationConsent(client.id, client.clientId, withAuthoritiesPrefix(clientDetails.authorities!!))
+      if (clientDetails.hasAuthorities()) {
+        val authorizationConsentToPersist = authorizationConsent?.let { existingAuthorizationConsent ->
+          existingAuthorizationConsent.authorities = withAuthoritiesPrefix(clientDetails.authorities!!)
+          return@let existingAuthorizationConsent
+        } ?: AuthorizationConsent(client.id, client.clientId, withAuthoritiesPrefix(clientDetails.authorities!!))
 
-      authorizationConsentRepository.save(authorizationConsentToPersist)
+        authorizationConsentRepository.save(authorizationConsentToPersist)
+      }
     }
   }
 
