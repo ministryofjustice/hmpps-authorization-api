@@ -7,12 +7,14 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.authorizationapi.data.model.AuthorizationConsent
+import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource.Companion.fromNullableString
@@ -21,7 +23,7 @@ import java.util.stream.Collectors
 
 @Component
 class TokenCustomizer(
-  private val authorizationConsentService: OAuth2AuthorizationConsentService,
+  private val authorizationConsentRepository: AuthorizationConsentRepository,
   private val userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oauthJtiGenerator: OAuthJtiGenerator,
@@ -88,10 +90,10 @@ class TokenCustomizer(
 
   private fun addClientAuthorities(context: JwtEncodingContext, principal: OAuth2ClientAuthenticationToken) {
     principal.registeredClient?.let { registeredClient ->
-      val oAuth2AuthorizationConsent = authorizationConsentService.findById(registeredClient.id, registeredClient.clientId)
+      val oAuth2AuthorizationConsent = authorizationConsentRepository.findByIdOrNull(AuthorizationConsent.AuthorizationConsentId(registeredClient.id, registeredClient.clientId))
 
-      oAuth2AuthorizationConsent?.let {
-        addAuthorities(context, it.authorities)
+      oAuth2AuthorizationConsent?.let { consent ->
+        addAuthorities(context, consent.authorities.map { SimpleGrantedAuthority(it) })
       }
     }
   }

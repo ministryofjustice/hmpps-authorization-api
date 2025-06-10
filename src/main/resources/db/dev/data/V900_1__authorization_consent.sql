@@ -84,3 +84,7 @@ VALUES  ('b495c436-6149-4969-93d6-1e03f7ec435c', 'apireporting', 'ROLE_REPORTING
         ('e1c775a5-81dd-4ed0-b106-5cc9ca1a6494', 'hmpps-assess-risks-and-needs-oastub-ui', 'ROLE_STRENGTHS_AND_NEEDS_READ,ROLE_STRENGTHS_AND_NEEDS_WRITE,ROLE_STRENGTHS_AND_NEEDS_OASYS,ROLE_RISK_INTEGRATIONS_RO,ROLE_SENTENCE_PLAN_READ,ROLE_SENTENCE_PLAN_WRITE'),
         ('ca47e68b-5d06-4db8-a761-50e16738602b', 'hmpps-community-payback-api-client', 'ROLE_ARN_READ_ONLY'),
         ('7995ffe9-3881-4312-b36f-100cc4ccc81e', 'hmpps-learner-records-api-client', 'ROLE_LEARNER_RECORDS_SEARCH__RO');
+
+-- No authorities test --
+insert into oauth2_authorization_consent (registered_client_id, principal_name, authorities)
+values  ('b1a685ed-76ba-4ac3-bfd8-85152d9d2576', 'no-authorities', '');
