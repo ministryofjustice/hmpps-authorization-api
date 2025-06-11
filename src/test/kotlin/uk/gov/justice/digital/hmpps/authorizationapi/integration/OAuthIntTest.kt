@@ -26,7 +26,6 @@ import org.springframework.web.reactive.function.BodyInserters.fromFormData
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
-import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -40,9 +39,6 @@ class OAuthIntTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var userAuthenticationService: OAuth2AuthorizationService
-
-  @Autowired
-  private lateinit var oAuthClientSecret: OAuthClientSecret
 
   @MockitoBean
   private lateinit var telemetryClient: TelemetryClient
@@ -273,6 +269,22 @@ class OAuthIntTest : IntegrationTestBase() {
         mapOf("clientId" to "unrecognised-client-id", "clientIpAddress" to "127.0.0.1"),
         null,
       )
+    }
+
+    @Test
+    fun `client with no authorities in authorization consent`() {
+      webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("no-authorities:clientsecret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
     }
 
     @Test

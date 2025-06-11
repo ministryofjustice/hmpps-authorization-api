@@ -15,3 +15,7 @@ VALUES  ('another-delete-test-client', 'SERVICE', 'A Team', 'A Team contact', 'A
         ('individual-client', 'PERSONAL', 'Bob', 'Bob@digital.justice.gov.uk', 'bob slack', 'OTHER', null, null, null, null, null, null),
         ('service-client', 'SERVICE', 'A Team', 'A Team contact', 'A team slack', 'CLOUDPLATFORM', 'service-dev', 'service-deployment', 'service-secret', 'API_CLIENT_ID', 'API_CLIENT_SECRET', 'More info blah'),
         ('another-test-client', 'SERVICE', 'A Team', 'A Team contact', 'A team slack', 'CLOUDPLATFORM', 'duplicate-dev', 'duplicate-deployment', 'duplicate-secret', 'API_CLIENT_ID', 'API_CLIENT_SECRET', 'More info blah');
+
+-- No Authorities test --
+insert into oauth2_client_deployment_details (base_client_id, client_type, team, team_contact, team_slack, hosting, namespace, deployment, secret_name, client_id_key, secret_key, deployment_info)
+values  ('no-authorities', null, null, null, null, null, null, null, null, null, null, null);

@@ -14,3 +14,7 @@ VALUES  ('end-date-client', '', null),
         ('ip-allow-group-client', '35.176.0.0/16,group_name_a', null),
         ('service-client', '127.0.0.1', null),
         ('another-test-client', '127.0.0.1', null);
+
+-- No authorities test --
+insert into oauth2_client_config (base_client_id, allowed_ips, client_end_date)
+values  ('no-authorities', '127.0.0.1', null);
