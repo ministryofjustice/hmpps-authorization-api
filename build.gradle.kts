@@ -24,8 +24,6 @@ dependencies {
   implementation("org.apache.commons:commons-text:1.13.1")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.jsonwebtoken:jjwt:0.12.6")
-  implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.0")
-  implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.0")
 
   runtimeOnly("com.h2database:h2:2.3.232")
   runtimeOnly("org.postgresql:postgresql:42.7.7")

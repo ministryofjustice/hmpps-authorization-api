@@ -6,9 +6,6 @@ import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import net.javacrumbs.shedlock.core.LockProvider
-import net.javacrumbs.shedlock.provider.jdbctemplate.DatabaseProduct
-import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.security.SecurityProperties
@@ -59,7 +56,6 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.AuthenticationConverter
 import org.springframework.security.web.authentication.AuthenticationFailureHandler
 import org.springframework.security.web.authentication.logout.LogoutFilter
-import org.springframework.transaction.PlatformTransactionManager
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
@@ -79,7 +75,6 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.UrlDecodingRetryCli
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UserAuthenticationService
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
-import java.sql.Connection
 import java.util.function.Consumer
 
 @EnableWebSecurity
@@ -267,18 +262,6 @@ class AuthorizationApiConfig(
     userDetailsService.jdbcTemplate = jdbcTemplate
     return userDetailsService
   }
-
-  @Bean
-  fun lockProvider(jdbcTemplate: JdbcTemplate, platformTransactionManager: PlatformTransactionManager): LockProvider = JdbcTemplateLockProvider(
-    JdbcTemplateLockProvider.Configuration.builder()
-      .withTableName("scheduled_job_lock")
-      .withJdbcTemplate(jdbcTemplate)
-      .withDatabaseProduct(DatabaseProduct.POSTGRES_SQL)
-      .withTransactionManager(platformTransactionManager)
-      .withIsolationLevel(Connection.TRANSACTION_SERIALIZABLE)
-      .usingDbTime()
-      .build(),
-  )
 
   private fun withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider is ClientSecretAuthenticationProvider) {
