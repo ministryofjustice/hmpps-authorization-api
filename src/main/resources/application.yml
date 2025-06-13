@@ -101,10 +101,6 @@ management:
 application:
   authentication:
     match-subdomains: false
-    cron:
-      remove-access-tokens: 0 30 * * * * # hourly at 30 minutes past the hour
-      remove-expired-auth-codes: 0 0 1 * * *  # once a day at 1 am
-      remove-expired-user-details: 0 20 */2 * * * # every 2 hours at 20 minutes past the hour
   oauth2:
     authorization-code:
       time-to-live: PT5M # Spring default to 5 minutes if no override is provided. For visibility explicitly apply default here.
