@@ -6,7 +6,6 @@ import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.security.SecurityProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean
@@ -80,7 +79,6 @@ import java.util.function.Consumer
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
 @EnableScheduling
-@EnableSchedulerLock(defaultLockAtMostFor = "PT50M", defaultLockAtLeastFor = "PT3M")
 @Configuration(proxyBeanMethods = false)
 class AuthorizationApiConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
