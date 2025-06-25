@@ -9,7 +9,7 @@ import java.time.Duration
 
 @Component
 class RegisteredClientAdditionalInformation(
-  @Value("\${application.oauth2.authorizationcode.timetolive}") val authorizationCodeTTL: String?,
+  @Value("\${application.oauth2.authorization-code.time-to-live}") val authorizationCodeTTL: String?,
 ) {
 
   companion object {
@@ -17,7 +17,6 @@ class RegisteredClientAdditionalInformation(
     const val JIRA_NUMBER_KEY = CLIENT_ADDITIONAL_DATA + "jira-number"
     const val DATABASE_USER_NAME_KEY = CLIENT_ADDITIONAL_DATA + "database-user-name"
     const val JWT_FIELDS_NAME_KEY = CLIENT_ADDITIONAL_DATA + "jwtFields"
-    const val CLAIMS_JIRA_NUMBER = "jira_number"
     const val AUTH_CODE_TTL_DEFAULT_DURATION = "PT5M"
   }
 
@@ -59,10 +58,4 @@ class RegisteredClientAdditionalInformation(
   fun getJiraNumber(clientSettings: ClientSettings?): String? = clientSettings?.let { it.settings[JIRA_NUMBER_KEY] as String? }
 
   fun getJwtFields(clientSettings: ClientSettings?): String? = clientSettings?.let { it.settings[JWT_FIELDS_NAME_KEY] as String? }
-
-  fun mapFrom(claims: Map<String, Any>): Map<String, Any> {
-    val additionalTokenSettings = HashMap<String, Any>()
-    claims[CLAIMS_JIRA_NUMBER]?.let { additionalTokenSettings[JIRA_NUMBER_KEY] = it }
-    return additionalTokenSettings
-  }
 }

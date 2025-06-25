@@ -28,7 +28,7 @@ import kotlin.streams.asSequence
 @Transactional
 @TestPropertySource(
   properties = [
-    "application.oauth2.authorizationcode.timetolive=PT13M",
+    "application.oauth2.authorization-code.time-to-live=PT13M",
   ],
 )
 class TokenSettingsAuthorizationCodeTimeToLiveConfigTest : IntegrationTestBase() {

@@ -64,10 +64,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsRe
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientSecretBasicBase64OnlyAuthenticationConverter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
-import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingAuthenticationFailureHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
-import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientAdditionalInformation
-import uk.gov.justice.digital.hmpps.authorizationapi.service.RegisteredClientDataService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.SubDomainMatchingRedirectUriValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UrlDecodingRetryClientSecretAuthenticationProvider
@@ -83,7 +80,6 @@ import java.util.function.Consumer
 class AuthorizationApiConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${hmpps-auth.issuer.url}") private val authIssuerUrl: String,
-  @Value("\${server.servlet.context-path}") private val contextPath: String,
   @Value("\${application.authentication.match-subdomains:false}") private val matchSubdomains: Boolean,
   private val clientConfigRepository: ClientConfigRepository,
   private val clientIdService: ClientIdService,
@@ -109,9 +105,6 @@ class AuthorizationApiConfig(
   @Order(Ordered.HIGHEST_PRECEDENCE)
   fun authorizationServerSecurityFilterChain(
     http: HttpSecurity,
-    registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
-    registeredClientDataService: RegisteredClientDataService,
-    loggingAuthenticationFailureHandler: LoggingAuthenticationFailureHandler,
   ): SecurityFilterChain {
     val configurer = OAuth2AuthorizationServerConfigurer.authorizationServer()
     http {
