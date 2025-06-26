@@ -8,7 +8,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono
 import java.util.Optional
 
-@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 class AuthService(
   @Qualifier("authWebClient") private val webClient: WebClient,

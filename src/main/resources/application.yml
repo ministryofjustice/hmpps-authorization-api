@@ -27,8 +27,9 @@ jwt:
 spring:
   application:
     name: hmpps-authorization-api
-  codec:
-    max-in-memory-size: 10MB
+  http:
+    codecs:
+      max-in-memory-size: 10MB
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
@@ -53,9 +54,12 @@ spring:
           hmpps-auth:
             token-uri: ${authorization.token.url}
 
+  sql:
+    init:
+      continue-on-error: true
+
   datasource:
     url: jdbc:postgresql://${SPRING_DATASOURCE_ENDPOINT}/${SPRING_DATASOURCE_NAME}?sslmode=verify-full
-    continue-on-error: true
     hikari:
       pool-name: AuthorizationApi-CP
       maximum-pool-size: 20
