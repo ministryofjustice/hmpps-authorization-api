@@ -5,7 +5,7 @@ generic-service:
   replicaCount: 4
 
   image:
-    repository: quay.io/hmpps/hmpps-authorization-api
+    repository: ghcr.io/ministryofjustice/hmpps-authorization-api
     tag: app_version # override at deployment time
     port: 8080
 
@@ -19,7 +19,6 @@ generic-service:
     JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
-    APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
@@ -28,8 +27,9 @@ generic-service:
   #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
 
   namespace_secrets:
+    hmpps-authorization-api-application-insights:
+      APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
     hmpps-authorization-api:
-      APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
       JWT_JWK_KEY_ID: "JWT_JWK_KEY_ID"
       JWT_KEYSTORE_ALIAS: "JWT_KEYSTORE_ALIAS"
       JWT_KEYSTORE_PASSWORD: "JWT_KEYSTORE_PASSWORD"
