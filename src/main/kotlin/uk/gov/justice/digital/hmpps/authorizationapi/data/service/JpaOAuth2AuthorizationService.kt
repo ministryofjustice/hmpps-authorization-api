@@ -13,14 +13,12 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module
-import org.springframework.stereotype.Component
 import org.springframework.util.StringUtils
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.Authorization
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
 import java.time.ZoneId
 
-@Component
 class JpaOAuth2AuthorizationService(
   private val authorizationRepository: AuthorizationRepository,
   private val registeredClientRepository: JdbcRegisteredClientRepository,
