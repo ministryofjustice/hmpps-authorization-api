@@ -9,9 +9,10 @@ on:
         required: true
         options:
           - dev
+          - stage
 #          - preprod
 #          - prod
-        default: 'dev'
+        default: 'stage'
       version:
         description: version to be deployed to the environment - must already exist.
         required: true
