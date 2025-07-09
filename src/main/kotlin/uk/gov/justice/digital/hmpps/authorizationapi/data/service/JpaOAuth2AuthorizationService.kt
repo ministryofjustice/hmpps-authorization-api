@@ -127,7 +127,7 @@ class JpaOAuth2AuthorizationService(
         registeredClientId = registeredClientId,
         principalName = principalName,
         authorizationGrantType = authorizationGrantType.value,
-        authorizedScopes = authorizedScopes.joinToString(),
+        authorizedScopes = authorizedScopes.joinToString(separator = ","),
         attributes = writeMap(attributes)!!,
         state = getAttribute(OAuth2ParameterNames.STATE),
         authorizationCodeValue = oAuth2AuthorizationCodeToken?.token?.tokenValue,
