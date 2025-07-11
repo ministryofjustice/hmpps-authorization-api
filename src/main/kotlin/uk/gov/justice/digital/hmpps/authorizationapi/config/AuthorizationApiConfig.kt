@@ -37,7 +37,6 @@ import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
-import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.authentication.ClientSecretAuthenticationProvider
@@ -55,8 +54,10 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.AuthenticationConverter
 import org.springframework.security.web.authentication.AuthenticationFailureHandler
 import org.springframework.security.web.authentication.logout.LogoutFilter
+import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.data.service.JpaOAuth2AuthorizationService
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorizationCodeFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
@@ -233,11 +234,11 @@ class AuthorizationApiConfig(
 
   @Bean
   fun authorizationService(
-    jdbcTemplate: JdbcTemplate,
-    registeredClientRepository: RegisteredClientRepository,
+    authorizationRepository: AuthorizationRepository,
+    registeredClientRepository: JdbcRegisteredClientRepository,
     userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
   ): OAuth2AuthorizationService = UserAuthenticationService(
-    JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository),
+    JpaOAuth2AuthorizationService(authorizationRepository, registeredClientRepository),
     userAuthorizationCodeRepository,
   )
 

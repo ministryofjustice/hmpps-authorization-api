@@ -12,19 +12,40 @@ data class Authorization(
   @Id
   val id: String,
 
-  private val registeredClientId: String,
+  val registeredClientId: String,
 
-  @Column(name = "principal_name")
-  private val principalName: String,
+  val principalName: String,
 
-  private val authorizationGrantType: String,
+  val authorizationGrantType: String,
 
-  @Column(name = "access_token_issued_at")
-  var accessTokenIssuedAt: LocalDateTime?,
+  @Column(length = 1000)
+  val authorizedScopes: String?,
 
-  @Column(name = "authorization_code_issued_at")
+  @Column(length = 4000)
+  val attributes: String?,
+
+  @Column(length = 500)
+  val state: String? = null,
+
+  @Column(length = 4000)
+  val authorizationCodeValue: String?,
+
   var authorizationCodeIssuedAt: LocalDateTime?,
 
-  @Column(name = "authorization_code_expires_at")
   var authorizationCodeExpiresAt: LocalDateTime?,
+
+  val authorizationCodeMetadata: String?,
+
+  @Column(length = 4000)
+  val accessTokenValue: String?,
+
+  val accessTokenIssuedAt: LocalDateTime?,
+  val accessTokenExpiresAt: LocalDateTime?,
+
+  @Column(length = 2000)
+  val accessTokenMetadata: String?,
+  val accessTokenType: String?,
+
+  @Column(length = 1000)
+  val accessTokenScopes: String?,
 )

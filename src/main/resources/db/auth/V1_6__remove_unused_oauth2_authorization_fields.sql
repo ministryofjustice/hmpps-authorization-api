@@ -1,0 +1,17 @@
+ALTER TABLE OAUTH2_AUTHORIZATION
+    DROP oidc_id_token_value,
+    oidc_id_token_issued_at,
+    oidc_id_token_expires_at,
+    oidc_id_token_metadata,
+    refresh_token_value,
+    refresh_token_issued_at,
+    refresh_token_expires_at,
+    refresh_token_metadata,
+    user_code_value,
+    user_code_issued_at,
+    user_code_expires_at,
+    user_code_metadata,
+    device_code_value,
+    device_code_issued_at,
+    device_code_expires_at,
+    device_code_metadata;
