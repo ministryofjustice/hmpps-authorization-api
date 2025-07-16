@@ -114,7 +114,7 @@ class JpaOAuth2AuthorizationService(
   } else if (AuthorizationGrantType.CLIENT_CREDENTIALS.value == authorizationGrantType) {
     AuthorizationGrantType.CLIENT_CREDENTIALS
   } else {
-    AuthorizationGrantType(authorizationGrantType)
+    throw IllegalArgumentException("AuthorizationGrantType $authorizationGrantType not supported")
   }
 
   private fun toEntity(authorization: OAuth2Authorization): Authorization {
