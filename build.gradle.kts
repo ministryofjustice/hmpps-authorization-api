@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.3"
-  kotlin("plugin.spring") version "2.2.0"
-  kotlin("plugin.jpa") version "2.2.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.6"
+  kotlin("plugin.spring") version "2.2.10"
+  kotlin("plugin.jpa") version "2.2.10"
 }
 
 configurations {
@@ -21,9 +21,9 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
   implementation("org.json:json:20250517")
   implementation("commons-codec:commons-codec")
-  implementation("org.apache.commons:commons-text:1.13.1")
+  implementation("org.apache.commons:commons-text:1.14.0")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("io.jsonwebtoken:jjwt:0.12.6")
+  implementation("io.jsonwebtoken:jjwt:0.12.7")
 
   runtimeOnly("com.h2database:h2:2.3.232")
   runtimeOnly("org.postgresql:postgresql:42.7.7")
@@ -31,8 +31,8 @@ dependencies {
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.7")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.7")
   implementation(kotlin("stdlib"))
 }
 
