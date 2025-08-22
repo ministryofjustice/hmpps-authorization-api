@@ -65,6 +65,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsRe
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientSecretBasicBase64OnlyAuthenticationConverter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
+import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingRedirectUriValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
 import uk.gov.justice.digital.hmpps.authorizationapi.service.SubDomainMatchingRedirectUriValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
@@ -158,13 +159,15 @@ class AuthorizationApiConfig(
   }
 
   private fun configureAuthenticationValidators(): Consumer<MutableList<AuthenticationProvider>> = Consumer { authenticationProviders ->
-    if (matchSubdomains) {
-      authenticationProviders.forEach { provider ->
-        if (provider is OAuth2AuthorizationCodeRequestAuthenticationProvider) {
+    authenticationProviders.forEach { provider ->
+      if (provider is OAuth2AuthorizationCodeRequestAuthenticationProvider) {
+        if (matchSubdomains) {
           val authenticationValidator: Consumer<OAuth2AuthorizationCodeRequestAuthenticationContext> =
             SubDomainMatchingRedirectUriValidator()
               .andThen(OAuth2AuthorizationCodeRequestAuthenticationValidator.DEFAULT_SCOPE_VALIDATOR)
-          provider.setAuthenticationValidator(authenticationValidator)
+          provider.setAuthenticationValidator(LoggingRedirectUriValidator(authenticationValidator))
+        } else {
+          provider.setAuthenticationValidator(LoggingRedirectUriValidator(OAuth2AuthorizationCodeRequestAuthenticationValidator()))
         }
       }
     }
