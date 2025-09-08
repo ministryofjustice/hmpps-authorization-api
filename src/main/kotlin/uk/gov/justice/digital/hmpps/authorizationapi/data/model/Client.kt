@@ -56,6 +56,9 @@ data class Client(
   @Convert(converter = TokenSettingsConverter::class)
   var tokenSettings: TokenSettings,
 
+  @Column(name = "migrated_last_accessed")
+  var migratedLastAccessed: LocalDateTime? = null,
+
   @OneToMany
   @JoinColumn(name = "registeredClientId")
   val latestClientAuthorization: MutableSet<Authorization>?,
@@ -74,7 +77,7 @@ data class Client(
   fun getLastAccessedDate(): LocalDateTime = latestClientAuthorization
     ?.filter { it.accessTokenIssuedAt != null || it.authorizationCodeIssuedAt != null }
     ?.map { (it.accessTokenIssuedAt ?: it.authorizationCodeIssuedAt)!! }
-    ?.maxOfOrNull { it } ?: clientIdIssuedAt
+    ?.maxOfOrNull { it } ?: migratedLastAccessed ?: clientIdIssuedAt
 
   fun getRegisteredRedirectUriWithNewlines(): Set<String>? = redirectUris?.replace("""\s+""".toRegex(), ",")
     ?.split(',')
