@@ -6,8 +6,6 @@ import jakarta.persistence.Convert
 import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.apache.commons.lang3.StringUtils
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
@@ -56,12 +54,8 @@ data class Client(
   @Convert(converter = TokenSettingsConverter::class)
   var tokenSettings: TokenSettings,
 
-  @Column(name = "migrated_last_accessed")
-  var migratedLastAccessed: LocalDateTime? = null,
-
-  @OneToMany
-  @JoinColumn(name = "registeredClientId")
-  val latestClientAuthorization: MutableSet<Authorization>?,
+  @Column(name = "last_accessed")
+  var lastAccessedDate: LocalDateTime? = null,
 
   var mfaRememberMe: Boolean,
 
@@ -74,10 +68,7 @@ data class Client(
   var resourceIds: List<String>?,
 ) {
 
-  fun getLastAccessedDate(): LocalDateTime = latestClientAuthorization
-    ?.filter { it.accessTokenIssuedAt != null || it.authorizationCodeIssuedAt != null }
-    ?.map { (it.accessTokenIssuedAt ?: it.authorizationCodeIssuedAt)!! }
-    ?.maxOfOrNull { it } ?: migratedLastAccessed ?: clientIdIssuedAt
+  fun getLastActiveDate(): LocalDateTime = lastAccessedDate ?: clientIdIssuedAt
 
   fun getRegisteredRedirectUriWithNewlines(): Set<String>? = redirectUris?.replace("""\s+""".toRegex(), ",")
     ?.split(',')

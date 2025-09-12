@@ -27,7 +27,6 @@ class ClientConverter(
         scopes = scopes ?: listOf("read"),
         clientSettings = registeredClientAdditionalInformation.buildClientSettings(databaseUserName, jiraNumber, jwtFields),
         tokenSettings = registeredClientAdditionalInformation.buildTokenSettings(accessTokenValiditySeconds),
-        latestClientAuthorization = mutableSetOf(),
         mfa = mfa,
         mfaRememberMe = mfaRememberMe,
         redirectUris = redirectUris,
