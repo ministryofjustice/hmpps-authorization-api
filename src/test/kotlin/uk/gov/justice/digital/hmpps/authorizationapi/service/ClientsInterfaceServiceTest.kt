@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepos
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientUpdateRequest
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthClientSecret
 import java.time.LocalDateTime
-import java.util.Optional
+import java.util.*
 
 class ClientsInterfaceServiceTest {
 
@@ -155,7 +155,6 @@ class ClientsInterfaceServiceTest {
       scopes = listOf("read", "write"),
       clientSettings = ClientSettings.builder().build(),
       tokenSettings = TokenSettings.builder().build(),
-      latestClientAuthorization = null,
       mfaRememberMe = false,
       mfa = null,
       skipToAzure = false,

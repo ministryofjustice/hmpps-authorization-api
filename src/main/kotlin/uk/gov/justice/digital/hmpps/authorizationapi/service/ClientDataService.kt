@@ -29,7 +29,7 @@ class ClientDataService(
   fun getAllClientsWithLastAccessed(): List<ClientLastAccessedResponse> = clientRepository.findAll().map {
     ClientLastAccessedResponse(
       it.clientId,
-      it.getLastAccessedDate(),
+      it.getLastActiveDate(),
     )
   }
 

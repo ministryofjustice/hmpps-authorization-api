@@ -172,7 +172,6 @@ class ClientDataServiceTest {
     scopes = listOf("read", "write"),
     clientSettings = ClientSettings.builder().build(),
     tokenSettings = TokenSettings.builder().build(),
-    latestClientAuthorization = null,
     mfaRememberMe = false,
     mfa = null,
     skipToAzure = false,

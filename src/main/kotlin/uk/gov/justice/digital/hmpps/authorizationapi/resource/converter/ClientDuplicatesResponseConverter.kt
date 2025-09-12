@@ -14,7 +14,7 @@ class ClientDuplicatesResponseConverter : Converter<List<Client>, ClientDuplicat
       ClientDateSummary(
         clientId = client.clientId,
         created = client.clientIdIssuedAt,
-        lastAccessed = client.getLastAccessedDate(),
+        lastAccessed = client.getLastActiveDate(),
       )
     }
 
