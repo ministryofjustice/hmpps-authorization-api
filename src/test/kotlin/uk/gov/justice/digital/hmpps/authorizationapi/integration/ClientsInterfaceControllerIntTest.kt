@@ -118,10 +118,10 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
           assertNull(ipAllowCClient.expired)
 
           val testClientIdClient = allClients.clients.first { it.baseClientId == "test-client-id" }
-          assertThat(testClientIdClient.lastAccessed).isNotNull
+          assertThat(testClientIdClient.lastAccessed!!.toLocalDate()).isToday
 
           val testAuthCodeClient = allClients.clients.first { it.baseClientId == "test-auth-code-client" }
-          assertThat(testAuthCodeClient.lastAccessed).isNotNull
+          assertThat(testAuthCodeClient.lastAccessed!!.toLocalDate()).isToday
 
           assertEquals(159, allClients.clients.size)
         }
