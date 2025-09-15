@@ -169,7 +169,7 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `updates last accessed date`() {
+    fun `updates last accessed date when null and suppresses update when already set to today`() {
       var client = clientRepository.findClientByClientId("last-accessed-date-test-client")
       assertThat(client!!.lastAccessedDate).isNull()
 
@@ -187,8 +187,51 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectStatus().isOk
 
       client = clientRepository.findClientByClientId("last-accessed-date-test-client")
-      assertThat(client!!.lastAccessedDate).isNotNull
-      assertThat(client.lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+      val lastAccessedDate = client!!.lastAccessedDate
+
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+
+      webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("last-accessed-date-test-client:test-secret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      client = clientRepository.findClientByClientId("last-accessed-date-test-client")
+      assertThat(client!!.lastAccessedDate).isEqualTo(lastAccessedDate)
+    }
+
+    @Test
+    fun `updates last accessed when before today`() {
+      var client = clientRepository.findClientByClientId("last-accessed-in-the-past-test-client")
+      assertThat(client!!.lastAccessedDate!!.toLocalDate()).isBefore(LocalDate.now())
+
+      webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("last-accessed-in-the-past-test-client:test-secret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      client = clientRepository.findClientByClientId("last-accessed-in-the-past-test-client")
+      val lastAccessedDate = client!!.lastAccessedDate
+
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
     }
 
     @Test
@@ -487,7 +530,7 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `success redirects with code and updates last accessed date`() {
+    fun `success redirects with code and updates last accessed date when null and suppresses update when already set to today`() {
       var client = clientRepository.findClientByClientId("hmpps-authorization-client")
       assertThat(client!!.lastAccessedDate).isNull()
 
@@ -502,8 +545,20 @@ class OAuthIntTest : IntegrationTestBase() {
         .value("Location", allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")))
 
       client = clientRepository.findClientByClientId("hmpps-authorization-client")
-      assertThat(client!!.lastAccessedDate).isNotNull
-      assertThat(client.lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+      var lastAccessedDate = client!!.lastAccessedDate
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+
+      webTestClient
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=hmpps-authorization-client&state=$state&redirect_uri=http://localhost:3002/sign-in/callback")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isFound
+
+      client = clientRepository.findClientByClientId("hmpps-authorization-client")
+      assertThat(lastAccessedDate).isEqualTo(lastAccessedDate)
     }
 
     @Test

@@ -25,27 +25,19 @@ class AuthenticationSuccessHandler(
     if (client == null) {
       log.warn("Client $clientId not found")
     } else {
-      if (client.lastAccessedDate == null) {
+      if (client.lastAccessedDate == null || client.lastAccessedDate!!.isBeforeToday()) {
         client.lastAccessedDate = LocalDateTime.now()
-      } else {
-        if (client.lastAccessedDate!!.isBeforeToday()) {
-          client.lastAccessedDate = LocalDateTime.now()
-        }
       }
     }
   }
 
-  fun LocalDateTime.isBeforeToday(): Boolean {
-    val date = this.toLocalDate()
-    return date != LocalDate.now() && date.isBefore(LocalDate.now())
-  }
+  fun LocalDateTime.isBeforeToday() = this.toLocalDate().isBefore(LocalDate.now())
 
   private fun extractClientIdFrom(successEvent: AuthenticationSuccessEvent): String {
     val eventSource = successEvent.source
     return when (eventSource) {
-      is OAuth2ClientAuthenticationToken -> eventSource.principal.toString()
+      is OAuth2ClientAuthenticationToken, is OAuth2AccessTokenAuthenticationToken -> eventSource.principal.toString()
       is OAuth2AuthorizationCodeRequestAuthenticationToken -> eventSource.clientId
-      is OAuth2AccessTokenAuthenticationToken -> eventSource.principal.toString()
       else -> "unknown"
     }
   }
