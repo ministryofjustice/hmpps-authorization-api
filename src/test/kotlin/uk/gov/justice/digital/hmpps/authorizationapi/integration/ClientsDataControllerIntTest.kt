@@ -42,7 +42,7 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(163) }
+        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(165) }
         .jsonPath("$.[0].clientId").isEqualTo("test-client-id")
         .jsonPath("$.[0].scopes[0]").isEqualTo("read")
         .jsonPath("$.[0].scopes[1]").isEqualTo("write")
@@ -129,7 +129,7 @@ class ClientsDataControllerIntTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(163) }
+        .jsonPath("$.[*]").value<List<String>> { assertThat(it).hasSize(165) }
         .jsonPath("$.[1].clientId").isEqualTo("test-client-create-id")
         .jsonPath("$.[1].lastAccessed").value { lastAccessed: String ->
           val lastAccessedTime = LocalDateTime.parse(lastAccessed)

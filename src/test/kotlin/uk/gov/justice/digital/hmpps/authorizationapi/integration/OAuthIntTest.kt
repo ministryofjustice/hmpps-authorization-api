@@ -562,6 +562,27 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `success updates last accessed date when before today`() {
+      var client = clientRepository.findClientByClientId("last-accessed-in-the-past-hmpps-authorization-client")
+      assertThat(client!!.lastAccessedDate!!.toLocalDate()).isBefore(LocalDate.now())
+
+      webTestClient
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=last-accessed-in-the-past-hmpps-authorization-client&state=$state&redirect_uri=http://localhost:3002/sign-in/callback")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isFound
+        .expectHeader()
+        .value("Location", allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")))
+
+      client = clientRepository.findClientByClientId("last-accessed-in-the-past-hmpps-authorization-client")
+      var lastAccessedDate = client!!.lastAccessedDate
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+    }
+
+    @Test
     fun `authorization code is valid for the default duration when no override has been defined`() {
       val location = webTestClient
         .get()

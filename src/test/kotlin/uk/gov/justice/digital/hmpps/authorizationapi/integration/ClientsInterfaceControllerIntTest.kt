@@ -123,8 +123,7 @@ class ClientsInterfaceControllerIntTest : IntegrationTestBase() {
           val testAuthCodeClient = allClients.clients.first { it.baseClientId == "test-auth-code-client" }
           assertThat(testAuthCodeClient.lastAccessed).isNotNull
 
-          // 162 clients in total, but some are duplicates so 156 base client IDs
-          assertEquals(157, allClients.clients.size)
+          assertEquals(159, allClients.clients.size)
         }
     }
 
