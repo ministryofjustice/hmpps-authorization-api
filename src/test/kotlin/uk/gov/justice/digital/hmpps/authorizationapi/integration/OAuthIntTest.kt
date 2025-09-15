@@ -23,14 +23,15 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters.fromFormData
+import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
-import java.util.Base64
-import java.util.Date
+import java.time.LocalDate
+import java.util.*
 
 class OAuthIntTest : IntegrationTestBase() {
 
@@ -39,6 +40,9 @@ class OAuthIntTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var userAuthenticationService: OAuth2AuthorizationService
+
+  @Autowired
+  private lateinit var clientRepository: ClientRepository
 
   @MockitoBean
   private lateinit var telemetryClient: TelemetryClient
@@ -162,6 +166,72 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(token.get("database_username")).isEqualTo("testy-db")
       assertThat(token.get("user_name")).isEqualTo("testy")
       verifyClaimNotPresentIn(token, "aud")
+    }
+
+    @Test
+    fun `updates last accessed date when null and suppresses update when already set to today`() {
+      var client = clientRepository.findClientByClientId("last-accessed-date-test-client")
+      assertThat(client!!.lastAccessedDate).isNull()
+
+      webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("last-accessed-date-test-client:test-secret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      client = clientRepository.findClientByClientId("last-accessed-date-test-client")
+      val lastAccessedDate = client!!.lastAccessedDate
+
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+
+      webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("last-accessed-date-test-client:test-secret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      client = clientRepository.findClientByClientId("last-accessed-date-test-client")
+      assertThat(client!!.lastAccessedDate).isEqualTo(lastAccessedDate)
+    }
+
+    @Test
+    fun `updates last accessed when before today`() {
+      var client = clientRepository.findClientByClientId("last-accessed-in-the-past-test-client")
+      assertThat(client!!.lastAccessedDate!!.toLocalDate()).isBefore(LocalDate.now())
+
+      webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("last-accessed-in-the-past-test-client:test-secret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .body(
+          fromFormData("grant_type", "client_credentials"),
+        )
+        .exchange()
+        .expectStatus().isOk
+
+      client = clientRepository.findClientByClientId("last-accessed-in-the-past-test-client")
+      val lastAccessedDate = client!!.lastAccessedDate
+
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
     }
 
     @Test
@@ -438,7 +508,7 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `client credentials token with incorrect authority`() {
+    fun `incorrect authority`() {
       webTestClient
         .get()
         .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
@@ -449,7 +519,7 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `client credentials token with no authority`() {
+    fun `no authority`() {
       webTestClient
         .get()
         .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
@@ -460,20 +530,60 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `success redirects with code`() {
+    fun `success redirects with code and updates last accessed date when null and suppresses update when already set to today`() {
+      var client = clientRepository.findClientByClientId("hmpps-authorization-client")
+      assertThat(client!!.lastAccessedDate).isNull()
+
       webTestClient
         .get()
-        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .uri("/oauth2/authorize?response_type=code&client_id=hmpps-authorization-client&state=$state&redirect_uri=http://localhost:3002/sign-in/callback")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
         .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .value("Location", allOf(startsWith(validRedirectUri), containsString("state=$state"), containsString("code=")))
+        .value("Location", allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")))
+
+      client = clientRepository.findClientByClientId("hmpps-authorization-client")
+      var lastAccessedDate = client!!.lastAccessedDate
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+
+      webTestClient
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=hmpps-authorization-client&state=$state&redirect_uri=http://localhost:3002/sign-in/callback")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isFound
+
+      client = clientRepository.findClientByClientId("hmpps-authorization-client")
+      assertThat(lastAccessedDate).isEqualTo(lastAccessedDate)
     }
 
     @Test
-    fun `authorization code has is valid for the default duration when no override has been defined`() {
+    fun `success updates last accessed date when before today`() {
+      var client = clientRepository.findClientByClientId("last-accessed-in-the-past-hmpps-authorization-client")
+      assertThat(client!!.lastAccessedDate!!.toLocalDate()).isBefore(LocalDate.now())
+
+      webTestClient
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=last-accessed-in-the-past-hmpps-authorization-client&state=$state&redirect_uri=http://localhost:3002/sign-in/callback")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .exchange()
+        .expectStatus().isFound
+        .expectHeader()
+        .value("Location", allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")))
+
+      client = clientRepository.findClientByClientId("last-accessed-in-the-past-hmpps-authorization-client")
+      var lastAccessedDate = client!!.lastAccessedDate
+      assertThat(lastAccessedDate).isNotNull
+      assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
+    }
+
+    @Test
+    fun `authorization code is valid for the default duration when no override has been defined`() {
       val location = webTestClient
         .get()
         .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")

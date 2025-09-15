@@ -89,7 +89,29 @@ VALUES
      'client_secret_basic', 'authorization_code', 'http://localhost:3002/sign-in/callback,http://localhost:3002,http://localhost:3002/', 'read',
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.authorization-code-time-to-live":["java.time.Duration",1200.000000000],"settings.token.additional-data.jira-number":"HAAR-9999","settings.token.access-token-time-to-live":["java.time.Duration",300.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"}}',
-     null, false,'http://127.0.0.1:8089/');
+     null, false,'http://127.0.0.1:8089/'),
+
+    ('b495c436-6149-4969-93d6-1e03f7ec435c', 'last-accessed-date-test-client', current_timestamp, '{bcrypt}$2a$10$iItP8qu7ocHyw92687SKAehZQb7MhCjU6g37OGUt1I0guEE7B.4ba', null, 'last-accessed-date-test-client',
+     'client_secret_basic', 'client_credentials', null, 'read',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.access-token-time-to-live":["java.time.Duration",1200.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"},"settings.token.refresh-token-time-to-live":["java.time.Duration",600.000000000]}', null, false, null);
+
+INSERT INTO oauth2_registered_client
+(ID, CLIENT_ID, CLIENT_ID_ISSUED_AT, CLIENT_SECRET, CLIENT_SECRET_EXPIRES_AT, CLIENT_NAME,
+ CLIENT_AUTHENTICATION_METHODS, AUTHORIZATION_GRANT_TYPES, REDIRECT_URIS, SCOPES, CLIENT_SETTINGS, TOKEN_SETTINGS, RESOURCE_IDS, SKIP_TO_AZURE, POST_LOGOUT_REDIRECT_URIS, LAST_ACCESSED)
+
+VALUES
+
+    ('6144dcac-0137-495b-9ed8-9d16b739670e', 'last-accessed-in-the-past-test-client', '2020-03-15 08:30:00', '{bcrypt}$2a$10$iItP8qu7ocHyw92687SKAehZQb7MhCjU6g37OGUt1I0guEE7B.4ba', null, 'last-accessed-in-the-past-test-client',
+     'client_secret_basic', 'client_credentials', null, 'read',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.access-token-time-to-live":["java.time.Duration",1200.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"},"settings.token.refresh-token-time-to-live":["java.time.Duration",600.000000000]}', null, false, null, '2020-03-16 08:30:00'),
+
+    ('9ddd4d08-3b09-4f0b-afb5-900fb30680eb', 'last-accessed-in-the-past-hmpps-authorization-client', '2020-03-15 08:30:00', '{bcrypt}$2a$10$iItP8qu7ocHyw92687SKAehZQb7MhCjU6g37OGUt1I0guEE7B.4ba', null, 'last-accessed-in-the-past-hmpps-authorization-client',
+     'client_secret_basic', 'authorization_code', 'http://localhost:3002/sign-in/callback,http://localhost:3002,http://localhost:3002/', 'read',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
+     '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.authorization-code-time-to-live":["java.time.Duration",1200.000000000],"settings.token.additional-data.jira-number":"HAAR-9999","settings.token.access-token-time-to-live":["java.time.Duration",300.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"}}',
+     null, false,'http://127.0.0.1:8089/', '2020-03-16 08:30:00');
 
 -- Dev Data From Auth --
 
