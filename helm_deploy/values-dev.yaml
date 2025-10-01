@@ -14,7 +14,7 @@ generic-service:
     APPLICATION_AUTHENTICATION_MATCH_SUBDOMAINS: "true"
 
   allowlist:
-    kpmg-pen-1: 195.68.59.72/32
+    kpmg-pen-1: 195.68.59.72/29
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
