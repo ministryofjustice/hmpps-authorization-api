@@ -79,6 +79,11 @@ class ClientsInterfaceService(
   fun retrieveClientDeploymentDetails(clientId: String) = getDeployment(clientId)
 
   private fun getDeployment(clientId: String): ClientDeploymentDetails? {
+    val clients = clientIdService.findByBaseClientId(clientId)
+    if (clients.isEmpty()) {
+      throw ClientNotFoundException(Client::class.simpleName, clientId)
+    }
+
     val baseClientId = clientIdService.toBase(clientId)
     val clientDeployment =
       clientDeploymentRepository.findByIdOrNull(baseClientId)
