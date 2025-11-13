@@ -23,13 +23,13 @@ class RotateClientsController(
   private val authenticationFacade: AuthenticationFacade,
 ) {
 
-  @GetMapping("rotate/base-clients/{baseClientId}")
+  @GetMapping("rotate/base-clients/{baseClientId}/deployment")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_CLIENT_ROTATION_ADMIN')")
-  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> = ResponseEntity.ok(
+  fun viewClientDeployment(@PathVariable baseClientId: String): ResponseEntity<Any> = ResponseEntity.ok(
     conversionService.convert(
-      clientsService.retrieveClientFullDetails(baseClientId),
-      ClientViewResponse::class.java,
+      clientsService.retrieveClientDeploymentDetails(baseClientId),
+      ClientDeploymentViewResponse::class.java,
     ),
   )
 

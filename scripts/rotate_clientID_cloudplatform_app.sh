@@ -88,13 +88,13 @@ echo "Talking to host \"${HOST}\""
 
 # Fetch clientID data
 echo "Fetching deployment data for clientID \"${BASE_CLIENT_ID}\""
-clientInfo_json=$(hmpps_authorization_api GET "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}")
+clientDeploymentInfo_json=$(hmpps_authorization_api GET "${HOST}/rotate/base-clients/${BASE_CLIENT_ID}/deployment")
 
-contextAndNamespace=$(echo "${clientInfo_json}" | jq -r .deployment.namespace)
-deployment=$(echo "${clientInfo_json}" | jq -r .deployment.deployment)
-secretName=$(echo "${clientInfo_json}" | jq -r .deployment.secretName)
-clientIdKey=$(echo "${clientInfo_json}" | jq -r .deployment.clientIdKey)
-secretKey=$(echo "${clientInfo_json}" | jq -r .deployment.secretKey)
+contextAndNamespace=$(echo "${clientDeploymentInfo_json}" | jq -r .deployment.namespace)
+deployment=$(echo "${clientDeploymentInfo_json}" | jq -r .deployment.deployment)
+secretName=$(echo "${clientDeploymentInfo_json}" | jq -r .deployment.secretName)
+clientIdKey=$(echo "${clientDeploymentInfo_json}" | jq -r .deployment.clientIdKey)
+secretKey=$(echo "${clientDeploymentInfo_json}" | jq -r .deployment.secretKey)
 
 context=${contextAndNamespace//:*/}
 namespace=${contextAndNamespace//*:/}
