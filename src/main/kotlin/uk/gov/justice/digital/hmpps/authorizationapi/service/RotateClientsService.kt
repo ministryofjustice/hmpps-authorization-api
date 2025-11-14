@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import java.util.Base64.getEncoder
 
 @Service
-class ClientsInterfaceService(
+class RotateClientsService(
   private val clientRepository: ClientRepository,
   private val clientConfigRepository: ClientConfigRepository,
   private val authorizationConsentRepository: AuthorizationConsentRepository,
