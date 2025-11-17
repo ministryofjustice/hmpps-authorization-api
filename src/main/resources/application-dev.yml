@@ -25,6 +25,3 @@ spring:
 hmpps-auth:
   endpoint:
     url: http://localhost:9090/auth
-  client:
-    client-id: test-client-id
-    client-secret: test-secret
