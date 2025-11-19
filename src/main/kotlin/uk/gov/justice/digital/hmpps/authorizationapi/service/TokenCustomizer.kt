@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
-import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource.Companion.fromNullableString
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.OAuthJtiGenerator
 import java.util.stream.Collectors
@@ -130,4 +129,10 @@ class TokenCustomizer(
   private fun suppressAudienceClaim(context: JwtEncodingContext) {
     context.claims.audience(listOf())
   }
+}
+
+@Suppress("ktlint:standard:enum-entry-name-case")
+enum class GrantType {
+  client_credentials,
+  authorization_code,
 }

@@ -6,6 +6,12 @@ VALUES
      'AUDIT_SECRET_KEY', null),
     ('test-client-create-id', 'PERSONAL', 'HAAR', 'Testy McTester', '#hmpps-auth-audit-registers', 'CLOUDPLATFORM',
      'hmpps-audit-dev', 'hmpps-audit-dev', 'AUDIT_SECRET', 'AUDIT_API_KEY',
+     'AUDIT_SECRET_KEY', null),
+    ('test-test', 'PERSONAL', 'HAAR', 'Testy McTester', '#hmpps-auth-audit-registers', 'CLOUDPLATFORM',
+     'hmpps-audit-dev', 'hmpps-audit-dev', 'AUDIT_SECRET', 'AUDIT_API_KEY',
+     'AUDIT_SECRET_KEY', null),
+    ('test-one-instance', 'PERSONAL', 'HAAR', 'Testy McTester', '#hmpps-auth-audit-registers', 'CLOUDPLATFORM',
+     'hmpps-audit-dev', 'hmpps-audit-dev', 'AUDIT_SECRET', 'AUDIT_API_KEY',
      'AUDIT_SECRET_KEY', null);
 
 -- Dev data from Auth --

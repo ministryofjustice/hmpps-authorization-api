@@ -13,23 +13,23 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import uk.gov.justice.digital.hmpps.authorizationapi.config.AuthenticationFacade
 import uk.gov.justice.digital.hmpps.authorizationapi.config.trackEvent
-import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientsInterfaceService
+import uk.gov.justice.digital.hmpps.authorizationapi.service.RotateClientsService
 
 @Controller
 class RotateClientsController(
-  private val clientsService: ClientsInterfaceService,
+  private val clientsService: RotateClientsService,
   private val conversionService: ConversionService,
   private val telemetryClient: TelemetryClient,
   private val authenticationFacade: AuthenticationFacade,
 ) {
 
-  @GetMapping("rotate/base-clients/{baseClientId}")
+  @GetMapping("rotate/base-clients/{baseClientId}/deployment")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_CLIENT_ROTATION_ADMIN')")
-  fun viewClient(@PathVariable baseClientId: String): ResponseEntity<Any> = ResponseEntity.ok(
+  fun viewClientDeployment(@PathVariable baseClientId: String): ResponseEntity<Any> = ResponseEntity.ok(
     conversionService.convert(
-      clientsService.retrieveClientFullDetails(baseClientId),
-      ClientViewResponse::class.java,
+      clientsService.retrieveClientDeploymentDetails(baseClientId),
+      ClientDeploymentViewResponse::class.java,
     ),
   )
 
@@ -56,3 +56,21 @@ class RotateClientsController(
     telemetryClient.trackEvent("AuthorizationApiClientDeleted", telemetryMap)
   }
 }
+
+data class ClientDeploymentViewResponse(
+  val deployment: ClientDeploymentDetails?,
+)
+
+data class ClientDeploymentDetails(
+  val clientType: String?,
+  val team: String?,
+  val teamContact: String?,
+  val teamSlack: String?,
+  val hosting: String?,
+  val namespace: String?,
+  val deployment: String?,
+  val secretName: String?,
+  val clientIdKey: String?,
+  val secretKey: String?,
+  val deploymentInfo: String?,
+)

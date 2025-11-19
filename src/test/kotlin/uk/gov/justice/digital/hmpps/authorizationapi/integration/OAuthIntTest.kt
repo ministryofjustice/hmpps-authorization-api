@@ -24,14 +24,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters.fromFormData
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
-import uk.gov.justice.digital.hmpps.authorizationapi.resource.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
+import uk.gov.justice.digital.hmpps.authorizationapi.service.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.LocalDate
-import java.util.*
+import java.util.Base64
+import java.util.Date
 
 class OAuthIntTest : IntegrationTestBase() {
 
