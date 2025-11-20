@@ -29,7 +29,7 @@ generic-service:
   namespace_secrets:
     hmpps-authorization-api-application-insights:
       APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
-    hmpps-authorization-api:
+    hmpps-auth:
       JWT_JWK_KEY_ID: "JWT_JWK_KEY_ID"
       JWT_KEYSTORE_ALIAS: "JWT_KEYSTORE_ALIAS"
       JWT_KEYSTORE_PASSWORD: "JWT_KEYSTORE_PASSWORD"
