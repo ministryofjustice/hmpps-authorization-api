@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.2.0"
   kotlin("plugin.spring") version "2.2.21"
   kotlin("plugin.jpa") version "2.2.21"
 }
@@ -18,7 +18,7 @@ dependencies {
   implementation("org.springframework.security:spring-security-oauth2-authorization-server")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
   implementation("org.json:json:20250517")
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.14.0")
