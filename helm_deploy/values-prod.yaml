@@ -7,6 +7,8 @@ generic-service:
 
   env:
     SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 30
+    HMPPS_AUTH_ENDPOINT_URL: http://hmpps-auth.hmpps-auth-prod.svc.cluster.local/auth
+    HMPPS_AUTH_ISSUER_URL: https://sign-in.hmpps.service.justice.gov.uk/auth/issuer
     APPLICATION_AUTHENTICATION_MATCH_SUBDOMAINS: "false"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
