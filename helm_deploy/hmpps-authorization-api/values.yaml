@@ -1,6 +1,7 @@
 generic-service:
   nameOverride: hmpps-authorization-api
   productId: DPS017
+  env_all_allow_list: true
 
   replicaCount: 4
 
