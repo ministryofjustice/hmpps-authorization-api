@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.service.JpaOAuth2AuthorizationService
+import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthIpSecurity
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorizationCodeFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
@@ -71,6 +72,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.service.SubDomainMatchingRe
 import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UrlDecodingRetryClientSecretAuthenticationProvider
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UserAuthenticationService
+import uk.gov.justice.digital.hmpps.authorizationapi.utils.IpAddressHelper
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.function.Consumer
@@ -86,6 +88,8 @@ class AuthorizationApiConfig(
   private val clientConfigRepository: ClientConfigRepository,
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
+  private val ipAddressHelper: IpAddressHelper,
+  private val authIpSecurity: AuthIpSecurity,
 ) {
 
   class ForbiddenAuthenticationConverter : AuthenticationConverter {
@@ -267,7 +271,7 @@ class AuthorizationApiConfig(
 
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, clientIdService)
+      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, clientIdService, authIpSecurity)
     }
 
     return authenticationProvider
