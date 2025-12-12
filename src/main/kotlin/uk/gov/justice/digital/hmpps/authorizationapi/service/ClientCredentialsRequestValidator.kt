@@ -7,8 +7,8 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
-import org.springframework.security.web.util.matcher.IpAddressMatcher
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthIpSecurity
 import uk.gov.justice.digital.hmpps.authorizationapi.utils.IpAddressHelper
 import java.time.LocalDate
 
@@ -17,6 +17,7 @@ class ClientCredentialsRequestValidator(
   private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
   private val clientIdService: ClientIdService,
+  private val authIpSecurity: AuthIpSecurity,
 ) : AuthenticationProvider {
 
   companion object {
@@ -38,7 +39,7 @@ class ClientCredentialsRequestValidator(
       }
 
       if (!clientConfig?.ips.isNullOrEmpty()) {
-        validateClientIpAllowed(clientIpAddress, clientConfig.ips)
+        authIpSecurity.validateClientIpAllowed(clientIpAddress, clientConfig.ips, clientId)
       }
 
       return delegate.authenticate(authentication)
@@ -48,16 +49,8 @@ class ClientCredentialsRequestValidator(
   }
 
   override fun supports(authentication: Class<*>): Boolean = OAuth2ClientCredentialsAuthenticationToken::class.java.isAssignableFrom(authentication)
-
-  private fun validateClientIpAllowed(remoteIp: String?, clientAllowList: List<String>) {
-    val matchIp = clientAllowList.any { ip: String? -> IpAddressMatcher(ip).matches(remoteIp) }
-    if (!matchIp) {
-      log.warn("Client IP: $remoteIp not in client allowlist: $clientAllowList")
-      throw IPAddressNotAllowedException(remoteIp)
-    }
-  }
 }
 
-class IPAddressNotAllowedException(remoteIp: String?) : AuthenticationException("Remote IP address $remoteIp not in client allow list")
+class IPAddressNotAllowedException : AuthenticationException("Unable to issue token as request is not from ip within allowed list")
 
 class ClientExpiredException(clientId: String) : AuthenticationException("Client $clientId has expired")

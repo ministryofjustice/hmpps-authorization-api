@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.Authorizati
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientConfigRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.service.JpaOAuth2AuthorizationService
+import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthIpSecurity
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorizationCodeFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
@@ -88,6 +89,7 @@ class AuthorizationApiConfig(
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
   private val ipAddressHelper: IpAddressHelper,
+  private val authIpSecurity: AuthIpSecurity,
 ) {
 
   class ForbiddenAuthenticationConverter : AuthenticationConverter {
@@ -269,7 +271,7 @@ class AuthorizationApiConfig(
 
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, clientIdService)
+      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, clientIdService, authIpSecurity)
     }
 
     return authenticationProvider
