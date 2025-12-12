@@ -37,7 +37,6 @@ class AuthIpSecurity(
       } else {
         if (ipAllowlistMap.containsKey(ipEntry)) {
           ipAllowlistMap[ipEntry]?.forEach {
-            val i = it
             ipAllowlist.add(it.trim())
           }
         } else {
