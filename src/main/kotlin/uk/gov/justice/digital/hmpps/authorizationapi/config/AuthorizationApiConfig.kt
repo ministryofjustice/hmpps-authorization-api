@@ -85,6 +85,8 @@ class AuthorizationApiConfig(
   @Value("\${jwt.jwk.key.id}") private val keyId: String,
   @Value("\${hmpps-auth.issuer.url}") private val authIssuerUrl: String,
   @Value("\${application.authentication.match-subdomains:false}") private val matchSubdomains: Boolean,
+  @Value("\${ip.permitted-client-range}") private val permittedClientIPRange: String,
+  @Value("\${ip.local-host-only}") private val localHostOnly: Boolean,
   private val clientConfigRepository: ClientConfigRepository,
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
@@ -260,6 +262,13 @@ class AuthorizationApiConfig(
     val userDetailsService = JdbcDaoImpl()
     userDetailsService.jdbcTemplate = jdbcTemplate
     return userDetailsService
+  }
+
+  @Bean
+  fun authIpSecurity(): AuthIpSecurity = if (localHostOnly) {
+    AuthIpSecurity(true)
+  } else {
+    AuthIpSecurity(permittedClientIPRange)
   }
 
   private fun withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider: AuthenticationProvider): AuthenticationProvider {

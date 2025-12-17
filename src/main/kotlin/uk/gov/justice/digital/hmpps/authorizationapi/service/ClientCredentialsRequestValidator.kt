@@ -38,10 +38,7 @@ class ClientCredentialsRequestValidator(
         throw ClientExpiredException(clientConfig.baseClientId)
       }
 
-      if (!clientConfig?.ips.isNullOrEmpty()) {
-        authIpSecurity.validateClientIpAllowed(clientIpAddress, clientConfig.ips, clientId)
-      }
-
+      authIpSecurity.validateCallReceivedFromPermittedIPAddress(clientIpAddress, clientId)
       return delegate.authenticate(authentication)
     }
 

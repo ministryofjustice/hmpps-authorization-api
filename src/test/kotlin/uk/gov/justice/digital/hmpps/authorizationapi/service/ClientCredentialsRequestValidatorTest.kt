@@ -74,10 +74,10 @@ class ClientCredentialsRequestValidatorTest {
   }
 
   @Test
-  fun shouldFailWhenClientIPNotPresentInClientConfig() {
+  fun shouldFailWhenClientIPNotPermitted() {
     whenever(ipAddressHelper.retrieveIpFromRequest()).thenReturn("1.2.3.4")
     whenever(clientConfigRepository.findById(clientId)).thenReturn(Optional.of(givenAClientConfig(LocalDate.now().plusDays(2), "1.2.3.5")))
-    doThrow(IPAddressNotAllowedException()).whenever(authIpSecurity).validateClientIpAllowed("1.2.3.4", listOf("1.2.3.5"), clientId)
+    doThrow(IPAddressNotAllowedException()).whenever(authIpSecurity).validateCallReceivedFromPermittedIPAddress("1.2.3.4", clientId)
 
     assertThatThrownBy {
       clientCredentialsRequestValidator.authenticate(authenticationToken)
