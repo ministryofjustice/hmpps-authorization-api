@@ -91,7 +91,6 @@ class AuthorizationApiConfig(
   private val clientIdService: ClientIdService,
   private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
   private val ipAddressHelper: IpAddressHelper,
-  private val authIpSecurity: AuthIpSecurity,
 ) {
 
   class ForbiddenAuthenticationConverter : AuthenticationConverter {
@@ -264,13 +263,6 @@ class AuthorizationApiConfig(
     return userDetailsService
   }
 
-  @Bean
-  fun authIpSecurity(): AuthIpSecurity = if (localHostOnly) {
-    AuthIpSecurity(true)
-  } else {
-    AuthIpSecurity(permittedClientIPRange)
-  }
-
   private fun withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider is ClientSecretAuthenticationProvider) {
       return UrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider)
@@ -279,6 +271,12 @@ class AuthorizationApiConfig(
   }
 
   private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
+    val authIpSecurity = if (localHostOnly) {
+      AuthIpSecurity(true)
+    } else {
+      AuthIpSecurity(permittedClientIPRange)
+    }
+
     if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
       return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, clientIdService, authIpSecurity)
     }
