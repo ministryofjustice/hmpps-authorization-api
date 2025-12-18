@@ -24,6 +24,10 @@ jwt:
     signing.key.pair: ''
     jwk.key.id: ''
 
+ip:
+  permitted-client-range: 127.0.0.1
+  local-host-only: true
+
 spring:
   application:
     name: hmpps-authorization-api

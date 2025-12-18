@@ -1,7 +1,6 @@
 generic-service:
   nameOverride: hmpps-authorization-api
   productId: DPS017
-  env_all_allow_list: true
 
   replicaCount: 4
 
@@ -21,6 +20,8 @@ generic-service:
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
+    IP_PERMITTED_CLIENT_RANGE: 172.20.0.0/16
+    IP_LOCAL_HOST_ONLY: false
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
