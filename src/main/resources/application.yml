@@ -24,11 +24,6 @@ jwt:
     signing.key.pair: ''
     jwk.key.id: ''
 
-ip:
-  allowlist:
-    raw-mappings:  map[group_name_a:map[ip-aa:1.1.1.1/32 ip-ab:2.2.2.2/32 ip-ac:3.3.3.3/32 ip-ad:4.4.4.4/24 ip-ae:12.21.23.24/28] group_name_b:map[ip-ba:12.12.12.12/32 ip-bb:13.13.13.13/32] group_name_c:map[ip-ca:23.23.23.23/32 ip-cb:24.24.24.24/32] group_name_d:map[ip-dd:9.9.9.9/32 u:8.8.8.8/32 ip-ac:3.3.3.3/16] localhost:map[localhost:127.0.0.1/32 ip-v6:0:0:0:0:0:0:0:1]]
-    version: 2024-09-18.44.3aa33e4
-
 spring:
   application:
     name: hmpps-authorization-api
