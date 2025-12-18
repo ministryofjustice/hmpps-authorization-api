@@ -24,4 +24,4 @@ jobs:
     secrets: inherit
     with:
       environment: stage
-      app_version: ${{ needs.build_image.outputs.version }}
+      app_version: ${{ needs.build_image.outputs.app_version }}
