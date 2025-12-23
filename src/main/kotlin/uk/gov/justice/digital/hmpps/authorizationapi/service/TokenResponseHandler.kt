@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.authorizationapi.service
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import org.springframework.http.server.ServletServerHttpResponse
 import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse
@@ -14,6 +15,10 @@ import java.util.Base64
 
 class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConverter: OAuth2AccessTokenResponseHttpMessageConverter) : AuthenticationSuccessHandler {
   constructor() : this(OAuth2AccessTokenResponseHttpMessageConverter())
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 
   override fun onAuthenticationSuccess(
     request: HttpServletRequest?,
@@ -65,6 +70,11 @@ class TokenResponseHandler(private val oAuth2AccessTokenResponseHttpMessageConve
 
   private fun getToken(accessToken: String): JSONObject {
     val tokenParts = accessToken.split(".")
-    return JSONObject(String(Base64.getDecoder().decode(tokenParts[1])))
+    return try {
+      JSONObject(String(Base64.getDecoder().decode(tokenParts[1])))
+    } catch (e: Exception) {
+      log.error("Failed to base 64 decode access token: $accessToken attempted to decode: ${tokenParts[1]}", e)
+      throw e
+    }
   }
 }
