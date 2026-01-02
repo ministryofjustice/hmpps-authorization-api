@@ -40,6 +40,7 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.authentication.ClientSecretAuthenticationProvider
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationContext
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationProvider
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationValidator
@@ -62,12 +63,14 @@ import uk.gov.justice.digital.hmpps.authorizationapi.security.AuthIpSecurity
 import uk.gov.justice.digital.hmpps.authorizationapi.security.JwtCookieAuthenticationFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.OAuthAuthorizationCodeFilter
 import uk.gov.justice.digital.hmpps.authorizationapi.security.SignedJwtParser
-import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsRequestValidator
+import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthorisationCodeTokenRequestValidator
+import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientCredentialsTokenRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientIdService
 import uk.gov.justice.digital.hmpps.authorizationapi.service.ClientSecretBasicBase64OnlyAuthenticationConverter
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
 import uk.gov.justice.digital.hmpps.authorizationapi.service.LoggingRedirectUriValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuth2AuthenticationFailureEvent
+import uk.gov.justice.digital.hmpps.authorizationapi.service.OAuthClientRequestValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.SubDomainMatchingRedirectUriValidator
 import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenResponseHandler
 import uk.gov.justice.digital.hmpps.authorizationapi.service.UrlDecodingRetryClientSecretAuthenticationProvider
@@ -87,10 +90,10 @@ class AuthorizationApiConfig(
   @Value("\${application.authentication.match-subdomains:false}") private val matchSubdomains: Boolean,
   @Value("\${ip.permitted-client-range}") private val permittedClientIPRange: String,
   @Value("\${ip.local-host-only}") private val localHostOnly: Boolean,
-  private val clientConfigRepository: ClientConfigRepository,
   private val clientIdService: ClientIdService,
-  private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
+  private val clientConfigRepository: ClientConfigRepository,
   private val ipAddressHelper: IpAddressHelper,
+  private val jwtCookieAuthenticationFilter: JwtCookieAuthenticationFilter,
 ) {
 
   class ForbiddenAuthenticationConverter : AuthenticationConverter {
@@ -112,6 +115,7 @@ class AuthorizationApiConfig(
   @Order(Ordered.HIGHEST_PRECEDENCE)
   fun authorizationServerSecurityFilterChain(
     http: HttpSecurity,
+    oAuthClientRequestValidator: OAuthClientRequestValidator,
   ): SecurityFilterChain {
     val configurer = OAuth2AuthorizationServerConfigurer.authorizationServer()
     http {
@@ -146,7 +150,7 @@ class AuthorizationApiConfig(
         }
         tokenEndpoint {
           it.authenticationProviders { providers ->
-            providers.replaceAll { provider -> withRequestValidatorForClientCredentials(provider) }
+            providers.replaceAll { provider -> withTokenRequestValidatorForSupportedGrantType(provider, oAuthClientRequestValidator) }
           }
           it.accessTokenResponseHandler(TokenResponseHandler())
         }
@@ -263,6 +267,16 @@ class AuthorizationApiConfig(
     return userDetailsService
   }
 
+  @Bean
+  fun authIpSecurity(): AuthIpSecurity = if (localHostOnly) {
+    AuthIpSecurity(true)
+  } else {
+    AuthIpSecurity(permittedClientIPRange)
+  }
+
+  @Bean
+  fun oAuthClientRequestValidator(authIpSecurity: AuthIpSecurity): OAuthClientRequestValidator = OAuthClientRequestValidator(clientIdService, clientConfigRepository, ipAddressHelper, authIpSecurity)
+
   private fun withUrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
     if (authenticationProvider is ClientSecretAuthenticationProvider) {
       return UrlDecodingRetryClientSecretAuthenticationProvider(authenticationProvider)
@@ -270,15 +284,13 @@ class AuthorizationApiConfig(
     return authenticationProvider
   }
 
-  private fun withRequestValidatorForClientCredentials(authenticationProvider: AuthenticationProvider): AuthenticationProvider {
-    val authIpSecurity = if (localHostOnly) {
-      AuthIpSecurity(true)
-    } else {
-      AuthIpSecurity(permittedClientIPRange)
+  private fun withTokenRequestValidatorForSupportedGrantType(authenticationProvider: AuthenticationProvider, oAuthClientRequestValidator: OAuthClientRequestValidator): AuthenticationProvider {
+    if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
+      return ClientCredentialsTokenRequestValidator(authenticationProvider, oAuthClientRequestValidator)
     }
 
-    if (authenticationProvider.supports(OAuth2ClientCredentialsAuthenticationToken::class.java)) {
-      return ClientCredentialsRequestValidator(authenticationProvider, clientConfigRepository, ipAddressHelper, clientIdService, authIpSecurity)
+    if (authenticationProvider.supports(OAuth2AuthorizationCodeAuthenticationToken::class.java)) {
+      return AuthorisationCodeTokenRequestValidator(authenticationProvider, oAuthClientRequestValidator)
     }
 
     return authenticationProvider
