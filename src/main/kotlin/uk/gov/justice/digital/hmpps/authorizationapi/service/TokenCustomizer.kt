@@ -42,8 +42,8 @@ class TokenCustomizer(
     private const val SUBJECT = "sub"
     private const val JWT_ID = "jwt_id"
 
-    private const val CURLY_APOSTROPHE = "‘"
-    private const val STRAIGHT_APOSTROPHE = "'"
+    const val CURLY_APOSTROPHE = "‘"
+    const val STRAIGHT_APOSTROPHE = "'"
   }
 
   override fun customize(context: JwtEncodingContext?) {

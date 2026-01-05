@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepos
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
 import uk.gov.justice.digital.hmpps.authorizationapi.service.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
+import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenCustomizer
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -693,7 +694,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .get()
         .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
-        .cookie("jwtSession", createAuthenticationJwt("username", name = "Testy O‘Tester", roles = arrayOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
+        .cookie("jwtSession", createAuthenticationJwt("username", name = "Testy O${TokenCustomizer.CURLY_APOSTROPHE}Tester", roles = arrayOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
         .exchange()
         .expectHeader()
         .value("Location") { h: String -> header = h }
@@ -724,7 +725,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(tokenResponse!!))
-      assertThat(token.get("name")).isEqualTo("Testy O'Tester")
+      assertThat(token.get("name")).isEqualTo("Testy O${TokenCustomizer.STRAIGHT_APOSTROPHE}Tester")
     }
 
     @Test
