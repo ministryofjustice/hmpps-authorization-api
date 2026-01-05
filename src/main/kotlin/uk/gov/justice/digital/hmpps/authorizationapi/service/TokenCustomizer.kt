@@ -73,7 +73,7 @@ class TokenCustomizer(
     }
   }
 
-  private fun cleanName(name: String): String = if (name.contains("‘")) {
+  private fun cleanName(name: String): String = if (name.contains(CURLY_APOSTROPHE)) {
     val nameCleansed = name.replace(CURLY_APOSTROPHE, STRAIGHT_APOSTROPHE)
     val telemetryMap = mapOf(
       "name" to name,
