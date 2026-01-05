@@ -620,7 +620,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .get()
         .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
-        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .cookie("jwtSession", createAuthenticationJwt("username", roles = arrayOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
         .exchange()
         .expectHeader()
         .value("Location") { h: String -> header = h }
@@ -687,6 +687,47 @@ class OAuthIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `code convert to token user name contains curly apostrophe replaced with straight apostrophe`() {
+      var header: String? = null
+      webTestClient
+        .get()
+        .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
+        .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
+        .cookie("jwtSession", createAuthenticationJwt("username", name = "Testy O‘Tester", roles = arrayOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
+        .exchange()
+        .expectHeader()
+        .value("Location") { h: String -> header = h }
+
+      val authorisationCode =
+        header!!.substringAfter("?").split("&").first { it.startsWith("code=") }.substringAfter("code=")
+
+      val formData = LinkedMultiValueMap<String, String>().apply {
+        add("grant_type", "authorization_code")
+        add("code", authorisationCode)
+        add("state", state)
+        add("redirect_uri", validRedirectUri)
+      }
+
+      val tokenResponse = webTestClient
+        .post().uri("/oauth2/token")
+        .header(
+          "Authorization",
+          "Basic " + Base64.getEncoder().encodeToString(("$validClientId:test-secret").toByteArray()),
+        )
+        .contentType(APPLICATION_FORM_URLENCODED)
+        .bodyValue(
+          formData,
+        )
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .returnResult().responseBody
+
+      val token = getTokenPayload(String(tokenResponse!!))
+      assertThat(token.get("name")).isEqualTo("Testy O'Tester")
+    }
+
+    @Test
     fun `code convert to token using url encoded credentials`() {
       val urlEncodedClientId = URLEncoder.encode("url-encode-auth-code", StandardCharsets.UTF_8.toString())
       val urlEncodedSecret = URLEncoder.encode("test>secret", StandardCharsets.UTF_8.toString())
@@ -738,7 +779,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .get()
         .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
-        .cookie("jwtSession", createAuthenticationJwt("username", "ROLE_TESTING", "ROLE_MORE_TESTING"))
+        .cookie("jwtSession", createAuthenticationJwt("username", roles = arrayOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
         .exchange()
         .expectHeader()
         .value("Location") { h: String -> header = h }
@@ -820,7 +861,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .compact()
     }
 
-    private fun createAuthenticationJwt(username: String, vararg roles: String): String {
+    private fun createAuthenticationJwt(username: String, name: String = "name", vararg roles: String): String {
       val authoritiesAsString = roles.asList().joinToString(",")
       return Jwts.builder()
         .id("1234-5678-9876-5432")
@@ -828,7 +869,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .claims(
           mapOf<String, Any>(
             "authorities" to authoritiesAsString,
-            "name" to "name",
+            "name" to name,
             "auth_source" to AuthSource.Auth.name,
             "user_id" to "9999",
             "uuid" to "1234-5678-9999-1111",
