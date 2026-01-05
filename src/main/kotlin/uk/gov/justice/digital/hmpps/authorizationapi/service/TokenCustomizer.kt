@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.service
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.isBlank
 import org.apache.commons.lang3.StringUtils.isNotEmpty
@@ -13,6 +14,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.authorizationapi.config.trackEvent
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.AuthorizationConsent
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationConsentRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.UserAuthorizationCodeRepository
@@ -26,6 +28,7 @@ class TokenCustomizer(
   private val userAuthorizationCodeRepository: UserAuthorizationCodeRepository,
   private val registeredClientAdditionalInformation: RegisteredClientAdditionalInformation,
   private val oauthJtiGenerator: OAuthJtiGenerator,
+  private val telemetryClient: TelemetryClient,
 ) : OAuth2TokenCustomizer<JwtEncodingContext> {
 
   companion object {
@@ -38,6 +41,9 @@ class TokenCustomizer(
     private const val ADD_INFO_USER_UUID = "user_uuid"
     private const val SUBJECT = "sub"
     private const val JWT_ID = "jwt_id"
+
+    const val CURLY_APOSTROPHE = "‘"
+    const val STRAIGHT_APOSTROPHE = "'"
   }
 
   override fun customize(context: JwtEncodingContext?) {
@@ -54,7 +60,7 @@ class TokenCustomizer(
         context.authorization?.let {
           userAuthorizationCodeRepository.findByIdOrNull(it.id)?.let { userAuthorizationCode ->
             additionalInfo[ADD_INFO_USER_ID] = userAuthorizationCode.userId
-            additionalInfo[ADD_INFO_NAME] = userAuthorizationCode.name
+            additionalInfo[ADD_INFO_NAME] = cleanName(userAuthorizationCode.name)
             additionalInfo[ADD_INFO_USER_NAME] = userAuthorizationCode.username
             additionalInfo[SUBJECT] = userAuthorizationCode.username
             additionalInfo[ADD_INFO_USER_UUID] = userAuthorizationCode.userUuid.toString()
@@ -65,6 +71,18 @@ class TokenCustomizer(
         filterJwtFields(additionalInfo, context)
       }
     }
+  }
+
+  private fun cleanName(name: String): String = if (name.contains(CURLY_APOSTROPHE)) {
+    val nameCleansed = name.replace(CURLY_APOSTROPHE, STRAIGHT_APOSTROPHE)
+    val telemetryMap = mapOf(
+      "name" to name,
+      "cleansed" to nameCleansed,
+    )
+    telemetryClient.trackEvent("AuthorizationApiNameCleansed", telemetryMap)
+    nameCleansed
+  } else {
+    name
   }
 
   private fun filterJwtFields(info: Map<String, Any>, context: JwtEncodingContext) {
