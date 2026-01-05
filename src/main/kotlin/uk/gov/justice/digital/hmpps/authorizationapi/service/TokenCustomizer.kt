@@ -41,6 +41,9 @@ class TokenCustomizer(
     private const val ADD_INFO_USER_UUID = "user_uuid"
     private const val SUBJECT = "sub"
     private const val JWT_ID = "jwt_id"
+
+    private const val CURLY_APOSTROPHE = "‘"
+    private const val STRAIGHT_APOSTROPHE = "'"
   }
 
   override fun customize(context: JwtEncodingContext?) {
@@ -71,7 +74,7 @@ class TokenCustomizer(
   }
 
   private fun cleanName(name: String): String = if (name.contains("‘")) {
-    val nameCleansed = name.replace("‘", "'")
+    val nameCleansed = name.replace(CURLY_APOSTROPHE, STRAIGHT_APOSTROPHE)
     val telemetryMap = mapOf(
       "name" to name,
       "cleansed" to nameCleansed,
