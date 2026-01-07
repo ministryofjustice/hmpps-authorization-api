@@ -2,21 +2,22 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.jsonwebtoken.Jwts
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.startsWith
-import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
@@ -27,7 +28,6 @@ import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepos
 import uk.gov.justice.digital.hmpps.authorizationapi.service.AuthSource
 import uk.gov.justice.digital.hmpps.authorizationapi.service.GrantType
 import uk.gov.justice.digital.hmpps.authorizationapi.service.JWKKeyAccessor
-import uk.gov.justice.digital.hmpps.authorizationapi.service.TokenCustomizer
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -39,6 +39,9 @@ class OAuthIntTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var jwkKeyAccessor: JWKKeyAccessor
+
+  @Autowired
+  private lateinit var jwtDecoder: JwtDecoder
 
   @Autowired
   private lateinit var userAuthenticationService: OAuth2AuthorizationService
@@ -79,23 +82,21 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
-      assertThat(token.get("sub")).isEqualTo("test-client-id")
-      assertThat(token.get("auth_source")).isEqualTo("none")
-      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities").toString()).isEqualTo(
-        JSONArray(
-          listOf(
-            "ROLE_AUDIT",
-            "ROLE_OAUTH_ADMIN",
-            "ROLE_TESTING",
-            "ROLE_VIEW_AUTH_SERVICE_DETAILS",
-          ),
+      assertThat(token.claims["sub"]).isEqualTo("test-client-id")
+      assertThat(token.claims["auth_source"]).isEqualTo("none")
+      assertThat(token.claims["grant_type"]).isEqualTo("client_credentials")
+      assertThat(token.claims["authorities"].toString()).isEqualTo(
+        listOf(
+          "ROLE_AUDIT",
+          "ROLE_OAUTH_ADMIN",
+          "ROLE_TESTING",
+          "ROLE_VIEW_AUTH_SERVICE_DETAILS",
         ).toString(),
       )
 
-      assertThat(token.get("database_username")).isEqualTo("testy-db")
-      assertTrue(token.isNull("user_name"))
-      verifyClaimNotPresentIn(token, "aud")
+      assertThat(token.claims["database_username"]).isEqualTo("testy-db")
+      assertNull(token.claims["user_name"])
+      assertFalse(token.claims.containsKey("aud"))
     }
 
     @Test
@@ -119,14 +120,14 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
-      assertThat(token.get("sub")).isEqualTo("ip-allow-a-client-1")
-      assertThat(token.get("auth_source")).isEqualTo("none")
-      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
+      assertThat(token.claims["sub"]).isEqualTo("ip-allow-a-client-1")
+      assertThat(token.claims["auth_source"]).isEqualTo("none")
+      assertThat(token.claims["grant_type"]).isEqualTo("client_credentials")
+      assertThat(token.claims["iss"]).isEqualTo("http://localhost:9090/auth/issuer")
 
-      verifyClaimNotPresentIn(token, "database_username")
-      verifyClaimNotPresentIn(token, "user_name")
-      verifyClaimNotPresentIn(token, "aud")
+      assertFalse(token.claims.containsKey("database_username"))
+      assertFalse(token.claims.containsKey("user_name"))
+      assertFalse(token.claims.containsKey("aud"))
     }
 
     @Test
@@ -150,24 +151,22 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
-      assertThat(token.get("sub")).isEqualTo("testy")
-      assertThat(token.get("auth_source")).isEqualTo("none")
-      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertThat(token.get("authorities").toString()).isEqualTo(
-        JSONArray(
-          listOf(
-            "ROLE_AUDIT",
-            "ROLE_OAUTH_ADMIN",
-            "ROLE_TESTING",
-            "ROLE_VIEW_AUTH_SERVICE_DETAILS",
-          ),
+      assertThat(token.claims["sub"]).isEqualTo("testy")
+      assertThat(token.claims["auth_source"]).isEqualTo("none")
+      assertThat(token.claims["grant_type"]).isEqualTo("client_credentials")
+      assertThat(token.claims["authorities"].toString()).isEqualTo(
+        listOf(
+          "ROLE_AUDIT",
+          "ROLE_OAUTH_ADMIN",
+          "ROLE_TESTING",
+          "ROLE_VIEW_AUTH_SERVICE_DETAILS",
         ).toString(),
       )
-      assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
+      assertThat(token.claims["iss"]).isEqualTo("http://localhost:9090/auth/issuer")
 
-      assertThat(token.get("database_username")).isEqualTo("testy-db")
-      assertThat(token.get("user_name")).isEqualTo("testy")
-      verifyClaimNotPresentIn(token, "aud")
+      assertThat(token.claims["database_username"]).isEqualTo("testy-db")
+      assertThat(token.claims["user_name"]).isEqualTo("testy")
+      assertFalse(token.claims.containsKey("aud"))
     }
 
     @Test
@@ -257,15 +256,15 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
-      assertThat(token.get("sub")).isEqualTo("test-client-create-id")
-      assertThat(token.get("auth_source")).isEqualTo("delius")
-      assertThat(token.get("iss")).isEqualTo("http://localhost:9090/auth/issuer")
-      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertTrue(token.isNull("authorities"))
+      assertThat(token.claims["sub"]).isEqualTo("test-client-create-id")
+      assertThat(token.claims["auth_source"]).isEqualTo("delius")
+      assertThat(token.claims["iss"]).isEqualTo("http://localhost:9090/auth/issuer")
+      assertThat(token.claims["grant_type"]).isEqualTo("client_credentials")
+      assertNull(token.claims["authorities"])
 
-      assertTrue(token.isNull("user_name"))
-      assertTrue(token.isNull("database_username"))
-      verifyClaimNotPresentIn(token, "aud")
+      assertNull(token.claims["user_name"])
+      assertNull(token.claims["database_username"])
+      assertFalse(token.claims.containsKey("aud"))
     }
 
     @Test
@@ -289,14 +288,14 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(clientCredentialsResponse))
-      assertThat(token.get("sub")).isEqualTo("test-client-create-id")
-      assertThat(token.get("auth_source")).isEqualTo("none")
-      assertThat(token.get("grant_type")).isEqualTo("client_credentials")
-      assertTrue(token.isNull("authorities"))
+      assertThat(token.claims["sub"]).isEqualTo("test-client-create-id")
+      assertThat(token.claims["auth_source"]).isEqualTo("none")
+      assertThat(token.claims["grant_type"]).isEqualTo("client_credentials")
+      assertNull(token.claims["authorities"])
 
-      assertTrue(token.isNull("user_name"))
-      assertTrue(token.isNull("database_username"))
-      verifyClaimNotPresentIn(token, "aud")
+      assertNull(token.claims["user_name"])
+      assertNull(token.claims["database_username"])
+      assertFalse(token.claims.containsKey("aud"))
     }
 
     @Test
@@ -395,7 +394,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
-      assertThat(token.get("sub")).isEqualTo("url-encode-client-credentials")
+      assertThat(token.claims["sub"]).isEqualTo("url-encode-client-credentials")
     }
 
     @Test
@@ -422,7 +421,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(clientCredentialsResponse!!))
-      assertThat(token.get("sub")).isEqualTo("long-encoded-client-credentials")
+      assertThat(token.claims["sub"]).isEqualTo("long-encoded-client-credentials")
     }
 
     @Test
@@ -665,36 +664,32 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
 
       val token = getTokenPayload(String(tokenResponse))
-      assertThat(token.get("authorities").toString()).isEqualTo(
-        JSONArray(
-          listOf(
-            "ROLE_TESTING",
-            "ROLE_MORE_TESTING",
-          ),
+      assertThat(token.claims["authorities"].toString()).isEqualTo(
+        listOf(
+          "ROLE_TESTING",
+          "ROLE_MORE_TESTING",
         ).toString(),
       )
-      assertThat(token.get("sub")).isEqualTo("username")
-      assertThat(token.get("client_id")).isEqualTo(validClientId)
-      assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
-      assertThat(token.get("auth_source")).isEqualTo(AuthSource.Auth.name.lowercase())
-      assertThat(token.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
-      assertThat(token.get("user_id")).isEqualTo("9999")
-      assertThat(token.get("name")).isEqualTo("name")
-      assertThat(fullJsonResponse.get("user_name")).isEqualTo("username")
-      assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
-      assertThat(token.get("jwt_id")).isEqualTo("1234-5678-9876-5432")
-
-      verifyClaimNotPresentIn(token, "aud")
+      assertThat(token.claims["sub"]).isEqualTo("username")
+      assertThat(token.claims["client_id"]).isEqualTo(validClientId)
+      assertThat(token.claims["grant_type"]).isEqualTo(GrantType.authorization_code.name)
+      assertThat(token.claims["auth_source"]).isEqualTo(AuthSource.Auth.name.lowercase())
+      assertThat(token.claims["scope"]).isEqualTo(listOf("read"))
+      assertThat(token.claims["user_id"]).isEqualTo("9999")
+      assertThat(token.claims["name"]).isEqualTo("name")
+      assertThat(token.claims["user_uuid"]).isEqualTo("1234-5678-9999-1111")
+      assertThat(token.claims["jwt_id"]).isEqualTo("1234-5678-9876-5432")
+      assertFalse(token.claims.containsKey("aud"))
     }
 
     @Test
-    fun `code convert to token user name contains curly apostrophe replaced with straight apostrophe`() {
+    fun `code convert to token user name contains curly apostrophe`() {
       var header: String? = null
       webTestClient
         .get()
         .uri("/oauth2/authorize?response_type=code&client_id=$validClientId&state=$state&redirect_uri=$validRedirectUri")
         .header("Authorization", createClientCredentialsTokenHeader("ROLE_OAUTH_AUTHORIZE"))
-        .cookie("jwtSession", createAuthenticationJwt("username", name = "Testy O${TokenCustomizer.CURLY_APOSTROPHE}Tester", roles = arrayOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
+        .cookie("jwtSession", createAuthenticationJwt("username", name = "Testy O‘Tester", roles = arrayOf("ROLE_TESTING", "ROLE_MORE_TESTING")))
         .exchange()
         .expectHeader()
         .value("Location") { h: String -> header = h }
@@ -725,7 +720,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(tokenResponse!!))
-      assertThat(token.get("name")).isEqualTo("Testy O${TokenCustomizer.STRAIGHT_APOSTROPHE}Tester")
+      assertThat(token.claims["name"]).isEqualTo("Testy O‘Tester")
     }
 
     @Test
@@ -769,7 +764,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val token = getTokenPayload(String(tokenResponse))
-      assertThat(token.get("client_id")).isEqualTo(urlEncodedClientId)
+      assertThat(token.claims["client_id"]).isEqualTo(urlEncodedClientId)
     }
 
     @Test
@@ -825,25 +820,23 @@ class OAuthIntTest : IntegrationTestBase() {
       assertThat(fullJsonResponse.optString("user_name", null)).isNull()
 
       val token = getTokenPayload(String(tokenResponse))
-      assertThat(token.get("authorities").toString()).isEqualTo(
-        JSONArray(
-          listOf(
-            "ROLE_TESTING",
-            "ROLE_MORE_TESTING",
-          ),
+      assertThat(token.claims["authorities"].toString()).isEqualTo(
+        listOf(
+          "ROLE_TESTING",
+          "ROLE_MORE_TESTING",
         ).toString(),
       )
-      assertThat(token.get("sub")).isEqualTo("username")
+      assertThat(token.claims["sub"]).isEqualTo("username")
 
-      assertThat(token.get("client_id")).isEqualTo(validClientId)
-      assertThat(token.get("grant_type")).isEqualTo(GrantType.authorization_code.name)
-      assertThat(token.get("auth_source")).isEqualTo(AuthSource.Auth.name.lowercase())
-      assertThat(token.get("scope").toString()).isEqualTo(JSONArray(listOf("read")).toString())
-      assertThat(token.get("user_uuid")).isEqualTo("1234-5678-9999-1111")
-      assertThat(token.get("name")).isEqualTo("name")
+      assertThat(token.claims["client_id"]).isEqualTo(validClientId)
+      assertThat(token.claims["grant_type"]).isEqualTo(GrantType.authorization_code.name)
+      assertThat(token.claims["auth_source"]).isEqualTo(AuthSource.Auth.name.lowercase())
+      assertThat(token.claims["scope"]).isEqualTo(listOf("read"))
+      assertThat(token.claims["user_uuid"]).isEqualTo("1234-5678-9999-1111")
+      assertThat(token.claims["name"]).isEqualTo("name")
 
-      assertThat(token.optString("user_name", null)).isNull()
-      assertThat(token.optString("user_id", null)).isNull()
+      assertNull(token.claims["user_name"])
+      assertNull(token.claims["user_id"])
     }
 
     private fun createClientCredentialsTokenHeader(vararg roles: String): String {
@@ -882,15 +875,8 @@ class OAuthIntTest : IntegrationTestBase() {
     }
   }
 
-  private fun verifyClaimNotPresentIn(token: JSONObject, claim: String) {
-    Assertions.assertThatThrownBy {
-      token.get(claim)
-    }.hasMessage("JSONObject[\"$claim\"] not found.")
-  }
-
-  private fun getTokenPayload(response: String): JSONObject {
+  private fun getTokenPayload(response: String): Jwt {
     val accessToken = JSONObject(response).get("access_token") as String
-    val tokenParts = accessToken.split(".")
-    return JSONObject(String(Base64.getDecoder().decode(tokenParts[1])))
+    return jwtDecoder.decode(accessToken)
   }
 }
