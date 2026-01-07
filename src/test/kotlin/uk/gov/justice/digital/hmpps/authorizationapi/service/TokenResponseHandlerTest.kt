@@ -23,6 +23,8 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken
 import org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken
 import java.time.Instant
 import java.time.temporal.ChronoUnit.SECONDS
@@ -35,6 +37,9 @@ class TokenResponseHandlerTest {
   private lateinit var oAuth2AccessTokenResponseHttpMessageConverter: OAuth2AccessTokenResponseHttpMessageConverter
 
   @Mock
+  private lateinit var jwtDecoder: JwtDecoder
+
+  @Mock
   private lateinit var request: HttpServletRequest
 
   @Mock
@@ -42,6 +47,9 @@ class TokenResponseHandlerTest {
 
   @Mock
   private lateinit var authentication: OAuth2AccessTokenAuthenticationToken
+
+  @Mock
+  private lateinit var jwt: Jwt
 
   private lateinit var tokenResponseHandler: TokenResponseHandler
 
@@ -65,7 +73,7 @@ class TokenResponseHandlerTest {
       "user_uuid" to "2e285ccd-dcfd-4497-9e22-d6e8e10a2d63",
       "grant_type" to "authorization_code",
       "user_id" to "3e285ccd-dcfd-4495-9e22-i6e8e10a2d63",
-      "scope" to SCOPE_RW,
+      "scope" to ArrayList<String>(SCOPE_RW),
       "name" to "Auth Mfa",
       "exp" to 1721752178,
       "jti" to "OvQBycPwvHpv3MYEOtnrn6P55F0",
@@ -77,7 +85,7 @@ class TokenResponseHandlerTest {
     issuedAt = Instant.now()
     expiresAt = issuedAt.plusSeconds(3600)
 
-    tokenResponseHandler = TokenResponseHandler(oAuth2AccessTokenResponseHttpMessageConverter)
+    tokenResponseHandler = TokenResponseHandler(oAuth2AccessTokenResponseHttpMessageConverter, jwtDecoder)
   }
 
   @Test
@@ -89,6 +97,9 @@ class TokenResponseHandlerTest {
 
     whenever(authentication.accessToken)
       .thenReturn(OAuth2AccessToken(TokenType.BEARER, testJWT, issuedAt, expiresAt, SCOPE_RW))
+
+    whenever(jwtDecoder.decode(testJWT)).thenReturn(jwt)
+    whenever(jwt.claims).thenReturn(ALL_CLAIMS)
 
     tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
@@ -114,6 +125,8 @@ class TokenResponseHandlerTest {
 
       whenever(authentication.accessToken)
         .thenReturn(OAuth2AccessToken(TokenType.BEARER, testJWT, issuedAt, expiresAt, SCOPE_RW))
+      whenever(jwtDecoder.decode(testJWT)).thenReturn(jwt)
+      whenever(jwt.claims).thenReturn(claims)
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
@@ -135,6 +148,8 @@ class TokenResponseHandlerTest {
 
       whenever(authentication.accessToken)
         .thenReturn(OAuth2AccessToken(TokenType.BEARER, testJWT, issuedAt, expiresAt, SCOPE_RW))
+      whenever(jwtDecoder.decode(testJWT)).thenReturn(jwt)
+      whenever(jwt.claims).thenReturn(claims)
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
@@ -156,6 +171,8 @@ class TokenResponseHandlerTest {
 
       whenever(authentication.accessToken)
         .thenReturn(OAuth2AccessToken(TokenType.BEARER, testJWT, issuedAt, expiresAt, SCOPE_RW))
+      whenever(jwtDecoder.decode(testJWT)).thenReturn(jwt)
+      whenever(jwt.claims).thenReturn(claims)
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 
@@ -184,6 +201,8 @@ class TokenResponseHandlerTest {
 
       whenever(authentication.accessToken)
         .thenReturn(OAuth2AccessToken(TokenType.BEARER, testJWT, issuedAt, expiresAt, SCOPE_RW))
+      whenever(jwtDecoder.decode(testJWT)).thenReturn(jwt)
+      whenever(jwt.claims).thenReturn(claims)
 
       tokenResponseHandler.onAuthenticationSuccess(request, response, authentication)
 

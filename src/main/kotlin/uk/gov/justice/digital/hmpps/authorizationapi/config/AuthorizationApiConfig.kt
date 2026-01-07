@@ -116,6 +116,7 @@ class AuthorizationApiConfig(
   fun authorizationServerSecurityFilterChain(
     http: HttpSecurity,
     oAuthClientRequestValidator: OAuthClientRequestValidator,
+    jwtDecoder: JwtDecoder,
   ): SecurityFilterChain {
     val configurer = OAuth2AuthorizationServerConfigurer.authorizationServer()
     http {
@@ -152,7 +153,7 @@ class AuthorizationApiConfig(
           it.authenticationProviders { providers ->
             providers.replaceAll { provider -> withTokenRequestValidatorForSupportedGrantType(provider, oAuthClientRequestValidator) }
           }
-          it.accessTokenResponseHandler(TokenResponseHandler())
+          it.accessTokenResponseHandler(TokenResponseHandler(jwtDecoder))
         }
         authorizationEndpoint {
           it.authenticationProviders(configureAuthenticationValidators())
