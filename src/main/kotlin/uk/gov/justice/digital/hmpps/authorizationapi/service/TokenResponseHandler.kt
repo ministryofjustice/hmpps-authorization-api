@@ -23,6 +23,12 @@ class TokenResponseHandler(
     authentication: Authentication,
   ) {
     val accessTokenAuthentication = authentication as OAuth2AccessTokenAuthenticationToken
+    val accessTokenResponse = buildAccessTokenResponse(accessTokenAuthentication)
+    val httpResponse = ServletServerHttpResponse(response)
+    oAuth2AccessTokenResponseHttpMessageConverter.write(accessTokenResponse, null, httpResponse)
+  }
+
+  private fun buildAccessTokenResponse(accessTokenAuthentication: OAuth2AccessTokenAuthenticationToken): OAuth2AccessTokenResponse {
     val accessToken = accessTokenAuthentication.accessToken
     val jwt = jwtDecoder.decode(accessToken.tokenValue)
     val claims = jwt.claims
@@ -61,9 +67,6 @@ class TokenResponseHandler(
       otherParams.putAll(additionalParameters)
     }
     builder.additionalParameters(otherParams)
-
-    val accessTokenResponse = builder.build()
-    val httpResponse = ServletServerHttpResponse(response)
-    oAuth2AccessTokenResponseHttpMessageConverter.write(accessTokenResponse, null, httpResponse)
+    return builder.build()
   }
 }
