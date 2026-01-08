@@ -6,8 +6,37 @@ on:
 permissions:
   contents: read
   packages: write
-
 jobs:
+  app_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.app_version.outputs.version }}
+    steps:
+      - id: app_version
+        name: Application version creators
+        uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
+  build_jar_no_tests:
+      name: Build JAR without tests
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v6
+        - name: Set up JDK 25
+          uses: actions/setup-java@v5
+          with:
+            distribution: 'temurin'
+            java-version: '25'
+        - name: Setup Gradle
+          uses: gradle/actions/setup-gradle@v5
+        - name: Run checks with gradle
+          shell: bash
+          run: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew clean build -x test'
+        - name: Upload the build artifacts
+          if: ${{ !cancelled() }}
+          uses: actions/upload-artifact@v5
+          with:
+            name: ${{ needs.app_version.outputs.version}}
+            path: build/libs
+            retention-days: 1
   build_image:
     name: Build docker image
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
@@ -17,6 +46,7 @@ jobs:
       push: true
       docker_multiplatform: true
       tag_latest: false
+      download_build_artifacts: true
   deploy_env:
     name: Deploy to stage
     needs: build_image
