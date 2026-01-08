@@ -6,8 +6,16 @@ on:
 permissions:
   contents: read
   packages: write
-
 jobs:
+  create-artifact:
+    name: Build the artifact for deployment to stage for testing
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    with:
+      gradle-command: 'BUILD_NUMBER=stage ./gradlew assemble'
+      upload-build-artifacts: true
+      build-artifact-name: 'build-results'
+      upload-test-artifacts: false
+      java-version: "25"
   build_image:
     name: Build docker image
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
@@ -17,6 +25,7 @@ jobs:
       push: true
       docker_multiplatform: true
       tag_latest: false
+      download_build_artifacts: true
   deploy_env:
     name: Deploy to stage
     needs: build_image

@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.2.0"
-  kotlin("plugin.spring") version "2.2.21"
-  kotlin("plugin.jpa") version "2.2.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.3.0"
+  kotlin("plugin.spring") version "2.3.0"
+  kotlin("plugin.jpa") version "2.3.0"
 }
 
 configurations {
@@ -19,9 +19,9 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
-  implementation("org.json:json:20250517")
+  implementation("org.json:json:20251224")
   implementation("commons-codec:commons-codec")
-  implementation("org.apache.commons:commons-text:1.14.0")
+  implementation("org.apache.commons:commons-text:1.15.0")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.jsonwebtoken:jjwt:0.13.0")
 
@@ -37,11 +37,11 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
 }
