@@ -8,6 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.oauth2.jwt.JwtClaimNames
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
@@ -127,7 +128,7 @@ class TokenCustomizer(
   }
 
   private fun suppressAudienceClaim(context: JwtEncodingContext) {
-    context.claims.audience(listOf())
+    context.claims.claims { claims -> claims.remove(JwtClaimNames.AUD) }
   }
 }
 
