@@ -19,8 +19,8 @@ class UserAuthenticationService(
 ) : OAuth2AuthorizationService {
 
   override fun save(authorization: OAuth2Authorization) {
-    delegateOAuth2AuthorizationService.save(authorization)
     if (SecurityContextHolder.getContext().authentication is UsernamePasswordAuthenticationToken) {
+      delegateOAuth2AuthorizationService.save(authorization)
       val authentication = SecurityContextHolder.getContext().authentication as UsernamePasswordAuthenticationToken
       val oAuth2TokenHolder = authorization.getToken(OAuth2AuthorizationCode::class.java) as OAuth2Authorization.Token
       val authenticatedUserDetails = authentication.principal as AuthenticatedUserDetails

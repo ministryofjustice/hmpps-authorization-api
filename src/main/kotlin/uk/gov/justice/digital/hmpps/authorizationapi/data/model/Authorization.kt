@@ -35,17 +35,4 @@ data class Authorization(
   var authorizationCodeExpiresAt: LocalDateTime?,
 
   val authorizationCodeMetadata: String?,
-
-  @Column(length = 4000)
-  val accessTokenValue: String?,
-
-  val accessTokenIssuedAt: LocalDateTime?,
-  val accessTokenExpiresAt: LocalDateTime?,
-
-  @Column(length = 2000)
-  val accessTokenMetadata: String?,
-  val accessTokenType: String?,
-
-  @Column(length = 1000)
-  val accessTokenScopes: String?,
 )

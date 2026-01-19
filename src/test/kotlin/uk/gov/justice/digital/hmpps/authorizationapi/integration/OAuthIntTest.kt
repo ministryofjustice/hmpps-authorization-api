@@ -559,7 +559,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectStatus().isFound
 
       client = clientRepository.findClientByClientId("hmpps-authorization-client")
-      assertThat(lastAccessedDate).isEqualTo(lastAccessedDate)
+      assertThat(lastAccessedDate).isEqualTo(client!!.lastAccessedDate)
     }
 
     @Test
