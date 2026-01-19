@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.oauth2.core.AuthorizationGrantType
@@ -13,6 +14,8 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationRepository
+import uk.gov.justice.digital.hmpps.authorizationapi.data.service.JpaOAuth2AuthorizationService
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.UUID
@@ -21,10 +24,17 @@ import java.util.UUID
 class JpaOAuth2AuthorizationServiceIntTest : IntegrationTestBase() {
 
   @Autowired
-  private lateinit var authorizationService: OAuth2AuthorizationService
+  private lateinit var authorizationRepository: AuthorizationRepository
 
   @Autowired
   private lateinit var registeredClientRepository: JdbcRegisteredClientRepository
+
+  private lateinit var authorizationService: OAuth2AuthorizationService
+
+  @BeforeEach
+  fun setUp() {
+    authorizationService = JpaOAuth2AuthorizationService(authorizationRepository, registeredClientRepository)
+  }
 
   @Test
   fun shouldManageAuthorizations() {
