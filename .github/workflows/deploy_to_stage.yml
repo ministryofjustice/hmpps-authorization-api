@@ -7,11 +7,20 @@ permissions:
   contents: read
   packages: write
 jobs:
+  app_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.app_version.outputs.version }}
+    steps:
+      - id: app_version
+        name: Application version creators
+        uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
   create-artifact:
     name: Build the artifact for deployment to stage for testing
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    needs: app_version
     with:
-      gradle-command: 'BUILD_NUMBER=stage ./gradlew assemble'
+      gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version }} ./gradlew assemble'
       upload-build-artifacts: true
       build-artifact-name: 'build-results'
       upload-test-artifacts: false
@@ -19,6 +28,7 @@ jobs:
   build_image:
     name: Build docker image
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
+    needs: create-artifact
     with:
       docker_registry: 'ghcr.io'
       registry_org: 'ministryofjustice'
