@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.dao.DataRetrievalFailureException
 import org.springframework.security.jackson2.SecurityJackson2Modules.getModules
 import org.springframework.security.oauth2.core.AuthorizationGrantType
-import org.springframework.security.oauth2.core.OAuth2AccessToken
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode
@@ -26,7 +25,7 @@ class JpaOAuth2AuthorizationService(
   private val objectMapper = ObjectMapper()
 
   init {
-    val classLoader: ClassLoader = ClientRepository::class.java.getClassLoader()
+    val classLoader: ClassLoader = ClientRepository::class.java.classLoader
     objectMapper.registerModules(getModules(classLoader))
     objectMapper.registerModule(OAuth2AuthorizationServerJackson2Module())
   }
@@ -43,13 +42,11 @@ class JpaOAuth2AuthorizationService(
 
   override fun findByToken(token: String, tokenType: OAuth2TokenType?): OAuth2Authorization? {
     val result: Authorization? = if (tokenType == null) {
-      authorizationRepository.findByStateOrAuthorizationCodeValueOrAccessTokenValue(token)
+      authorizationRepository.findByStateOrAuthorizationCodeValue(token)
     } else if (OAuth2ParameterNames.STATE == tokenType.value) {
       authorizationRepository.findByState(token)
     } else if (OAuth2ParameterNames.CODE == tokenType.value) {
       authorizationRepository.findByAuthorizationCodeValue(token)
-    } else if (OAuth2ParameterNames.ACCESS_TOKEN == tokenType.value) {
-      authorizationRepository.findByAccessTokenValue(token)
     } else {
       null
     }
@@ -81,19 +78,6 @@ class JpaOAuth2AuthorizationService(
 
       builder.token(authorizationCode) { metadata -> metadata.putAll(parseMap(entity.authorizationCodeMetadata)) }
     }
-
-    if (entity.accessTokenValue != null) {
-      val accessToken = OAuth2AccessToken(
-        OAuth2AccessToken.TokenType.BEARER,
-        entity.accessTokenValue,
-        entity.accessTokenIssuedAt?.atZone(ZoneId.systemDefault())?.toInstant(),
-        entity.accessTokenExpiresAt?.atZone(ZoneId.systemDefault())?.toInstant(),
-        StringUtils.commaDelimitedListToSet(entity.accessTokenScopes),
-      )
-
-      builder.token(accessToken) { metadata -> metadata.putAll(parseMap(entity.accessTokenMetadata)) }
-    }
-
     return builder.build()
   }
 
@@ -120,8 +104,6 @@ class JpaOAuth2AuthorizationService(
   private fun toEntity(authorization: OAuth2Authorization): Authorization {
     with(authorization) {
       val oAuth2AuthorizationCodeToken: OAuth2Authorization.Token<OAuth2AuthorizationCode>? = getToken(OAuth2AuthorizationCode::class.java)
-      val oAuth2AccessToken: OAuth2Authorization.Token<OAuth2AccessToken>? = getToken(OAuth2AccessToken::class.java)
-
       return Authorization(
         id = id!!,
         registeredClientId = registeredClientId,
@@ -134,12 +116,6 @@ class JpaOAuth2AuthorizationService(
         authorizationCodeIssuedAt = oAuth2AuthorizationCodeToken?.token?.issuedAt?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
         authorizationCodeExpiresAt = oAuth2AuthorizationCodeToken?.token?.expiresAt?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
         authorizationCodeMetadata = writeMap(oAuth2AuthorizationCodeToken?.metadata),
-        accessTokenValue = oAuth2AccessToken?.token?.tokenValue,
-        accessTokenIssuedAt = oAuth2AccessToken?.token?.issuedAt?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
-        accessTokenExpiresAt = oAuth2AccessToken?.token?.expiresAt?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
-        accessTokenMetadata = writeMap(oAuth2AccessToken?.metadata),
-        accessTokenType = oAuth2AccessToken?.token?.tokenType?.value,
-        accessTokenScopes = oAuth2AccessToken?.token?.scopes?.joinToString(","),
       )
     }
   }

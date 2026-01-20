@@ -42,13 +42,12 @@ class UserAuthenticationServiceTest {
   }
 
   @Test
-  fun shouldJustSaveWhenNotUsernamePasswordAuthenticationToken() {
+  fun shouldNotSaveWhenNotUsernamePasswordAuthenticationToken() {
     SecurityContextHolder.getContext().authentication = TestingAuthenticationToken(null, null)
 
     userAuthenticationService.save(oAuth2Authorization)
 
-    verify(delegateOAuth2AuthorizationService).save(oAuth2Authorization)
-    verifyNoInteractions(userAuthorizationCodeRepository)
+    verifyNoInteractions(userAuthorizationCodeRepository, delegateOAuth2AuthorizationService)
   }
 
   @Test
