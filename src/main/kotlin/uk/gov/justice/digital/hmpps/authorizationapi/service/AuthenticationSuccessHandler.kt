@@ -20,6 +20,7 @@ class AuthenticationSuccessHandler(
   @Transactional
   @EventListener
   fun recordAuthenticationSuccessEvent(successEvent: AuthenticationSuccessEvent) {
+    if (!isTokenRequestEvent(successEvent)) return
     val clientId = extractClientIdFrom(successEvent)
     val client = clientRepository.findClientByClientId(clientId)
     if (client == null) {
@@ -33,13 +34,16 @@ class AuthenticationSuccessHandler(
 
   fun LocalDateTime.isBeforeToday() = this.toLocalDate().isBefore(LocalDate.now())
 
-  private fun extractClientIdFrom(successEvent: AuthenticationSuccessEvent): String {
-    val eventSource = successEvent.source
-    return when (eventSource) {
-      is OAuth2ClientAuthenticationToken, is OAuth2AccessTokenAuthenticationToken -> eventSource.principal.toString()
-      is OAuth2AuthorizationCodeRequestAuthenticationToken -> eventSource.clientId
-      else -> "unknown"
-    }
+  fun isTokenRequestEvent(event: AuthenticationSuccessEvent): Boolean {
+    val eventSource = event.source
+    return (eventSource is OAuth2AccessTokenAuthenticationToken && eventSource.principal is OAuth2ClientAuthenticationToken) ||
+      event.source is OAuth2AuthorizationCodeRequestAuthenticationToken
+  }
+
+  private fun extractClientIdFrom(successEvent: AuthenticationSuccessEvent): String = when (val eventSource = successEvent.source) {
+    is OAuth2AccessTokenAuthenticationToken -> (eventSource.principal as OAuth2ClientAuthenticationToken).principal.toString()
+    is OAuth2AuthorizationCodeRequestAuthenticationToken -> eventSource.clientId
+    else -> "unknown"
   }
 
   companion object {
