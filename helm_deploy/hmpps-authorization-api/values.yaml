@@ -14,6 +14,14 @@ generic-service:
     host: app-hostname.local # override per environment
     tlsSecretName: hmpps-authorization-api-cert
 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 640Mi
+    limits:
+      cpu: 2000m
+      memory: 1536Mi
+
   # Environment variables to load into the deployment
   env:
     JAVA_OPTS: "-Xmx512m"
