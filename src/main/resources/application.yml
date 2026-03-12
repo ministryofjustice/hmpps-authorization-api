@@ -101,3 +101,9 @@ application:
   oauth2:
     authorization-code:
       time-to-live: PT5M # Spring default to 5 minutes if no override is provided. For visibility explicitly apply default here.
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
