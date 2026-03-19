@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.data.service
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.dao.DataRetrievalFailureException
-import org.springframework.security.jackson2.SecurityJackson2Modules.getModules
+import org.springframework.security.jackson.SecurityJacksonModules
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization
@@ -11,8 +9,11 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module
+import org.springframework.security.oauth2.server.authorization.jackson.OAuth2AuthorizationServerJacksonModule
 import org.springframework.util.StringUtils
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.Authorization
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
@@ -22,12 +23,14 @@ class JpaOAuth2AuthorizationService(
   private val authorizationRepository: AuthorizationRepository,
   private val registeredClientRepository: JdbcRegisteredClientRepository,
 ) : OAuth2AuthorizationService {
-  private val objectMapper = ObjectMapper()
 
-  init {
+  private val objectMapper: JsonMapper = run {
     val classLoader: ClassLoader = ClientRepository::class.java.classLoader
-    objectMapper.registerModules(getModules(classLoader))
-    objectMapper.registerModule(OAuth2AuthorizationServerJackson2Module())
+    JsonMapper.builder()
+      .addModule(KotlinModule.Builder().build())
+      .addModules(SecurityJacksonModules.getModules(classLoader))
+      .addModule(OAuth2AuthorizationServerJacksonModule())
+      .build()
   }
 
   override fun save(authorization: OAuth2Authorization) {
@@ -86,8 +89,8 @@ class JpaOAuth2AuthorizationService(
       return emptyMap()
     }
 
-    try {
-      return objectMapper.readValue(data, object : TypeReference<Map<String, Any>>() {})
+    return try {
+      objectMapper.readValue(data, object : TypeReference<Map<String, Any>>() {})
     } catch (ex: Exception) {
       throw IllegalArgumentException(ex.message, ex)
     }

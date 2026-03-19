@@ -7,7 +7,7 @@ import com.nimbusds.jose.proc.SecurityContext
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.security.SecurityProperties
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
@@ -23,6 +23,7 @@ import org.springframework.security.authentication.DefaultAuthenticationEventPub
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.Authentication
@@ -36,6 +37,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes
 import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
@@ -47,8 +49,6 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.oauth2.server.authorization.web.authentication.ClientSecretBasicAuthenticationConverter
 import org.springframework.security.web.SecurityFilterChain
@@ -97,7 +97,7 @@ class AuthorizationApiConfig(
 ) {
 
   class ForbiddenAuthenticationConverter : AuthenticationConverter {
-    override fun convert(request: HttpServletRequest?): Authentication = throw OAuth2AuthenticationException(OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED))
+    override fun convert(request: HttpServletRequest): Authentication? = throw OAuth2AuthenticationException(OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED))
   }
 
   class ForbiddenErrorHandler : AuthenticationFailureHandler {
@@ -118,7 +118,7 @@ class AuthorizationApiConfig(
     oAuthClientRequestValidator: OAuthClientRequestValidator,
     jwtDecoder: JwtDecoder,
   ): SecurityFilterChain {
-    val configurer = OAuth2AuthorizationServerConfigurer.authorizationServer()
+    val configurer = OAuth2AuthorizationServerConfigurer()
     http {
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
       cors { disable() }
@@ -186,9 +186,9 @@ class AuthorizationApiConfig(
   @Bean
   fun authorizeFilter(signedJwtParser: SignedJwtParser): FilterRegistrationBean<OAuthAuthorizationCodeFilter> {
     val registrationBean = FilterRegistrationBean<OAuthAuthorizationCodeFilter>()
-    registrationBean.filter = OAuthAuthorizationCodeFilter(signedJwtParser)
+    registrationBean.setFilter(OAuthAuthorizationCodeFilter(signedJwtParser))
     registrationBean.addUrlPatterns("/oauth2/authorize")
-    registrationBean.order = SecurityProperties.DEFAULT_FILTER_ORDER - 1
+    registrationBean.order = SecurityFilterProperties.DEFAULT_FILTER_ORDER - 1
     return registrationBean
   }
 
@@ -216,7 +216,7 @@ class AuthorizationApiConfig(
   }
 
   @Bean
-  fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder = OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
+  fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder = NimbusJwtDecoder.withJwkSource(jwkSource).build()
 
   @Bean
   fun providerSettings(): AuthorizationServerSettings = AuthorizationServerSettings.builder().issuer(authIssuerUrl).build()
@@ -231,7 +231,7 @@ class AuthorizationApiConfig(
   }
 
   @Bean
-  fun authenticationEventPublisher(applicationEventPublisher: ApplicationEventPublisher?): AuthenticationEventPublisher {
+  fun authenticationEventPublisher(applicationEventPublisher: ApplicationEventPublisher): AuthenticationEventPublisher {
     // Note: DefaultAuthenticationEventPublisher provides a mapping between a number of exception types and corresponding events.
     // We could set up subscriptions (very simple using @EventListener annotation) to any of these as necessary,
     // plus add additional mappings, as below.

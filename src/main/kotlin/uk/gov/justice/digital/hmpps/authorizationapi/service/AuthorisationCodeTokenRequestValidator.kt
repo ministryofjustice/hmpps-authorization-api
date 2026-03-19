@@ -10,7 +10,7 @@ class AuthorisationCodeTokenRequestValidator(
   private val oAuthClientRequestValidator: OAuthClientRequestValidator,
 ) : AuthenticationProvider {
 
-  override fun authenticate(authentication: Authentication?): Authentication? {
+  override fun authenticate(authentication: Authentication): Authentication? {
     val authorisationCodeAuthentication = authentication as OAuth2AuthorizationCodeAuthenticationToken
 
     if (authorisationCodeAuthentication.principal is OAuth2ClientAuthenticationToken) {

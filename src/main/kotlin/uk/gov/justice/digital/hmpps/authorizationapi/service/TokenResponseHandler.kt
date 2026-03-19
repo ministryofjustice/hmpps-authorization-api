@@ -18,8 +18,8 @@ class TokenResponseHandler(
   constructor(jwtDecoder: JwtDecoder) : this(OAuth2AccessTokenResponseHttpMessageConverter(), jwtDecoder)
 
   override fun onAuthenticationSuccess(
-    request: HttpServletRequest?,
-    response: HttpServletResponse?,
+    request: HttpServletRequest,
+    response: HttpServletResponse,
     authentication: Authentication,
   ) {
     val accessTokenAuthentication = authentication as OAuth2AccessTokenAuthenticationToken
