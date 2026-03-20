@@ -19,7 +19,7 @@ class AuthIpSecurity(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun validateCallReceivedFromPermittedIPAddress(remoteIp: String, clientId: String) {
+  fun validateCallReceivedFromPermittedIPAddress(remoteIp: String, clientId: String?) {
     if (localHostOnly) {
       if (!isLocalHost(remoteIp)) {
         log.warn("Call detected from non local host IP address: Client {} IP {}", clientId, remoteIp)

@@ -3,9 +3,6 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration
 import com.microsoft.applicationinsights.TelemetryClient
 import io.jsonwebtoken.Jwts
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.containsString
-import org.hamcrest.CoreMatchers.startsWith
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Nested
@@ -544,7 +541,12 @@ class OAuthIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .value("Location") { allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")) }
+        .value("Location") {
+          assertThat(it)
+            .startsWith("http://localhost:3002/sign-in/callback")
+            .contains("state=$state")
+            .contains("code=")
+        }
 
       client = clientRepository.findClientByClientId("hmpps-authorization-client")
       val lastAccessedDate = client!!.lastAccessedDate
@@ -576,7 +578,12 @@ class OAuthIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .value("Location") { allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")) }
+        .value("Location") {
+          assertThat(it)
+            .startsWith("http://localhost:3002/sign-in/callback")
+            .contains("state=$state")
+            .contains("code=")
+        }
 
       client = clientRepository.findClientByClientId("last-accessed-in-the-past-hmpps-authorization-client")
       val lastAccessedDate = client!!.lastAccessedDate
@@ -594,7 +601,12 @@ class OAuthIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .value("Location") { allOf(startsWith(validRedirectUri), containsString("state=$state"), containsString("code=")) }
+        .value("Location") {
+          assertThat(it)
+            .startsWith(validRedirectUri)
+            .contains("state=$state")
+            .contains("code=")
+        }
         .returnResult<String>()
 
       val groups: MatchResult? = ".*code=(.*)&state=.*".toRegex().find(location.responseHeaders.location!!.toString())
