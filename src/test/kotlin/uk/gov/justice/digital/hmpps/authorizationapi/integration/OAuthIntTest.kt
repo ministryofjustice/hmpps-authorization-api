@@ -3,9 +3,6 @@ package uk.gov.justice.digital.hmpps.authorizationapi.integration
 import com.microsoft.applicationinsights.TelemetryClient
 import io.jsonwebtoken.Jwts
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.containsString
-import org.hamcrest.CoreMatchers.startsWith
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Nested
@@ -22,6 +19,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters.fromFormData
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
@@ -287,7 +285,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectBody()
         .returnResult().responseBody
 
-      val token = getTokenPayload(String(clientCredentialsResponse))
+      val token = getTokenPayload(String(clientCredentialsResponse!!))
       assertThat(token.claims["sub"]).isEqualTo("test-client-create-id")
       assertThat(token.claims["auth_source"]).isEqualTo("none")
       assertThat(token.claims["grant_type"]).isEqualTo("client_credentials")
@@ -543,10 +541,15 @@ class OAuthIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .value("Location", allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")))
+        .value("Location") {
+          assertThat(it)
+            .startsWith("http://localhost:3002/sign-in/callback")
+            .contains("state=$state")
+            .contains("code=")
+        }
 
       client = clientRepository.findClientByClientId("hmpps-authorization-client")
-      var lastAccessedDate = client!!.lastAccessedDate
+      val lastAccessedDate = client!!.lastAccessedDate
       assertThat(lastAccessedDate).isNotNull
       assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
 
@@ -575,10 +578,15 @@ class OAuthIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .value("Location", allOf(startsWith("http://localhost:3002/sign-in/callback"), containsString("state=$state"), containsString("code=")))
+        .value("Location") {
+          assertThat(it)
+            .startsWith("http://localhost:3002/sign-in/callback")
+            .contains("state=$state")
+            .contains("code=")
+        }
 
       client = clientRepository.findClientByClientId("last-accessed-in-the-past-hmpps-authorization-client")
-      var lastAccessedDate = client!!.lastAccessedDate
+      val lastAccessedDate = client!!.lastAccessedDate
       assertThat(lastAccessedDate).isNotNull
       assertThat(lastAccessedDate!!.toLocalDate()).isEqualTo(LocalDate.now())
     }
@@ -593,8 +601,13 @@ class OAuthIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isFound
         .expectHeader()
-        .value("Location", allOf(startsWith(validRedirectUri), containsString("state=$state"), containsString("code=")))
-        .returnResult(String::class.java)
+        .value("Location") {
+          assertThat(it)
+            .startsWith(validRedirectUri)
+            .contains("state=$state")
+            .contains("code=")
+        }
+        .returnResult<String>()
 
       val groups: MatchResult? = ".*code=(.*)&state=.*".toRegex().find(location.responseHeaders.location!!.toString())
       assertThat(groups).isNotNull
@@ -763,7 +776,7 @@ class OAuthIntTest : IntegrationTestBase() {
         .expectBody()
         .returnResult().responseBody
 
-      val token = getTokenPayload(String(tokenResponse))
+      val token = getTokenPayload(String(tokenResponse!!))
       assertThat(token.claims["client_id"]).isEqualTo(urlEncodedClientId)
     }
 

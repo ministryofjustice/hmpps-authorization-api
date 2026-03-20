@@ -89,7 +89,9 @@ class JwtAuthenticationHelperTest : IntegrationTestBase() {
   )
 
   fun createJwtWith(username: String, jwtId: String, claims: Map<String, Any?>, expiryTime: Duration, key: PrivateKey): String {
-    val authoritiesAsString = (claims["authorities"] as? Collection<*>)?.joinToString(separator = ",") { (it as GrantedAuthority).authority } ?: ""
+    val authoritiesAsString = (claims["authorities"] as? Collection<*>)?.mapNotNull {
+      (it as? GrantedAuthority)?.authority
+    }?.joinToString(separator = ",") ?: ""
 
     return Jwts.builder()
       .setId(jwtId)

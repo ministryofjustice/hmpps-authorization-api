@@ -6,7 +6,6 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken
-import java.lang.IllegalArgumentException
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -14,7 +13,7 @@ class UrlDecodingRetryClientSecretAuthenticationProvider(
   private val delegate: AuthenticationProvider,
 ) : AuthenticationProvider {
 
-  override fun authenticate(authentication: Authentication?): Authentication? = try {
+  override fun authenticate(authentication: Authentication): Authentication? = try {
     delegate.authenticate(authentication)
   } catch (e: IllegalArgumentException) {
     authentication.decodeAndRetry()

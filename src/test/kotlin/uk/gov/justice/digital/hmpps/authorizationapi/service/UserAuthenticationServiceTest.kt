@@ -43,7 +43,7 @@ class UserAuthenticationServiceTest {
 
   @Test
   fun shouldNotSaveWhenNotUsernamePasswordAuthenticationToken() {
-    SecurityContextHolder.getContext().authentication = TestingAuthenticationToken(null, null)
+    SecurityContextHolder.getContext().authentication = TestingAuthenticationToken("", "")
 
     userAuthenticationService.save(oAuth2Authorization)
 

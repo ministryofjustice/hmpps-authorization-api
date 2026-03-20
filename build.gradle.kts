@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.5.0"
-  kotlin("plugin.spring") version "2.3.10"
-  kotlin("plugin.jpa") version "2.3.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.5"
+  kotlin("plugin.spring") version "2.3.20"
+  kotlin("plugin.jpa") version "2.3.20"
 }
 
 configurations {
@@ -15,10 +15,11 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.security:spring-security-oauth2-authorization-server")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
   implementation("org.json:json:20251224")
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.15.0")
@@ -30,6 +31,7 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 
+  testImplementation("org.springframework.boot:spring-boot-webtestclient")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")

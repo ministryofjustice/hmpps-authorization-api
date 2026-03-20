@@ -19,8 +19,8 @@ import java.util.Base64
 
 class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConverter {
 
-  override fun convert(request: HttpServletRequest?): Authentication? {
-    val header = request!!.getHeader(HttpHeaders.AUTHORIZATION) ?: return null
+  override fun convert(request: HttpServletRequest): Authentication? {
+    val header = request.getHeader(HttpHeaders.AUTHORIZATION) ?: return null
 
     val parts = header.split("\\s".toRegex()).toTypedArray()
     if (!parts[0].equals("Basic", ignoreCase = true)) {

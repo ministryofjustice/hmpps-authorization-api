@@ -113,9 +113,9 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
       assertNotNull(clientDeployment)
       assertTrue(clientConfig.isPresent)
 
-      clientDeploymentRepository.delete(clientDeployment)
+      clientDeploymentRepository.delete(clientDeployment!!)
       clientConfigRepository.delete(clientConfig.get())
-      clientRepository.delete(baseClient)
+      clientRepository.delete(baseClient!!)
 
       verify(telemetryClient).trackEvent(
         "AuthorizationApiClientDeleted",
@@ -188,8 +188,8 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.CONFLICT)
 
-      clientRepository.delete(duplicatedClient)
-      clientRepository.delete(duplicatedClient2)
+      clientRepository.delete(duplicatedClient!!)
+      clientRepository.delete(duplicatedClient2!!)
     }
 
     @Test
@@ -221,7 +221,7 @@ class RotateClientsControllerIntTest : IntegrationTestBase() {
 
       assertThat(duplicateCateAuthorizationConsent?.authorities).isEqualTo(authorizationConsent?.authorities)
 
-      authorizationConsentRepository.delete(duplicateCateAuthorizationConsent)
+      authorizationConsentRepository.delete(duplicateCateAuthorizationConsent!!)
 
       verify(telemetryClient).trackEvent(
         "AuthorizationApiClientDetailsDuplicated",
