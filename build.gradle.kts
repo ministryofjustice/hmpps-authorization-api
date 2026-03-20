@@ -25,6 +25,7 @@ dependencies {
   implementation("org.apache.commons:commons-text:1.15.0")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.jsonwebtoken:jjwt:0.13.0")
+  implementation("commons-logging:commons-logging:1.2")
 
   runtimeOnly("com.h2database:h2:2.4.240")
   runtimeOnly("org.postgresql:postgresql:42.7.10")
