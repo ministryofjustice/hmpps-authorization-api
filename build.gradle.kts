@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.5"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.0"
   kotlin("plugin.spring") version "2.3.20"
   kotlin("plugin.jpa") version "2.3.20"
 }
@@ -25,7 +25,7 @@ dependencies {
   implementation("org.apache.commons:commons-text:1.15.0")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.jsonwebtoken:jjwt:0.13.0")
-  implementation("commons-logging:commons-logging:1.2")
+  implementation("commons-logging:commons-logging:1.3.6")
 
   runtimeOnly("com.h2database:h2:2.4.240")
   runtimeOnly("org.postgresql:postgresql:42.7.10")
