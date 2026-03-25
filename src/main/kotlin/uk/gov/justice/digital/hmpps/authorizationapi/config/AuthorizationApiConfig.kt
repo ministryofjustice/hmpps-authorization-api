@@ -97,7 +97,7 @@ class AuthorizationApiConfig(
 ) {
 
   class ForbiddenAuthenticationConverter : AuthenticationConverter {
-    override fun convert(request: HttpServletRequest): Authentication? = throw OAuth2AuthenticationException(OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED))
+    override fun convert(request: HttpServletRequest): Authentication = throw OAuth2AuthenticationException(OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED))
   }
 
   class ForbiddenErrorHandler : AuthenticationFailureHandler {
@@ -125,14 +125,6 @@ class AuthorizationApiConfig(
       csrf { disable() }
       addFilterAfter<LogoutFilter>(jwtCookieAuthenticationFilter)
       with(configurer) {
-        deviceAuthorizationEndpoint {
-          it.deviceAuthorizationRequestConverter(ForbiddenAuthenticationConverter())
-          it.errorResponseHandler(ForbiddenErrorHandler())
-        }
-        deviceVerificationEndpoint {
-          it.deviceVerificationRequestConverter(ForbiddenAuthenticationConverter())
-          it.errorResponseHandler(ForbiddenErrorHandler())
-        }
         tokenIntrospectionEndpoint {
           it.introspectionRequestConverter(ForbiddenAuthenticationConverter())
           it.errorResponseHandler(ForbiddenErrorHandler())
