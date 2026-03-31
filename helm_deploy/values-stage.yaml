@@ -6,6 +6,7 @@ generic-service:
 
   ingress:
     host: authorization-api-stage.hmpps.service.justice.gov.uk
+    className: default-non-prod
     tlsSecretName: hmpps-authorization-api-cert
 
   env:
