@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.3"
-  kotlin("plugin.spring") version "2.3.21"
-  kotlin("plugin.jpa") version "2.3.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.1"
+  kotlin("plugin.spring") version "2.3.20"
+  kotlin("plugin.jpa") version "2.3.20"
 }
 
 configurations {
@@ -20,6 +20,9 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+  constraints {
+    implementation("org.webjars:swagger-ui:5.32.2")
+  }
   implementation("org.json:json:20251224")
   implementation("commons-codec:commons-codec")
   implementation("org.apache.commons:commons-text:1.15.0")
