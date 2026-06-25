@@ -19,7 +19,9 @@ dependencies {
   implementation("org.springframework.security:spring-security-oauth2-authorization-server")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.flywaydb:flyway-core")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+  // Temporarily pin spring doc at 3.0.2 whilst waiting for 3.0.4 upgrade
+  val springDocVersion = "3.0.2"
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocVersion")
   constraints {
     implementation("org.webjars:swagger-ui:5.32.2")
   }
