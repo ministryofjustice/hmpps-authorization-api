@@ -68,13 +68,15 @@ class JpaOAuth2AuthorizationService(
       .authorizedScopes(StringUtils.commaDelimitedListToSet(entity.authorizedScopes))
       .attributes { attributes -> attributes.putAll(parseMap(entity.attributes)) }
 
-    if (entity.state != null) {
-      builder.attribute(OAuth2ParameterNames.STATE, entity.state)
+    val state = entity.state
+    if (state != null) {
+      builder.attribute(OAuth2ParameterNames.STATE, state)
     }
 
-    if (entity.authorizationCodeValue != null) {
+    val authorizationCodeValue = entity.authorizationCodeValue
+    if (authorizationCodeValue != null) {
       val authorizationCode = OAuth2AuthorizationCode(
-        entity.authorizationCodeValue,
+        authorizationCodeValue,
         entity.authorizationCodeIssuedAt!!.atZone(ZoneId.systemDefault()).toInstant(),
         entity.authorizationCodeExpiresAt!!.atZone(ZoneId.systemDefault()).toInstant(),
       )
