@@ -38,7 +38,7 @@ class JpaOAuth2AuthorizationService(
   }
 
   override fun remove(authorization: OAuth2Authorization) {
-    authorizationRepository.deleteById(authorization.id!!)
+    authorizationRepository.deleteById(authorization.id)
   }
 
   override fun findById(id: String): OAuth2Authorization? = authorizationRepository.findById(id).map { toObject(it) }.orElse(null)
@@ -75,8 +75,8 @@ class JpaOAuth2AuthorizationService(
     if (entity.authorizationCodeValue != null) {
       val authorizationCode = OAuth2AuthorizationCode(
         entity.authorizationCodeValue,
-        entity.authorizationCodeIssuedAt?.atZone(ZoneId.systemDefault())?.toInstant(),
-        entity.authorizationCodeExpiresAt?.atZone(ZoneId.systemDefault())?.toInstant(),
+        entity.authorizationCodeIssuedAt!!.atZone(ZoneId.systemDefault()).toInstant(),
+        entity.authorizationCodeExpiresAt!!.atZone(ZoneId.systemDefault()).toInstant(),
       )
 
       builder.token(authorizationCode) { metadata -> metadata.putAll(parseMap(entity.authorizationCodeMetadata)) }
@@ -108,7 +108,7 @@ class JpaOAuth2AuthorizationService(
     with(authorization) {
       val oAuth2AuthorizationCodeToken: OAuth2Authorization.Token<OAuth2AuthorizationCode>? = getToken(OAuth2AuthorizationCode::class.java)
       return Authorization(
-        id = id!!,
+        id = id,
         registeredClientId = registeredClientId,
         principalName = principalName,
         authorizationGrantType = authorizationGrantType.value,
