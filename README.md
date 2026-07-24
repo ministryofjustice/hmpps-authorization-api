@@ -1,6 +1,6 @@
 # HMPPS Authorization API
 
-Spring Boot 3.2.0, Java 21, Spring Security Authorization API covering the client credentials flow. This project has been started with the intention of:
+Spring Boot 4, Java 25, Spring Security Authorization API covering the client credentials flow. This project has been started with the intention of:
 - Moving HMPPS Auth off the deprecated spring-security-oauth2 library
 - Simplifying Auth by splitting out client credentials flows into a separate service
 

@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.authorizationapi.data.service
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.dao.DataRetrievalFailureException
-import org.springframework.security.jackson2.SecurityJackson2Modules.getModules
+import org.springframework.security.jackson.SecurityJacksonModules
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization
@@ -11,8 +9,11 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module
+import org.springframework.security.oauth2.server.authorization.jackson.OAuth2AuthorizationServerJacksonModule
 import org.springframework.util.StringUtils
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.authorizationapi.data.model.Authorization
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.AuthorizationRepository
 import uk.gov.justice.digital.hmpps.authorizationapi.data.repository.ClientRepository
@@ -22,12 +23,14 @@ class JpaOAuth2AuthorizationService(
   private val authorizationRepository: AuthorizationRepository,
   private val registeredClientRepository: JdbcRegisteredClientRepository,
 ) : OAuth2AuthorizationService {
-  private val objectMapper = ObjectMapper()
 
-  init {
+  private val objectMapper: JsonMapper = run {
     val classLoader: ClassLoader = ClientRepository::class.java.classLoader
-    objectMapper.registerModules(getModules(classLoader))
-    objectMapper.registerModule(OAuth2AuthorizationServerJackson2Module())
+    JsonMapper.builder()
+      .addModule(KotlinModule.Builder().build())
+      .addModules(SecurityJacksonModules.getModules(classLoader))
+      .addModule(OAuth2AuthorizationServerJacksonModule())
+      .build()
   }
 
   override fun save(authorization: OAuth2Authorization) {
@@ -35,7 +38,7 @@ class JpaOAuth2AuthorizationService(
   }
 
   override fun remove(authorization: OAuth2Authorization) {
-    authorizationRepository.deleteById(authorization.id!!)
+    authorizationRepository.deleteById(authorization.id)
   }
 
   override fun findById(id: String): OAuth2Authorization? = authorizationRepository.findById(id).map { toObject(it) }.orElse(null)
@@ -65,15 +68,17 @@ class JpaOAuth2AuthorizationService(
       .authorizedScopes(StringUtils.commaDelimitedListToSet(entity.authorizedScopes))
       .attributes { attributes -> attributes.putAll(parseMap(entity.attributes)) }
 
-    if (entity.state != null) {
-      builder.attribute(OAuth2ParameterNames.STATE, entity.state)
+    val state = entity.state
+    if (state != null) {
+      builder.attribute(OAuth2ParameterNames.STATE, state)
     }
 
-    if (entity.authorizationCodeValue != null) {
+    val authorizationCodeValue = entity.authorizationCodeValue
+    if (authorizationCodeValue != null) {
       val authorizationCode = OAuth2AuthorizationCode(
-        entity.authorizationCodeValue,
-        entity.authorizationCodeIssuedAt?.atZone(ZoneId.systemDefault())?.toInstant(),
-        entity.authorizationCodeExpiresAt?.atZone(ZoneId.systemDefault())?.toInstant(),
+        authorizationCodeValue,
+        entity.authorizationCodeIssuedAt!!.atZone(ZoneId.systemDefault()).toInstant(),
+        entity.authorizationCodeExpiresAt!!.atZone(ZoneId.systemDefault()).toInstant(),
       )
 
       builder.token(authorizationCode) { metadata -> metadata.putAll(parseMap(entity.authorizationCodeMetadata)) }
@@ -86,8 +91,8 @@ class JpaOAuth2AuthorizationService(
       return emptyMap()
     }
 
-    try {
-      return objectMapper.readValue(data, object : TypeReference<Map<String, Any>>() {})
+    return try {
+      objectMapper.readValue(data, object : TypeReference<Map<String, Any>>() {})
     } catch (ex: Exception) {
       throw IllegalArgumentException(ex.message, ex)
     }
@@ -105,7 +110,7 @@ class JpaOAuth2AuthorizationService(
     with(authorization) {
       val oAuth2AuthorizationCodeToken: OAuth2Authorization.Token<OAuth2AuthorizationCode>? = getToken(OAuth2AuthorizationCode::class.java)
       return Authorization(
-        id = id!!,
+        id = id,
         registeredClientId = registeredClientId,
         principalName = principalName,
         authorizationGrantType = authorizationGrantType.value,

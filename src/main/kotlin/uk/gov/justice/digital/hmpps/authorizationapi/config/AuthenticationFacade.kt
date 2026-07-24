@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class AuthenticationFacade {
-  val authentication: Authentication
+  val authentication: Authentication?
     get() = SecurityContextHolder.getContext().authentication
   val currentUsername: String?
     get() {
@@ -32,6 +32,6 @@ class AuthenticationFacade {
 
   private val userPrincipal: Any?
     get() {
-      return authentication.principal
+      return authentication?.principal
     }
 }

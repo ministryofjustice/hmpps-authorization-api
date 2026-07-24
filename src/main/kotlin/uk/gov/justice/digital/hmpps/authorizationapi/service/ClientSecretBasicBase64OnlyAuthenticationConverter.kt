@@ -19,8 +19,8 @@ import java.util.Base64
 
 class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConverter {
 
-  override fun convert(request: HttpServletRequest?): Authentication? {
-    val header = request!!.getHeader(HttpHeaders.AUTHORIZATION) ?: return null
+  override fun convert(request: HttpServletRequest): Authentication? {
+    val header = request.getHeader(HttpHeaders.AUTHORIZATION) ?: return null
 
     val parts = header.split("\\s".toRegex()).toTypedArray()
     if (!parts[0].equals("Basic", ignoreCase = true)) {
@@ -59,7 +59,7 @@ class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConvert
   private fun getParametersIfMatchesAuthorizationCodeGrantRequest(
     request: HttpServletRequest,
     vararg exclusions: String,
-  ): Map<String?, Any> {
+  ): Map<String, Any> {
     if (!matchesAuthorizationCodeGrantRequest(request)) {
       return emptyMap()
     }
@@ -74,8 +74,8 @@ class ClientSecretBasicBase64OnlyAuthenticationConverter : AuthenticationConvert
     for (exclusion in exclusions) {
       multiValueParameters.remove(exclusion)
     }
-    val parameters: MutableMap<String?, Any> = HashMap()
-    multiValueParameters.forEach { (key: String?, value: List<String>) ->
+    val parameters: MutableMap<String, Any> = HashMap()
+    multiValueParameters.forEach { (key: String, value: List<String>) ->
       parameters[key] = if (value.size == 1) value[0] else value.toTypedArray()
     }
     return parameters

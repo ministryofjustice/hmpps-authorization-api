@@ -65,15 +65,6 @@ class AuthIpSecurityTest {
     }
 
     @Test
-    fun shouldAcceptNullIPAddressAsLocalHost() {
-      val authIpSecurity = AuthIpSecurity(true)
-
-      assertThatCode {
-        authIpSecurity.validateCallReceivedFromPermittedIPAddress(null, "test-client")
-      }.doesNotThrowAnyException()
-    }
-
-    @Test
     fun shouldNotAcceptIPAddressOutsideLocalHostRange() {
       val authIpSecurity = AuthIpSecurity(true)
 

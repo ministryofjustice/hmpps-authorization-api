@@ -11,7 +11,7 @@ class ClientCredentialsTokenRequestValidator(
   private val oAuthClientRequestValidator: OAuthClientRequestValidator,
 ) : AuthenticationProvider {
 
-  override fun authenticate(authentication: Authentication?): Authentication? {
+  override fun authenticate(authentication: Authentication): Authentication? {
     val clientCredentialsAuthentication = authentication as OAuth2ClientCredentialsAuthenticationToken
 
     if (clientCredentialsAuthentication.principal is OAuth2ClientAuthenticationToken) {

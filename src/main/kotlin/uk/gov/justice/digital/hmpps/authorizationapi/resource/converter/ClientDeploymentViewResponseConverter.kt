@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.authorizationapi.resource.ClientDeploymentVi
 @Component
 class ClientDeploymentViewResponseConverter : Converter<ClientDeploymentDetails, ClientDeploymentViewResponse> {
 
-  override fun convert(source: ClientDeploymentDetails): ClientDeploymentViewResponse? = ClientDeploymentViewResponse(
+  override fun convert(source: ClientDeploymentDetails): ClientDeploymentViewResponse = ClientDeploymentViewResponse(
     source,
   )
 }
